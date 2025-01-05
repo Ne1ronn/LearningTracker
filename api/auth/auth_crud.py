@@ -23,13 +23,15 @@ async def register(session: SessionDep, user: UserAddSchema):
 
     if await get_user_by_email(session, user.email):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="User with this email already exists"
         )
+
     hashed_passwd = get_password_hash(user.password)
     new_user = UserModel(
         username = user.username,
         email = user.email,
+        role = user.role,
         hashed_password = hashed_passwd
     )
 
@@ -101,8 +103,8 @@ async def get_user_by_email(session: SessionDep, email: str):
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
-async def require_role(required_role: str, user: UserModel):
-    if user.role != required_role:
+async def require_role(user=Depends(get_current_user)):
+    if user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Don't have enough permissions"

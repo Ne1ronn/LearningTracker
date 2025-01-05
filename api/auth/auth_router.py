@@ -16,7 +16,6 @@ router = APIRouter(tags=["Authentification"])
 @router.post("/register")
 async def register_user(session: SessionDep, user: UserAddSchema):
     await register(session, user)
-    return {"DB URL:": f"{session.get_bind().url}"}
     return {"User created successfully": True}
 
 @router.post("/login")
