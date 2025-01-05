@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 from typing import Annotated
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from models.base import Base
 import os
-
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_async_engine(
@@ -18,12 +16,3 @@ async def get_session():
         yield session
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
-
-router = APIRouter(tags=["Database"])
-
-@router.post("/setup_database")
-async def setup_database():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
-    return {"Database created successfully": True}

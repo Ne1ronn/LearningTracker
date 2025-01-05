@@ -1,6 +1,4 @@
 from pydantic import BaseModel, EmailStr
-from datetime import datetime
-from pydantic import Field
 from typing import List
 
 from schemas.entry_schema import EntrySchema
@@ -10,6 +8,7 @@ class UserAddSchema(BaseModel):
     username: str
     email: EmailStr
     password: str
+    role: str
 
 class UserSchema(UserAddSchema):
     id: int
