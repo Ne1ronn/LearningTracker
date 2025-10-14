@@ -9,6 +9,7 @@ from schemas.entry_schema import EntryAddSchema
 async def add_entry(session: SessionDep, entry: EntryAddSchema):
     new_entry = EntryModel(
         title = entry.title,
+        topic = entry.topic,
         description = entry.description,
         tags = entry.tags,
         created_at = entry.created_at,
@@ -33,7 +34,7 @@ async def give_entry(session: SessionDep, entry_id: int):
 
     return entry
 
-async def update_entry(session: SessionDep, new_entry: EntryAddSchema, entry_id: int):
+async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int):
     stmt = (
         select(EntryModel).where(EntryModel.id == entry_id)
     )
@@ -47,6 +48,7 @@ async def update_entry(session: SessionDep, new_entry: EntryAddSchema, entry_id:
         )
 
     entry.title = new_entry.title
+    entry.topic = new_entry.topic
     entry.description = new_entry.description
     entry.tags = new_entry.tags
     entry.created_at = new_entry.created_at
@@ -54,7 +56,7 @@ async def update_entry(session: SessionDep, new_entry: EntryAddSchema, entry_id:
 
     await session.commit()
 
-async def delete_entry(session: SessionDep, entry_id: int):
+async def delete_entry_(session: SessionDep, entry_id: int):
     stmt = (
         select(EntryModel).where(EntryModel.id == entry_id)
     )
