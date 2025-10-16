@@ -10,7 +10,6 @@ class EntryModel(Base):
     __tablename__ = "entries"
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
-    topic: Mapped[str]
     description: Mapped[str]
     tags: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
