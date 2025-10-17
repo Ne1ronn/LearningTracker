@@ -11,6 +11,8 @@ class TopicModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
     skill: Mapped[str]
+    need: Mapped[int]
+    progress_score: Mapped[int]
     is_active: Mapped[bool] = mapped_column(default=True)
 
     entries: Mapped[List["EntryModel"]] = relationship("EntryModel", secondary=entry_topics, back_populates="topics")

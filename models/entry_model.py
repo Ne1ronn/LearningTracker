@@ -14,5 +14,7 @@ class EntryModel(Base):
     tags: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     mood_score: Mapped[int]
+    progress_score: Mapped[int]
+    learning_hours: Mapped[float]
 
     topics: Mapped[List["TopicModel"]] = relationship("TopicModel", secondary=entry_topics, back_populates="entries")

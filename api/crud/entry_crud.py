@@ -12,7 +12,9 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema):
         title = entry.title,
         description = entry.description,
         tags = entry.tags,
-        mood_score = entry.mood_score
+        mood_score = entry.mood_score,
+        progress_score = entry.progress_score,
+        learning_hours = entry.learning_hours
     )
 
     if entry.topic_ids:
@@ -35,7 +37,7 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema):
 
 
 async def give_entry(session: SessionDep, entry_id: int):
-    stmt = select(EntryModel).options(selectinload(EntryModel.topics))
+    stmt = select(EntryModel).where(EntryModel.id == entry_id).options(selectinload(EntryModel.topics))
     result = await session.execute(stmt)
     entry = result.scalar_one_or_none()
 
@@ -48,9 +50,7 @@ async def give_entry(session: SessionDep, entry_id: int):
     return entry
 
 async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int):
-    stmt = (
-        select(EntryModel).where(EntryModel.id == entry_id)
-    )
+    stmt = select(EntryModel).where(EntryModel.id == entry_id).options(selectinload(EntryModel.topics))
     result = await session.execute(stmt)
     entry = result.scalar_one_or_none()
 
@@ -63,8 +63,9 @@ async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id
     entry.title = new_entry.title
     entry.description = new_entry.description
     entry.tags = new_entry.tags
-    entry.created_at = new_entry.created_at
     entry.mood_score = new_entry.mood_score
+    entry.progress_score = new_entry.progress_score
+    entry.learning_hours = new_entry.learning_hours
 
     if new_entry.topic_ids:
         stmt = select(TopicModel).where(TopicModel.id.in_(new_entry.topic_ids))

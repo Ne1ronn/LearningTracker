@@ -13,8 +13,7 @@ async def insert_entry(session: SessionDep, entry: EntryAddSchema):
 
 @router.get("/entries/{entry_id}", response_model=EntrySchema)
 async def get_entry(session: SessionDep, entry_id: int):
-    entry = await give_entry(session, entry_id)
-    return EntrySchema.from_orm(entry)
+    return await give_entry(session, entry_id)
 
 @router.put("/entries/{entry_id}")
 async def update_entry(session: SessionDep, entry: EntryAddSchema, entry_id: int):

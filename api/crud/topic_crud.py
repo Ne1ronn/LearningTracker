@@ -10,6 +10,8 @@ async def add_topic(session: SessionDep, topic: TopicAddSchema):
     new_topic = TopicModel(
         title = topic.title,
         skill = topic.skill,
+        need = topic.need,
+        progress_score = topic.progress_score,
         is_active = topic.is_active
     )
 
@@ -42,8 +44,11 @@ async def update_topic_(session: SessionDep, new_topic: TopicAddSchema, topic_id
 
     topic.title = new_topic.title
     topic.skill = new_topic.skill
+    topic.need = new_topic.need
+    topic.progress_score = new_topic.progress_score
     topic.is_active = new_topic.is_active
-    topic.entries = new_topic.entries
+
+    await session.commit()
 
 async def delete_topic_(session: SessionDep, topic_id: int):
     stmt = select(TopicModel).where(TopicModel.id == topic_id)

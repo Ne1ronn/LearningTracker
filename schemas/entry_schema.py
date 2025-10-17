@@ -11,6 +11,8 @@ class EntryAddSchema(BaseModel):
     description: str
     tags: str
     mood_score: int = Field(ge=1, le=10)
+    progress_score: int = Field(ge=1, le=10)
+    learning_hours: float
     topic_ids: Optional[List[int]] = []
 
 class EntrySchema(EntryAddSchema):
