@@ -1,25 +1,36 @@
 from aiogram import Router, types
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
-from typing import Any
+from models.entry_model import EntryModel
 
-router = Router(name=__name__)
+router = Router()
 
-@router.message(Command("start"))
-async def start_handler(message: types.Message) -> Any:
-    await message.answer('Hello from my router!')
+class AddEntry(StatesGroup):
+    waiting_for_field = State()
 
-@router.message(Command("Add entry"))
-async def message_handler(message: types.Message) -> Any:
-    await message.answer("Give me title of new entry")
-    await title_handler()
+FIELDS = ["title", "description", "mood"]
 
-async def is_string(message: types.Message) -> bool:
-    return isinstance(message.text, str)
+@router.message(Command("Add_entry"))
+async def start_add_entry(message: types.Message, state: FSMContext):
+    await state.update_data(current_index=0, data={})
+    await message.answer(f"Введите {FIELDS[0]}:")
+    await state.set_state(AddEntry.waiting_for_field)
 
-@router.message()
-async def title_handler(message: types.Message) -> Any:
-    if not is_string(message):
-        await message.answer("This isn't a string")
+@router.message(AddEntry.waiting_for_field)
+async def process_field(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    current_index = data["current_index"]
+    entry_data = data.get("data", {})
+
+    field_name = FIELDS[current_index]
+    entry_data[field_name] = message.text
+
+    current_index += 1
+
+    if current_index < len(FIELDS):
+        await state.update_data(current_index=current_index, data=entry_data)
+        await message.answer(f"Введите {FIELDS[current_index]}:")
     else:
-        await message.answer("Now description of new entry")
-
+        await message.answer("✅ Запись создана:\n" + "\n".join(f"{k}: {v}" for k, v in entry_data.items()))
+        await state.clear()
