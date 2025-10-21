@@ -1,11 +1,11 @@
-from asyncio import start_server
-
 from aiogram import Router, types
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
+import httpx
 
 router = Router()
+API_URL = "http://127.0.0.1:8000/entries"
 
 class EntryForm(StatesGroup):
     title = State()
@@ -77,5 +77,11 @@ async def get_hours(message: types.Message, state: FSMContext):
 
     await state.update_data(learning_hours=hours)
     data = await state.get_data()
-    await message.answer(f"✅ Everything entered correctly:\n\n{data}")
-    await state.clear()
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(API_URL, json=data)
+
+    if response.status_code == 200:
+        await message.answer("Entry added to database")
+    else:
+        await message.answer(f"Error:{response.text}")

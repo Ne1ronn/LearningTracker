@@ -1,6 +1,6 @@
 from aiogram import Bot, Dispatcher
 import asyncio
-from routers.test import router
+from routers.entry_bot import router
 
 async def main():
     bot = Bot(token="8413546619:AAEDhdhZuKjsTCleBs8P5L9QA4_EeNmWtHI")
