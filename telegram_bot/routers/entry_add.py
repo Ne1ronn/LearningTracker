@@ -15,7 +15,7 @@ class EntryForm(StatesGroup):
     progress_score = State()
     learning_hours = State()
 
-@router.message(Command("new_entry"))
+@router.message(Command("add_entry"))
 async def start_entry(message: types.Message, state: FSMContext):
     await message.answer("Enter the title of entry:")
     await state.set_state(EntryForm.title)
@@ -82,6 +82,6 @@ async def get_hours(message: types.Message, state: FSMContext):
         response = await client.post(API_URL, json=data)
 
     if response.status_code == 200:
-        await message.answer("Entry added to database")
+        await message.answer("Entry added to database ✅")
     else:
         await message.answer(f"Error:{response.text}")
