@@ -1,0 +1,112 @@
+from aiogram import Router, types
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.context import FSMContext
+from aiogram.filters import Command
+import httpx
+
+router = Router()
+API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
+
+class UpdateEntryForm(StatesGroup):
+    waiting_id = State()
+    title = State()
+    description = State()
+    tags = State()
+    mood_score = State()
+    progress_score = State()
+    learning_hours = State()
+
+@router.message(Command("update_entry"))
+async def start_update(message: types.Message, state: FSMContext):
+    await message.answer("Enter the id of entry:")
+    await state.set_state(UpdateEntryForm.waiting_id)
+
+@router.message(UpdateEntryForm.waiting_id)
+async def get_entry(message: types.Message, state: FSMContext):
+    try:
+        entry_id = int(message.text)
+        if not entry_id.is_integer():
+            raise ValueError
+    except ValueError:
+        await message.answer("Enter a integer number")
+        return
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(API_URL.format(entry_id=entry_id))
+
+    if response.status_code != 200:
+        await message.answer("Entered a wrong id, try again ❌")
+        return
+
+    await state.update_data(entry_id=entry_id)
+    await message.answer("Enter the updated title of entry:")
+    await state.set_state(UpdateEntryForm.title)
+
+@router.message(UpdateEntryForm.title)
+async def get_title(message: types.Message, state: FSMContext):
+    await state.update_data(title=message.text)
+    await message.answer("Now the updated description:")
+    await state.set_state(UpdateEntryForm.description)
+
+@router.message(UpdateEntryForm.description)
+async def get_description(message: types.Message, state: FSMContext):
+    await state.update_data(description=message.text)
+    await message.answer("Now the updated tags(separated by commas):")
+    await state.set_state(UpdateEntryForm.tags)
+
+@router.message(UpdateEntryForm.tags)
+async def get_tags(message: types.Message, state: FSMContext):
+    await state.update_data(tags=message.text)
+    await message.answer("Now the updated mood score:")
+    await state.set_state(UpdateEntryForm.mood_score)
+
+@router.message(UpdateEntryForm.mood_score)
+async def get_mood(message: types.Message, state: FSMContext):
+    try:
+        score = int(message.text)
+        if not (0 <= score <= 10):
+            raise ValueError
+    except ValueError:
+        await message.answer("Enter number between 0 and 10")
+        return
+    await state.update_data(mood_score=score)
+    await message.answer("Now the updated progress score:")
+    await state.set_state(UpdateEntryForm.progress_score)
+
+@router.message(UpdateEntryForm.progress_score)
+async def get_progress(message: types.Message, state: FSMContext):
+    try:
+        score = int(message.text)
+        if not (0 <= score <= 10):
+            raise ValueError
+    except ValueError:
+        await message.answer("Enter number between 0 and 10")
+        return
+
+    await state.update_data(progress_score=score)
+    await message.answer("Now the updated learning hours:")
+    await state.set_state(UpdateEntryForm.learning_hours)
+
+@router.message(UpdateEntryForm.learning_hours)
+async def get_hours(message: types.Message, state: FSMContext):
+    try:
+        hours = float(message.text)
+        if hours < 0:
+            raise ValueError
+    except ValueError:
+        await message.answer("Enter number more than 0")
+        return
+
+    await state.update_data(learning_hours=hours)
+    data = await state.get_data()
+
+    entry_id = data.pop('entry_id')
+    async with httpx.AsyncClient() as client:
+        response = await client.put(API_URL.format(entry_id=entry_id), json=data)
+
+    if response.status_code == 200:
+        await message.answer("Entry successfully updated ✅")
+    else:
+        await message.answer(f"Error:{response.text}")
+
+    await state.clear()

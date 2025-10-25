@@ -85,3 +85,5 @@ async def get_hours(message: types.Message, state: FSMContext):
         await message.answer("Entry added to database ✅")
     else:
         await message.answer(f"Error:{response.text}")
+
+    await state.clear()
