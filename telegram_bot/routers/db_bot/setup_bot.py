@@ -1,6 +1,4 @@
 from aiogram import Router, types
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 import httpx
 

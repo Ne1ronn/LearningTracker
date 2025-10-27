@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from pydantic.v1 import Field
 
 class TopicAddSchema(BaseModel):
@@ -8,7 +8,7 @@ class TopicAddSchema(BaseModel):
     skill: str
     need: int = Field(ge=1, le=10)
     progress_score: int = Field(ge=1, le=10)
-    is_active: bool
+    is_active: Optional[bool] = True
 
 class TopicSchema(TopicAddSchema):
     id: int

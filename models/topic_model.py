@@ -13,6 +13,6 @@ class TopicModel(Base):
     skill: Mapped[str]
     need: Mapped[int]
     progress_score: Mapped[int]
-    is_active: Mapped[bool] = mapped_column(default=True)
+    is_active: Mapped[bool] = mapped_column(nullable=True, default=True)
 
     entries: Mapped[List["EntryModel"]] = relationship("EntryModel", secondary=entry_topics, back_populates="topics")

@@ -1,5 +1,3 @@
-from email.charset import add_alias
-
 from aiogram import Router, types
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
@@ -57,3 +55,14 @@ async def add_score(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(progress_score=score)
+
+    data = await state.get_data()
+    async with httpx.AsyncClient() as client:
+        response = await client.post(API_URL, json=data)
+
+    if response.status_code == 200:
+        await message.answer("Topic added to database ✅")
+    else:
+        await message.answer(f"Error:{response.text}")
+
+    await state.clear()
