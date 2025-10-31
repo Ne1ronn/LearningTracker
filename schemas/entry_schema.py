@@ -15,6 +15,15 @@ class EntryAddSchema(BaseModel):
     learning_hours: float
     topic_ids: Optional[List[int]] = []
 
+class UpdateEntrySchema(BaseModel):
+    title: Optional[str]
+    description: Optional[str]
+    tags: Optional[str]
+    mood_score: Optional[int] = Field(ge=1, le=10)
+    progress_score: Optional[int] = Field(ge=1, le=10)
+    learning_hours: Optional[int]
+    topic_ids: Optional[List[int]] = []
+
 class EntrySchema(EntryAddSchema):
     id: int
     created_at: datetime

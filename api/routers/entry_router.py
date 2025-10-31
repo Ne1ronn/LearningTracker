@@ -1,8 +1,8 @@
 from fastapi import APIRouter, status
 
-from api.crud.entry_crud import add_entry, give_entry, update_entry_, delete_entry_
+from api.crud.entry_crud import (add_entry, give_entry, update_entry_, patch_entry_, delete_entry_)
 from database.setup import SessionDep
-from schemas.entry_schema import EntryAddSchema, EntrySchema
+from schemas.entry_schema import EntryAddSchema, EntrySchema, UpdateEntrySchema
 
 router = APIRouter(tags=["Entry Tracking"])
 
@@ -18,6 +18,11 @@ async def get_entry(session: SessionDep, entry_id: int):
 @router.put("/entries/{entry_id}")
 async def update_entry(session: SessionDep, entry: EntryAddSchema, entry_id: int):
     await update_entry_(session, entry, entry_id)
+    return {"message": "Entry updated successfully"}
+
+@router.patch("/entries/{entry_id}")
+async def patch_entry(session: SessionDep, patched_entry: UpdateEntrySchema, entry_id: int):
+    await patch_entry_(session, entry_id, patched_entry)
     return {"message": "Entry updated successfully"}
 
 @router.delete("/entries/{entry_id}")
