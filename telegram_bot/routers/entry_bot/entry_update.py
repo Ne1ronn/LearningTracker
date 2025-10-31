@@ -15,6 +15,8 @@ class UpdateEntryForm(StatesGroup):
     mood_score = State()
     progress_score = State()
     learning_hours = State()
+    waiting_ids = State()
+    topic_ids = State()
 
 @router.message(Command("update_entry"))
 async def start_update(message: types.Message, state: FSMContext):
@@ -98,8 +100,37 @@ async def get_hours(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(learning_hours=hours)
-    data = await state.get_data()
+    await message.answer("Do you want add id of related topics?")
+    await state.set_state(UpdateEntryForm.waiting_ids)
 
+@router.message(UpdateEntryForm.waiting_ids)
+async def waiting_ids(message: types.Message, state: FSMContext):
+    if message.text.lower() == "yes":
+        await message.answer("Enter the id's by square brackets: [1, 2]")
+        await state.set_state(UpdateEntryForm.topic_ids)
+    else:
+        await update_entry(message, state)
+
+@router.message(UpdateEntryForm.topic_ids)
+async def add_topics(message: types.Message, state: FSMContext):
+    text = message.text.strip()
+
+    if not (text.startswith("[") and text.endswith("]")):
+        await message.answer("Enter in this format: [1, 2, 3]")
+        return
+
+    items = text[1:-1].replace(" ", "").split(",")
+
+    if not all(item.isdigit() for item in items):
+        await message.answer("Enter only integers by comma: [1, 2, 3]")
+        return
+
+    topic_ids = list(map(int, items))
+    await state.update_data(topic_ids=topic_ids)
+    await update_entry(message, state)
+
+async def update_entry(message: types.Message, state: FSMContext):
+    data = await state.get_data()
     entry_id = data.pop('entry_id')
     async with httpx.AsyncClient() as client:
         response = await client.put(API_URL.format(entry_id=entry_id), json=data)

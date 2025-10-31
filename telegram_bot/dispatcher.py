@@ -4,6 +4,7 @@ from telegram_bot.routers.entry_bot.entry_add import router as add_entry_router
 from telegram_bot.routers.entry_bot.entry_get import router as get_entry_router
 from telegram_bot.routers.db_bot.setup_bot import router as db_router
 from telegram_bot.routers.entry_bot.entry_update import router as update_entry_router
+from telegram_bot.routers.entry_bot.entry_patch import router as patch_entry_router
 from telegram_bot.routers.entry_bot.entry_delete import router as delete_entry_router
 from telegram_bot.routers.topic_bot.topic_get import router as topic_get_router
 from telegram_bot.routers.topic_bot.topic_add import router as topic_add_router
@@ -16,6 +17,7 @@ async def main():
     dp.include_router(add_entry_router)
     dp.include_router(get_entry_router)
     dp.include_router(update_entry_router)
+    dp.include_router(patch_entry_router)
     dp.include_router(delete_entry_router)
     dp.include_router(topic_add_router)
     dp.include_router(topic_get_router)
