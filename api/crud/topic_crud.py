@@ -42,7 +42,6 @@ async def update_topic_(session: SessionDep, new_topic: TopicAddSchema, topic_id
             detail=f"Topic with id {topic_id} not found"
         )
 
-    updated_dic = new_topic.dict(exclude_unset=True)
     updated_dic = new_topic.dict()
     for field, value in updated_dic.items():
         setattr(topic, field, value)

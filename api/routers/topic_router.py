@@ -20,7 +20,7 @@ async def update_topic(session: SessionDep, topic: TopicAddSchema, topic_id: int
     await update_topic_(session, topic, topic_id)
     return {"message": "Topic updated successfully"}
 
-@router.put("/topic/{topic_id}")
+@router.patch("/topic/{topic_id}")
 async def patch_topic(session: SessionDep, patched_topic: UpdateTopicSchema, topic_id: int):
     await patch_topic_(session, patched_topic, topic_id)
     return {"message": "Topic updated successfully"}

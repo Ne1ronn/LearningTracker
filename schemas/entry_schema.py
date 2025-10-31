@@ -16,13 +16,13 @@ class EntryAddSchema(BaseModel):
     topic_ids: Optional[List[int]] = []
 
 class UpdateEntrySchema(BaseModel):
-    title: Optional[str]
-    description: Optional[str]
-    tags: Optional[str]
-    mood_score: Optional[int] = Field(ge=1, le=10)
-    progress_score: Optional[int] = Field(ge=1, le=10)
-    learning_hours: Optional[int]
-    topic_ids: Optional[List[int]] = []
+    title: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[str] = None
+    mood_score: Optional[int] = Field(default=None, ge=1, le=10)
+    progress_score: Optional[int] = Field(default=None, ge=1, le=10)
+    learning_hours: Optional[int] = None
+    topic_ids: Optional[List[int]] =  []
 
 class EntrySchema(EntryAddSchema):
     id: int
