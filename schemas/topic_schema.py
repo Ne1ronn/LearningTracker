@@ -10,6 +10,13 @@ class TopicAddSchema(BaseModel):
     progress_score: int = Field(ge=1, le=10)
     is_active: Optional[bool] = True
 
+class UpdateTopicSchema(BaseModel):
+    title: Optional[str]
+    skill: Optional[str]
+    need: Optional[int] = Field(ge=1, le=10)
+    progress_score: Optional[int] = Field(ge=1, le=10)
+    is_active: Optional[bool] = True
+
 class TopicSchema(TopicAddSchema):
     id: int
 
