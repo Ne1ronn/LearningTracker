@@ -19,7 +19,7 @@ async def start_patch(message: types.Message, state: FSMContext):
     await state.set_state(PatchEntryForm.waiting_id)
 
 @router.message(PatchEntryForm.waiting_id)
-async def patch_entry(message: types.Message, state: FSMContext):
+async def get_entry(message: types.Message, state: FSMContext):
     try:
         entry_id = int(message.text)
         if not entry_id.is_integer():

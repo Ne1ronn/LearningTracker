@@ -9,6 +9,7 @@ from telegram_bot.routers.entry_bot.entry_delete import router as delete_entry_r
 from telegram_bot.routers.topic_bot.topic_get import router as topic_get_router
 from telegram_bot.routers.topic_bot.topic_add import router as topic_add_router
 from telegram_bot.routers.topic_bot.topic_update import router as topic_update_router
+from telegram_bot.routers.topic_bot.topic_patch import router as topic_patch_router
 from telegram_bot.routers.topic_bot.topic_delete import router as topic_delete_router
 
 async def main():
@@ -22,6 +23,7 @@ async def main():
     dp.include_router(topic_add_router)
     dp.include_router(topic_get_router)
     dp.include_router(topic_update_router)
+    dp.include_router(topic_patch_router)
     dp.include_router(topic_delete_router)
     dp.include_router(db_router)
     await dp.start_polling(bot)
