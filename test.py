@@ -1,22 +1,13 @@
 from typing import Annotated
+
 from fastapi import Depends, FastAPI
+from fastapi.security import OAuth2PasswordBearer
 
 app = FastAPI()
 
-
-class FixedContentQueryChecker:
-    def __init__(self, fixed_content: str):
-        self.fixed_content = fixed_content
-
-    def __call__(self, q: str = ""):
-        if q:
-            return self.fixed_content in q
-        return False
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-checker = FixedContentQueryChecker("bar")
-
-
-@app.get("/query-checker/")
-async def read_query_check(fixed_content_included: Annotated[bool, Depends(checker)]):
-    return {"fixed_content_in_query": fixed_content_included}
+@app.get("/items/")
+async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
+    return {"token": token}
