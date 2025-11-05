@@ -51,15 +51,7 @@ async def give_entry(session: SessionDep, entry_id: int):
     return entry
 
 async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int):
-    stmt = select(EntryModel).where(EntryModel.id == entry_id).options(selectinload(EntryModel.topics))
-    result = await session.execute(stmt)
-    entry = result.scalar_one_or_none()
-
-    if entry is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Entry with id {entry_id} not found"
-        )
+    entry = give_entry(session, entry_id)
 
     update_dict = new_entry.dict()
     for field, value in update_dict.items():
@@ -83,15 +75,7 @@ async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id
     await session.commit()
 
 async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: UpdateEntrySchema):
-    stmt = select(EntryModel).where(EntryModel.id == entry_id).options(selectinload(EntryModel.topics))
-    result = await session.execute(stmt)
-    entry = result.scalar_one_or_none()
-
-    if entry is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Entry with id {entry_id} not found"
-        )
+    entry = give_entry(session, entry_id)
 
     update_dict = patched_entry.dict(exclude_unset=True)
     for field, value in update_dict.items():
@@ -115,17 +99,7 @@ async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: Update
     await session.commit()
 
 async def delete_entry_(session: SessionDep, entry_id: int):
-    stmt = (
-        select(EntryModel).where(EntryModel.id == entry_id)
-    )
-    result = await session.execute(stmt)
-    entry = result.scalar_one_or_none()
-
-    if entry is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Entry with id {entry_id} not found"
-        )
+    entry = give_entry(session, entry_id)
 
     await session.delete(entry)
     await session.commit()
