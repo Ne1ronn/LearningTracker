@@ -4,14 +4,9 @@ from database.setup import SessionDep
 from models.user_model import UserModel
 from schemas.user_schema import UserAddSchema, Token
 from sqlalchemy import select
-from datetime import timedelta
 
 async def register(session: SessionDep, user: UserAddSchema):
-    stmt = select(UserModel).where(UserModel.username == user.username)
-    result = await session.execute(stmt)
-    db_user = result.scalar_one_or_none()
-    if db_user:
-        raise HTTPException(status_code=400, detail="User already registered")
+    await get_user_by_username(session, user.username)
     hashed_passwd = get_password_hash(user.password)
     new_user = UserModel(
         username = user.username,
@@ -37,3 +32,16 @@ async def login(session: SessionDep, username: str, passwd: str):
 
     access_token = create_access_token(data={"sub": username})
     return Token(access_token=access_token, token_type="bearer")
+
+async def get_user_by_username(session: SessionDep, username: str):
+    stmt = select(UserModel).where(UserModel.username == username)
+    result = await session.execute(stmt)
+    user = result.scalar_one_or_none()
+
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User already exists"
+        )
+
+    return {"message": "Username is free"}
