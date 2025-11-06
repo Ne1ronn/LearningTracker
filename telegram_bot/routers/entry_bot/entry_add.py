@@ -6,8 +6,10 @@ import httpx
 
 router = Router()
 API_URL = "http://127.0.0.1:8000/entries"
+API_GET_URL = "http://127.0.0.1:8000/user/{username}"
 
 class EntryForm(StatesGroup):
+    username = State()
     title = State()
     description = State()
     tags = State()
@@ -19,6 +21,19 @@ class EntryForm(StatesGroup):
 
 @router.message(Command("add_entry"))
 async def start_entry(message: types.Message, state: FSMContext):
+    await message.answer("Enter username that belongs this entry:")
+    await state.set_state(EntryForm.username)
+
+@router.message(EntryForm.username)
+async def get_user(message: types.Message, state: FSMContext):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(API_GET_URL.format(username=message.text))
+
+    if response.status_code == 404:
+        await message.answer("This username don't exists. Enter another:")
+        return
+
+    await state.update_data(username=message.text)
     await message.answer("Enter the title of entry:")
     await state.set_state(EntryForm.title)
 

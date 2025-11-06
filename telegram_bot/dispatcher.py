@@ -12,6 +12,7 @@ from telegram_bot.routers.topic_bot.topic_update import router as topic_update_r
 from telegram_bot.routers.topic_bot.topic_patch import router as topic_patch_router
 from telegram_bot.routers.topic_bot.topic_delete import router as topic_delete_router
 from telegram_bot.routers.auth_bot.register import router as auth_router
+from telegram_bot.routers.auth_bot.login import router as login_router
 
 async def main():
     bot = Bot(token="8413546619:AAEDhdhZuKjsTCleBs8P5L9QA4_EeNmWtHI")
@@ -27,6 +28,7 @@ async def main():
     dp.include_router(topic_patch_router)
     dp.include_router(topic_delete_router)
     dp.include_router(auth_router)
+    dp.include_router(login_router)
     dp.include_router(db_router)
     await dp.start_polling(bot)
 

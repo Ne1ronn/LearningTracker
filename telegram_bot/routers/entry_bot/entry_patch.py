@@ -37,6 +37,7 @@ async def get_entry(message: types.Message, state: FSMContext):
 
     await state.update_data(entry_id=entry_id, updates={})
     await message.answer("What exactly you want update?\n"
+                         "User_id?\n"
                          "Title?\n"
                          "Description?\n"
                          "Tags?\n"
@@ -48,7 +49,7 @@ async def get_entry(message: types.Message, state: FSMContext):
 
 @router.message(PatchEntryForm.waiting_attribute)
 async def wait_attribute(message: types.Message, state: FSMContext):
-    attributes = ["title", "description", "tags", "mood_score", "progress_score", "learning_hours", "topic_ids"]
+    attributes = ["user_id", "title", "description", "tags", "mood_score", "progress_score", "learning_hours", "topic_ids"]
     try:
         attribute = message.text.strip().lower()
         if not attribute in attributes:

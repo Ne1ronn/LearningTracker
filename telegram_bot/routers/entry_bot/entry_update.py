@@ -27,8 +27,6 @@ async def start_update(message: types.Message, state: FSMContext):
 async def get_entry(message: types.Message, state: FSMContext):
     try:
         entry_id = int(message.text)
-        if not entry_id.is_integer():
-            raise ValueError
     except ValueError:
         await message.answer("Enter a integer number")
         return
