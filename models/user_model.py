@@ -1,5 +1,6 @@
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models.base import Base
+from typing import List
 
 class UserModel(Base):
     __tablename__ = "users"
@@ -7,3 +8,5 @@ class UserModel(Base):
     username: Mapped[str] = mapped_column(unique=True)
     email: Mapped[str] = mapped_column(unique=True)
     hashed_password: Mapped[str]
+
+    entries: Mapped[List["EntryModel"]] = relationship("EntryModel", back_populates="user")

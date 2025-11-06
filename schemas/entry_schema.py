@@ -7,6 +7,7 @@ from schemas.topic_schema import TopicSchema
 
 
 class EntryAddSchema(BaseModel):
+    user_id: int
     title: str
     description: str
     tags: str

@@ -9,6 +9,7 @@ from models.entry_topics_model import entry_topics
 class EntryModel(Base):
     __tablename__ = "entries"
     id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     title: Mapped[str]
     description: Mapped[str]
     tags: Mapped[str]
@@ -17,4 +18,5 @@ class EntryModel(Base):
     progress_score: Mapped[int]
     learning_hours: Mapped[float]
 
+    user: Mapped["UserModel"] = relationship("UserModel", back_populates="entries")
     topics: Mapped[List["TopicModel"]] = relationship("TopicModel", secondary=entry_topics, back_populates="entries")
