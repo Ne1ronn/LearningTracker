@@ -1,13 +1,14 @@
-from typing import Union
+from typing import Union, Annotated
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 
-from api.auth.register import get_user_by_username
+from api.auth.register import get_current_user
 from database.setup import SessionDep
 from models.entry_model import EntryModel
 from models.topic_model import TopicModel
+from models.user_model import UserModel
 from schemas.entry_schema import EntryAddSchema, UpdateEntrySchema
 
 
@@ -26,13 +27,7 @@ async def missing_topics(session: SessionDep, entry: Union[EntryAddSchema, Updat
 
     return topics
 
-async def add_entry(session: SessionDep, entry: EntryAddSchema):
-    user = await get_user_by_username(session, entry.username)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User don't exists"
-        )
+async def add_entry(session: SessionDep, entry: EntryAddSchema, user: Annotated[UserModel, Depends(get_current_user)]):
     new_entry = EntryModel(
         user_id = user.id,
         title = entry.title,
@@ -51,8 +46,13 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema):
     await session.commit()
 
 
-async def give_entry(session: SessionDep, entry_id: int):
-    stmt = select(EntryModel).where(EntryModel.id == entry_id).options(selectinload(EntryModel.topics))
+async def give_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
+    stmt = (
+        select(EntryModel)
+        .where((EntryModel.id == entry_id) & (user.id == EntryModel.user_id))
+        .options(selectinload(EntryModel.topics))
+    )
+
     result = await session.execute(stmt)
     entry = result.scalar_one_or_none()
 
@@ -64,11 +64,9 @@ async def give_entry(session: SessionDep, entry_id: int):
 
     return entry
 
-async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int):
-    entry = await give_entry(session, entry_id)
-    user = await get_user_by_username(session, new_entry.username)
+async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
+    entry = await give_entry(session, entry_id, user)
     update_dict = new_entry.dict()
-    update_dict.pop("username", None)
     entry.user_id = user.id
     for field, value in update_dict.items():
         setattr(entry, field, value)
@@ -80,11 +78,9 @@ async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id
 
     await session.commit()
 
-async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: UpdateEntrySchema):
-    entry = await give_entry(session, entry_id)
-    user = await get_user_by_username(session, patched_entry.username)
+async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: UpdateEntrySchema, user: Annotated[UserModel, Depends(get_current_user)]):
+    entry = await give_entry(session, entry_id, user)
     update_dict = patched_entry.dict(exclude_unset=True)
-    update_dict.pop("username", None)
     entry.user_id = user.id
     for field, value in update_dict.items():
         setattr(entry, field, value)
@@ -96,8 +92,8 @@ async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: Update
 
     await session.commit()
 
-async def delete_entry_(session: SessionDep, entry_id: int):
-    entry = give_entry(session, entry_id)
-
-    await session.delete(entry)
-    await session.commit()
+async def delete_entry_(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
+    entry = await give_entry(session, entry_id, user)
+    if entry.user_id == user.id:
+        await session.delete(entry)
+        await session.commit()

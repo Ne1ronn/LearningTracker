@@ -8,7 +8,7 @@ SECRET_KEY = "15f24a9bc88665c6a04ba9a2ddf96ebdd831d7d3bf2619fd85dc4bf7a10368ed"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 password_hash = PasswordHash.recommended()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 def get_password_hash(password):
     return password_hash.hash(password)

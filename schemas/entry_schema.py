@@ -7,7 +7,6 @@ from schemas.topic_schema import TopicSchema
 
 
 class EntryAddSchema(BaseModel):
-    username: str
     title: str
     description: str
     tags: str
@@ -17,7 +16,6 @@ class EntryAddSchema(BaseModel):
     topic_ids: List[int] | None = []
 
 class UpdateEntrySchema(BaseModel):
-    username: str | None = None
     title: str | None = None
     description: str | None = None
     tags: str | None = None
