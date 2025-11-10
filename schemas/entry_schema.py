@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from pydantic import Field
-from typing import List, Optional
+from typing import List
 
 from schemas.topic_schema import TopicSchema
 

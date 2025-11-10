@@ -6,11 +6,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 
 from api.auth.functions import get_password_hash, create_access_token, verify_password, SECRET_KEY, ALGORITHM, \
-    oauth2_scheme
+    oauth2_scheme, get_user_by_username
 from database.setup import SessionDep
+from models.telegram_model import TelegramTokenModel
 from models.user_model import UserModel
+from schemas.telegram_schema import TelegramTokenAddSchema
 from schemas.user_schema import UserAddSchema, Token, TokenData
-from sqlalchemy import select
 
 async def register(session: SessionDep, user: UserAddSchema):
     if await get_user_by_username(session, user.username):
@@ -42,6 +43,16 @@ async def login(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestF
     access_token = create_access_token(data={"sub": form_data.username})
     return Token(access_token=access_token, token_type="bearer")
 
+async def create_telegram_token(session: SessionDep, data: TelegramTokenAddSchema):
+    telegram_token = TelegramTokenModel(
+        user_id = data.user_id,
+        telegram_id = data.telegram_id,
+        access_token = data.access_token
+    )
+
+    session.add(telegram_token)
+    await session.commit()
+
 async def get_current_user(session: SessionDep, token: str = Depends(oauth2_scheme)):
     credential_exceptions = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -60,8 +71,3 @@ async def get_current_user(session: SessionDep, token: str = Depends(oauth2_sche
     if user is None:
         raise credential_exceptions
     return user
-
-async def get_user_by_username(session: SessionDep, username: str):
-    stmt = select(UserModel).where(UserModel.username == username)
-    result = await session.execute(stmt)
-    return result.scalar_one_or_none()

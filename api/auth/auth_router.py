@@ -4,8 +4,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from database.setup import SessionDep
 from fastapi import APIRouter, Depends
+
+from schemas.telegram_schema import TelegramTokenAddSchema
 from schemas.user_schema import UserAddSchema, Token
-from api.auth.register import register, login, get_user_by_username
+from api.auth.register import register, login, get_user_by_username, create_telegram_token
+
 router = APIRouter(tags=["Authentification"])
 
 @router.post("/register")
@@ -16,6 +19,10 @@ async def register_user(session: SessionDep, user: UserAddSchema):
 @router.post("/login")
 async def login_user(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     return await login(session, form_data)
+
+@router.post("/token")
+async def insert_token(session: SessionDep, data: TelegramTokenAddSchema):
+    await create_telegram_token(session, data)
 
 @router.get("/user/{username}")
 async def get_user(session: SessionDep, username: str):
