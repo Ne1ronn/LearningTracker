@@ -9,7 +9,7 @@ class TelegramTokenModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    telegram_id: Mapped[BIGINT] = mapped_column(nullable=False, index=True)
+    telegram_id: Mapped[int] = mapped_column(nullable=False, index=True)
     access_token: Mapped[str] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow())
 

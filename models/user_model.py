@@ -10,4 +10,4 @@ class UserModel(Base):
     hashed_password: Mapped[str]
 
     entries: Mapped[List["EntryModel"]] = relationship("EntryModel", back_populates="user")
-    telegram_token: Mapped["TelegramToken"] = relationship("TelegramToken", back_populates="user")
+    telegram_token: Mapped["TelegramTokenModel"] = relationship("TelegramTokenModel", back_populates="user")
