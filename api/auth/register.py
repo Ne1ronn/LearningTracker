@@ -45,7 +45,7 @@ async def login(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestF
     return Token(access_token=access_token, token_type="bearer")
 
 async def create_telegram_token(session: SessionDep, data: TelegramTokenAddSchema):
-    token = get_telegram_token(session, data.telegram_id)
+    token = await get_telegram_token(session, data.telegram_id)
 
     if token:
         token.access_token = data.access_token

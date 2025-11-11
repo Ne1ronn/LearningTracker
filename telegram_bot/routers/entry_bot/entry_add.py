@@ -6,10 +6,10 @@ import httpx
 
 router = Router()
 API_URL = "http://127.0.0.1:8000/entries"
-API_GET_URL = "http://127.0.0.1:8000/user/{username}"
+API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
+
 
 class EntryForm(StatesGroup):
-    username = State()
     title = State()
     description = State()
     tags = State()
@@ -21,19 +21,15 @@ class EntryForm(StatesGroup):
 
 @router.message(Command("add_entry"))
 async def start_entry(message: types.Message, state: FSMContext):
-    await message.answer("Enter username that belongs this entry:")
-    await state.set_state(EntryForm.username)
-
-@router.message(EntryForm.username)
-async def get_user(message: types.Message, state: FSMContext):
+    telegram_id = message.from_user.id
     async with httpx.AsyncClient() as client:
-        response = await client.get(API_GET_URL.format(username=message.text))
+        response = await client.get(API_GET_URL.format(telegram_id=telegram_id))
 
-    if response.status_code == 404:
-        await message.answer("This username don't exists. Enter another:")
-        return
+    if response.status_code != 200:
+        await message.answer(f"User with telegram id {telegram_id} unauthorized. Use command /login for authorize")
+        await state.clear()
 
-    await state.update_data(username=message.text)
+    await state.update_data(token=response.json().get("access_token"))
     await message.answer("Enter the title of entry:")
     await state.set_state(EntryForm.title)
 
@@ -126,9 +122,9 @@ async def add_topics(message: types.Message, state: FSMContext):
 
 async def add_entry(message: types.Message, state: FSMContext):
     data = await state.get_data()
-
+    token = data.pop("token")
     async with httpx.AsyncClient() as client:
-        response = await client.post(API_URL, json=data)
+        response = await client.post(API_URL, json=data, headers={"Authorization": f"Bearer {token}"})
 
     if response.status_code == 200:
         await message.answer("Entry added to database ✅")
