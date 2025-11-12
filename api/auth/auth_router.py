@@ -2,12 +2,13 @@ from typing import Annotated
 
 from fastapi.security import OAuth2PasswordRequestForm
 
+
 from database.setup import SessionDep
 from fastapi import APIRouter, Depends
 
 from schemas.telegram_schema import TelegramTokenAddSchema
 from schemas.user_schema import UserAddSchema, Token
-from api.auth.register import register, login, get_user_by_username, create_telegram_token
+from api.auth.register import register, login, get_user_by_username, create_telegram_token, get_telegram_token
 
 router = APIRouter(tags=["Authentification"])
 
@@ -23,6 +24,10 @@ async def login_user(session: SessionDep, form_data: Annotated[OAuth2PasswordReq
 @router.post("/token")
 async def insert_token(session: SessionDep, data: TelegramTokenAddSchema):
     await create_telegram_token(session, data)
+
+@router.get("/token/{telegram_id}")
+async def get_token(session: SessionDep, telegram_id: int):
+    return await get_telegram_token(session, telegram_id)
 
 @router.get("/user/{username}")
 async def get_user(session: SessionDep, username: str):

@@ -45,9 +45,7 @@ async def login(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestF
     return Token(access_token=access_token, token_type="bearer")
 
 async def create_telegram_token(session: SessionDep, data: TelegramTokenAddSchema):
-    stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == data.telegram_id)
-    result = await session.execute(stmt)
-    token = result.scalar_one_or_none()
+    token = get_telegram_token(session, data.telegram_id)
 
     if token:
         token.access_token = data.access_token
@@ -61,6 +59,19 @@ async def create_telegram_token(session: SessionDep, data: TelegramTokenAddSchem
         session.add(telegram_token)
 
     await session.commit()
+
+async def get_telegram_token(session: SessionDep, telegram_id: int):
+    stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == telegram_id)
+    result = await session.execute(stmt)
+    token = result.scalar_one_or_none()
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"User with telegram id {telegram_id} unauthorized",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return token
 
 async def get_current_user(session: SessionDep, token: str = Depends(oauth2_scheme)):
     credential_exceptions = HTTPException(
