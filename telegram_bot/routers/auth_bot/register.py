@@ -24,7 +24,7 @@ async def add_username(message: types.Message, state: FSMContext):
     async with httpx.AsyncClient() as client:
         response = await client.get(API_GET_URL.format(username=message.text))
 
-    if response.status_code == 200:
+    if response.status_code == 400:
         await message.answer("This username already exists. Enter another:")
         return
 
