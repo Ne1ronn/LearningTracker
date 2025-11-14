@@ -7,7 +7,7 @@ import httpx
 router = Router()
 API_URL = "http://127.0.0.1:8000/entries"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
-API_TOKEN_URL = "http://127.0.0.1:8000//auth/validate"
+API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
 class EntryForm(StatesGroup):
     title = State()
@@ -34,7 +34,6 @@ async def start_entry(message: types.Message, state: FSMContext):
 
     async with httpx.AsyncClient() as client:
         response = await client.get(API_TOKEN_URL, headers={"Authorization": f"Bearer {token}"})
-        print("TOKEN USED BY BOT:", token)
 
     if response.status_code != 200:
         await message.answer(f"User didn't authorize. Use command /login for authorize")
