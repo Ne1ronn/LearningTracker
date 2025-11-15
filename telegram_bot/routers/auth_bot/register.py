@@ -3,9 +3,9 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from email_validator import validate_email, EmailNotValidError
+from .auth_router import router
 import httpx
 
-router = Router()
 API_GET_URL = "http://127.0.0.1:8000/user/{username}"
 API_POST_URL = "http://127.0.0.1:8000/register"
 

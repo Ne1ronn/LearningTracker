@@ -2,9 +2,9 @@ from aiogram import Router, types
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
+from .topic_router import router
 import httpx
 
-router = Router()
 API_URL = "http://127.0.0.1:8000/topics"
 
 class TopicForm(StatesGroup):

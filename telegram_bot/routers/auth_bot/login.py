@@ -2,10 +2,9 @@ from aiogram import Router, types
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
+from .auth_router import router
 import httpx
-from pyexpat.errors import messages
 
-router = Router()
 API_URL = "http://127.0.0.1:8000/login"
 API_GET_URL = "http://127.0.0.1:8000/user/{username}"
 API_POST_URL = "http://127.0.0.1:8000/token"
