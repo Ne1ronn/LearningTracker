@@ -15,5 +15,5 @@ async def start(message: types.Message):
                          "Add entry? Command /add_entry\n"
                          "To get? Command /get_entry?\n"
                          "To update? Command /update_entry\n"
-                         "To update some attributes? Command /patch_entry\n"
+                         "To update some attributes? Command /edit_entry\n"
                          "Or even delete? Command /delete_entry")

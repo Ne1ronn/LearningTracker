@@ -6,6 +6,8 @@ from .entry_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
+API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
+API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
 class PatchEntryForm(StatesGroup):
     waiting_id = State()
@@ -15,6 +17,26 @@ class PatchEntryForm(StatesGroup):
 
 @router.message(Command("edit_entry"))
 async def start_patch(message: types.Message, state: FSMContext):
+    telegram_id = message.from_user.id
+    async with httpx.AsyncClient() as client:
+        response = await client.get(API_GET_URL.format(telegram_id=telegram_id))
+
+    if response.status_code != 200:
+        await message.answer(f"User with telegram id {telegram_id} unauthorized. Use command /login for authorize")
+        await state.clear()
+        return
+
+    token = response.json().get("access_token")
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(API_TOKEN_URL, headers={"Authorization": f"Bearer {token}"})
+
+    if response.status_code != 200:
+        await message.answer(f"User didn't authorize. Use command /login for authorize")
+        await state.clear()
+        return
+
+    await state.update_data(token=token)
     await message.answer("Enter the id of entry:")
     await state.set_state(PatchEntryForm.waiting_id)
 
@@ -28,8 +50,11 @@ async def get_entry(message: types.Message, state: FSMContext):
         await message.answer("Enter a integer number")
         return
 
+    data = await state.get_data()
+    token = data["token"]
+
     async with httpx.AsyncClient() as client:
-        response = await client.get(API_URL.format(entry_id=entry_id))
+        response = await client.get(API_URL.format(entry_id=entry_id), headers={"Authorization": f"Bearer {token}"})
 
     if response.status_code != 200:
         await message.answer("Entered a wrong id, try again ❌")
@@ -37,7 +62,6 @@ async def get_entry(message: types.Message, state: FSMContext):
 
     await state.update_data(entry_id=entry_id, updates={})
     await message.answer("What exactly you want update?\n"
-                         "User_id?\n"
                          "Title?\n"
                          "Description?\n"
                          "Tags?\n"
@@ -122,9 +146,10 @@ async def confirm(message: types.Message, state: FSMContext):
     data = await state.get_data()
     entry_id = data["entry_id"]
     updates = data["updates"]
+    token = data.pop("token")
 
     async with httpx.AsyncClient() as client:
-        response = await client.patch(API_URL.format(entry_id=entry_id), json=updates)
+        response = await client.patch(API_URL.format(entry_id=entry_id), json=updates, headers={"Authorization": f"Bearer {token}"})
 
     if response.status_code == 200:
         await message.answer("Entry successfully updated ✅")
