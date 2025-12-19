@@ -65,12 +65,6 @@ async def get_telegram_token(session: SessionDep, telegram_id: int):
     result = await session.execute(stmt)
     token = result.scalar_one_or_none()
 
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"User with telegram id {telegram_id} unauthorized",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
     return token
 
 async def get_current_user(session: SessionDep, token: str = Depends(oauth2_scheme)):

@@ -45,6 +45,7 @@ async def check_password(message: types.Message, state: FSMContext):
         await add_token(message, state)
     else:
         await message.answer(f"Error:{response.text}")
+        await state.clear()
 
 async def add_token(message: types. Message, state: FSMContext):
     data = await state.get_data()
@@ -53,3 +54,5 @@ async def add_token(message: types. Message, state: FSMContext):
 
     if response.status_code != 200:
         await message.answer(f"Error:{response.text}")
+
+    await state.clear()

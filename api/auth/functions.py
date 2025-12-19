@@ -6,6 +6,7 @@ import os
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 password_hash = PasswordHash.recommended()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
