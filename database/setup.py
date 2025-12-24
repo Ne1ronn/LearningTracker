@@ -2,9 +2,12 @@ from fastapi import APIRouter, Depends
 from typing import Annotated
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from models.base import Base
+import os
 
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_async_engine(
-    "postgresql+asyncpg://postgres:873490Es@localhost:5432/LearningTracker",
+    DATABASE_URL,
     echo=True,
 )
 
