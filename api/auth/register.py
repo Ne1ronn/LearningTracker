@@ -4,6 +4,7 @@ import jwt
 from fastapi import  HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
+from pydantic import EmailStr
 
 from api.auth.functions import get_password_hash, create_access_token, verify_password, SECRET_KEY, ALGORITHM, \
     oauth2_scheme
@@ -18,7 +19,13 @@ async def register(session: SessionDep, user: UserAddSchema):
     if await get_user_by_username(session, user.username):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User already exists"
+            detail="User with this name already exists"
+        )
+
+    if await get_user_by_email(session, user.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exists"
         )
     hashed_passwd = get_password_hash(user.password)
     new_user = UserModel(
@@ -88,5 +95,10 @@ async def get_current_user(session: SessionDep, token: str = Depends(oauth2_sche
 
 async def get_user_by_username(session: SessionDep, username: str):
     stmt = select(UserModel).where(UserModel.username == username)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+async def get_user_by_email(session: SessionDep, email: str):
+    stmt = select(UserModel).where(UserModel.email == email)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()

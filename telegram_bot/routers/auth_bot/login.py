@@ -24,7 +24,7 @@ async def check_username(message: types.Message, state: FSMContext):
     async with httpx.AsyncClient() as client:
         response = await client.get(API_GET_URL.format(username=message.text))
 
-    if response.status_code != 200:
+    if not response.json():
         await message.answer("This username don't exists. Enter another:")
         return
 

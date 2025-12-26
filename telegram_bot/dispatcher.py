@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from aiogram import Bot, Dispatcher
 import asyncio
 from telegram_bot.routers.topic_bot.topic_router import router as topic_router
