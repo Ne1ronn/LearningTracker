@@ -8,7 +8,7 @@ import os
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 async def main():
-    bot = Bot(token=BOT_TOKEN)
+    bot = Bot(token=str(BOT_TOKEN))
     dp = Dispatcher()
     dp.include_router(topic_router)
     dp.include_router(entry_router)

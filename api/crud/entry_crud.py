@@ -1,7 +1,7 @@
 from typing import Union, Annotated
 
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 from fastapi import HTTPException, status, Depends
 
 from api.auth.register import get_current_user
@@ -97,3 +97,21 @@ async def delete_entry_(session: SessionDep, entry_id: int, user: Annotated[User
     if entry.user_id == user.id:
         await session.delete(entry)
         await session.commit()
+
+
+async def summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
+    stmt = select(TopicModel).options(
+        joinedload(TopicModel.entries)
+    )
+    result = await session.execute(stmt)
+    topics = result.scalars().all()
+
+    data = {}
+    for topic in topics:
+        hours_sum = 0
+        entries = topic.entries
+        for entry in entries:
+            hours_sum += entry.learning_hours
+        data[topic.title] = hours_sum
+
+    return data

@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends
-from api.crud.entry_crud import (add_entry, give_entry, update_entry_, patch_entry_, delete_entry_)
+from api.crud.entry_crud import (add_entry, give_entry, update_entry_, patch_entry_, delete_entry_, summary)
 from api.auth.register import get_current_user
 from database.setup import SessionDep
 from models.user_model import UserModel
@@ -31,3 +31,7 @@ async def patch_entry(session: SessionDep, patched_entry: UpdateEntrySchema, ent
 async def delete_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     await delete_entry_(session, entry_id, user)
     return {"message": "Entry deleted successfully"}
+
+@router.put("/entries/summary")
+async def hours_summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
+    return await summary(session, user)
