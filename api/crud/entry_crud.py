@@ -1,12 +1,13 @@
 from typing import Union, Annotated
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload, joinedload
 from fastapi import HTTPException, status, Depends
 
 from api.auth.register import get_current_user
 from database.setup import SessionDep
 from models.entry_model import EntryModel
+from models.entry_topics_model import entry_topics
 from models.topic_model import TopicModel
 from models.user_model import UserModel
 from schemas.entry_schema import EntryAddSchema, UpdateEntrySchema
@@ -100,19 +101,22 @@ async def delete_entry_(session: SessionDep, entry_id: int, user: Annotated[User
 
 
 async def summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
-    stmt = (select(TopicModel)
-            .join(TopicModel.entries)
-            .where(EntryModel.user_id == user.id)
-            .options(joinedload(TopicModel.entries)))
+    stmt = (
+        select(
+            TopicModel.title,
+            func.sum(EntryModel.learning_hours)
+        )
+        .select_from(TopicModel)
+        .join(entry_topics, entry_topics.c.topic_id == TopicModel.id)
+        .join(EntryModel, EntryModel.id == entry_topics.c.entry_id                  )
+        .where(EntryModel.user_id == user.id)
+        .group_by(TopicModel.id)
+    )
     result = await session.execute(stmt)
-    topics = result.unique().scalars().all()
+    rows = result.all()
 
     data = {}
-    for topic in topics:
-        hours_sum = 0
-        entries = topic.entries
-        for entry in entries:
-            hours_sum += entry.learning_hours
-        data[topic.title] = hours_sum
+    for title, hours in rows:
+        data[title] = hours
 
     return data
