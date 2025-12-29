@@ -100,11 +100,12 @@ async def delete_entry_(session: SessionDep, entry_id: int, user: Annotated[User
 
 
 async def summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
-    stmt = select(TopicModel).options(
-        joinedload(TopicModel.entries)
-    )
+    stmt = (select(TopicModel)
+            .join(TopicModel.entries)
+            .where(EntryModel.user_id == user.id)
+            .options(joinedload(TopicModel.entries)))
     result = await session.execute(stmt)
-    topics = result.scalars().all()
+    topics = result.unique().scalars().all()
 
     data = {}
     for topic in topics:

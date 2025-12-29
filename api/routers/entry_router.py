@@ -13,6 +13,10 @@ async def insert_entry(session: SessionDep, entry: EntryAddSchema, user: Annotat
     await add_entry(session, entry, user)
     return {"message": "Entry added successfully"}
 
+@router.get("/entries/summary")
+async def hours_summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
+    return await summary(session, user)
+
 @router.get("/entries/{entry_id}", response_model=EntrySchema)
 async def get_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     return await give_entry(session, entry_id, user)
@@ -31,7 +35,3 @@ async def patch_entry(session: SessionDep, patched_entry: UpdateEntrySchema, ent
 async def delete_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     await delete_entry_(session, entry_id, user)
     return {"message": "Entry deleted successfully"}
-
-@router.put("/entries/summary")
-async def hours_summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
-    return await summary(session, user)

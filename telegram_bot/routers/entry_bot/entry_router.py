@@ -8,6 +8,7 @@ from . import entry_get
 from . import entry_delete
 from . import entry_update
 from . import entry_patch
+from . import summary
 
 @router.message(Command("start_entry"))
 async def start(message: types.Message):
