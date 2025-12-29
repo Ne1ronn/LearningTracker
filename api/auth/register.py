@@ -17,7 +17,7 @@ from sqlalchemy import select
 async def register(session: SessionDep, user: UserAddSchema):
     if await get_user_by_username(session, user.username):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="User with this name already exists"
         )
 

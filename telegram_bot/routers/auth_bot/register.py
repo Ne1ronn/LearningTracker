@@ -6,7 +6,7 @@ from email_validator import validate_email, EmailNotValidError
 from .auth_router import router
 import httpx
 
-API_GET_URL = "http://127.0.0.1:8000/user/{username}"
+API_GET_URL = "http://127.0.0.1:8000/user/register/{username}"
 API_EMAIL_URL = "http://127.0.0.1:8000/userm/{email}"
 API_POST_URL = "http://127.0.0.1:8000/register"
 
@@ -25,7 +25,7 @@ async def add_username(message: types.Message, state: FSMContext):
     async with httpx.AsyncClient() as client:
         response = await client.get(API_GET_URL.format(username=message.text))
 
-    if response.json():
+    if response.status_code == 409:
         await message.answer("This username already exists. Enter another:")
         return
 
@@ -44,9 +44,11 @@ async def add_email(message: types.Message, state: FSMContext):
 
     async with httpx.AsyncClient() as client:
         response = await client.get(API_EMAIL_URL.format(email=email))
-    if response.json():
+
+    if response.status_code == 409:
         await message.answer("This email already exists. Enter another:")
         return
+
     await state.update_data(email=email)
     await message.answer("Enter the password:")
     await state.set_state(UserForm.hashed_password)

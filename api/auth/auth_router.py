@@ -35,10 +35,30 @@ async def get_token(session: SessionDep, telegram_id: int):
 async def token_check(user: Annotated[UserModel, Depends(get_current_user)]):
     return {"detail": "OK"}
 
-@router.get("/user/{username}")
-async def get_user(session: SessionDep, username: str):
-    return await get_user_by_username(session, username)
+@router.get("/user/register/{username}")
+async def get_user_for_register(session: SessionDep, username: str):
+    if await get_user_by_username(session, username):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this name already exists"
+        )
+
+@router.get("/user/login/{username}")
+async def get_user_for_login(session: SessionDep, username: str):
+    user = await get_user_by_username(session, username)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return user
 
 @router.get("/userm/{email}")
 async def get_user_email(session: SessionDep, email: EmailStr):
-    return await get_user_by_email(session, email)
+    if await get_user_by_email(session, email):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this email already exists"
+        )

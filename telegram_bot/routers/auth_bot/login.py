@@ -6,7 +6,7 @@ from .auth_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/login"
-API_GET_URL = "http://127.0.0.1:8000/user/{username}"
+API_GET_URL = "http://127.0.0.1:8000/user/login/{username}"
 API_POST_URL = "http://127.0.0.1:8000/token"
 
 class UserLoginForm(StatesGroup):
@@ -24,7 +24,7 @@ async def check_username(message: types.Message, state: FSMContext):
     async with httpx.AsyncClient() as client:
         response = await client.get(API_GET_URL.format(username=message.text))
 
-    if not response.json():
+    if response.status_code == 401:
         await message.answer("This username don't exists. Enter another:")
         return
 
