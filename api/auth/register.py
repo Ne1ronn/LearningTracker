@@ -4,7 +4,6 @@ import jwt
 from fastapi import  HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
-from pydantic import EmailStr
 
 from api.auth.functions import get_password_hash, create_access_token, verify_password, SECRET_KEY, ALGORITHM, \
     oauth2_scheme
@@ -39,9 +38,8 @@ async def register(session: SessionDep, user: UserAddSchema):
 
 async def login(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     db_user = await get_user_by_username(session, form_data.username)
-    hashed_passwd = get_password_hash(form_data.password)
 
-    if not db_user or not verify_password(form_data.password, hashed_passwd):
+    if not db_user or not verify_password(form_data.password, db_user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
