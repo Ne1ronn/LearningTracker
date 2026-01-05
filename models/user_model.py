@@ -8,6 +8,7 @@ class UserModel(Base):
     username: Mapped[str] = mapped_column(unique=True)
     email: Mapped[str] = mapped_column(unique=True)
     hashed_password: Mapped[str]
+    role: Mapped[str] = mapped_column(nullable=False, default="user")
 
     entries: Mapped[List["EntryModel"]] = relationship("EntryModel", back_populates="user")
     telegram_token: Mapped["TelegramTokenModel"] = relationship("TelegramTokenModel", back_populates="user")

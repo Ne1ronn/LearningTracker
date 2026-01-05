@@ -1,12 +1,17 @@
+from typing import Annotated
+
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from database.setup import SessionDep
 from models.topic_model import TopicModel
+from models.user_model import UserModel
 from schemas.topic_schema import TopicAddSchema, UpdateTopicSchema
+from api.auth.auth_crud import get_current_user, require_role
 
 
-async def add_topic(session: SessionDep, topic: TopicAddSchema):
+async def add_topic(session: SessionDep, topic: TopicAddSchema, user: Annotated[UserModel, Depends(get_current_user)]):
+    await require_role("admin", user)
+
     new_topic = TopicModel(
         title = topic.title,
         skill = topic.skill,

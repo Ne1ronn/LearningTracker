@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends
 from api.crud.entry_crud import (add_entry, give_entry, update_entry_, patch_entry_, delete_entry_, summary)
-from api.auth.register import get_current_user
+from api.auth.auth_crud import get_current_user
 from database.setup import SessionDep
 from models.user_model import UserModel
 from schemas.entry_schema import EntryAddSchema, EntrySchema, UpdateEntrySchema

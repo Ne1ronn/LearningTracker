@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload, joinedload
 from fastapi import HTTPException, status, Depends
 
-from api.auth.register import get_current_user
+from api.auth.auth_crud import get_current_user
 from database.setup import SessionDep
 from models.entry_model import EntryModel
 from models.entry_topics_model import entry_topics

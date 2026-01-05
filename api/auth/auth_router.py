@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from models.user_model import UserModel
 from schemas.telegram_schema import TelegramTokenAddSchema
 from schemas.user_schema import UserAddSchema, Token
-from api.auth.register import register, login, get_user_by_username, create_telegram_token, get_telegram_token, get_current_user, get_user_by_email
+from api.auth.auth_crud import register, login, get_user_by_username, create_telegram_token, get_telegram_token, get_current_user, get_user_by_email
 
 router = APIRouter(tags=["Authentification"])
 

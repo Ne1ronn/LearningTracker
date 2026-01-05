@@ -46,7 +46,7 @@ async def login(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestF
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = create_access_token(data={"sub": form_data.username})
+    access_token = create_access_token(data={"sub": form_data.username, "role": db_user.role})
     return Token(access_token=access_token, token_type="bearer")
 
 async def create_telegram_token(session: SessionDep, data: TelegramTokenAddSchema):
@@ -100,3 +100,10 @@ async def get_user_by_email(session: SessionDep, email: str):
     stmt = select(UserModel).where(UserModel.email == email)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
+
+async def require_role(required_role: str, user: UserModel):
+    if user.role != required_role:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Don't have enough permissions"
+        )
