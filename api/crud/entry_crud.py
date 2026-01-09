@@ -1,7 +1,7 @@
 from typing import Union, Annotated
 
 from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status, Depends
 
 from api.auth.auth_crud import get_current_user
@@ -36,7 +36,8 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema, user: Annotated[
         tags = entry.tags,
         mood_score = entry.mood_score,
         progress_score = entry.progress_score,
-        learning_hours = entry.learning_hours
+        learning_hours = entry.learning_hours,
+        private=entry.private
     )
 
     if entry.topic_ids:
@@ -50,7 +51,7 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema, user: Annotated[
 async def give_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     stmt = (
         select(EntryModel)
-        .where((EntryModel.id == entry_id) & (user.id == EntryModel.user_id))
+        .where((EntryModel.id == entry_id))
         .options(selectinload(EntryModel.topics))
     )
 
@@ -61,6 +62,12 @@ async def give_entry(session: SessionDep, entry_id: int, user: Annotated[UserMod
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Entry with id {entry_id} not found"
+        )
+
+    if entry.user_id != user.id and user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to get this entry"
         )
 
     return entry
@@ -98,7 +105,6 @@ async def delete_entry_(session: SessionDep, entry_id: int, user: Annotated[User
     if entry.user_id == user.id:
         await session.delete(entry)
         await session.commit()
-
 
 async def summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
     stmt = (

@@ -14,7 +14,6 @@ async def main():
     dp.include_router(topic_router)
     dp.include_router(entry_router)
     dp.include_router(auth_router)
-    dp.include_router(db_router)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":

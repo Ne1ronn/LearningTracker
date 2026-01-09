@@ -17,6 +17,7 @@ class EntryModel(Base):
     mood_score: Mapped[int]
     progress_score: Mapped[int]
     learning_hours: Mapped[float]
+    private: Mapped[bool] = mapped_column(default=False)
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="entries")
     topics: Mapped[List["TopicModel"]] = relationship("TopicModel", secondary=entry_topics, back_populates="entries")

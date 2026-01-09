@@ -68,6 +68,7 @@ async def get_entry(message: types.Message, state: FSMContext):
                          "Mood_score?\n"
                          "Progress_score?\n"
                          "Learning_hours?\n"
+                         "Private?\n"
                          "Topic_id?")
     await state.set_state(PatchEntryForm.waiting_attribute)
 

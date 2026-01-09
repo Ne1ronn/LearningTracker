@@ -17,6 +17,7 @@ class UpdateEntryForm(StatesGroup):
     mood_score = State()
     progress_score = State()
     learning_hours = State()
+    private = State()
     waiting_ids = State()
     topic_ids = State()
 
@@ -123,6 +124,15 @@ async def get_hours(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(learning_hours=hours)
+    await message.answer("Your entry will be private or not?")
+    await state.set_state(UpdateEntryForm.private)
+
+@router.message(UpdateEntryForm.private)
+async def get_private(message: types.Message, state: FSMContext):
+    if message.text.lower() == "private" or message.text.lower() == "yes":
+        await state.update_data(private=True)
+    else:
+        await state.update_data(private=False)
     await message.answer("Do you want add id of related topics?")
     await state.set_state(UpdateEntryForm.waiting_ids)
 
