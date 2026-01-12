@@ -49,33 +49,15 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema, user: Annotated[
 
 
 async def give_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
-    stmt = (
-        select(EntryModel)
-        .where((EntryModel.id == entry_id))
-        .options(selectinload(EntryModel.topics))
-    )
-
-    result = await session.execute(stmt)
-    entry = result.scalar_one_or_none()
-
-    if entry is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Entry with id {entry_id} not found"
-        )
-
-    if entry.user_id != user.id and user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to get this entry"
-        )
-
+    entry = await get_entry_by_id(session, entry_id)
+    can_read_entry(entry, user)
     return entry
 
 async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
-    entry = await give_entry(session, entry_id, user)
+    entry = await get_entry_by_id(session, entry_id)
+    can_update_entry(entry, user)
+
     update_dict = new_entry.dict()
-    entry.user_id = user.id
     for field, value in update_dict.items():
         setattr(entry, field, value)
 
@@ -87,9 +69,10 @@ async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id
     await session.commit()
 
 async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: UpdateEntrySchema, user: Annotated[UserModel, Depends(get_current_user)]):
-    entry = await give_entry(session, entry_id, user)
+    entry = await get_entry_by_id(session, entry_id)
+    can_update_entry(entry, user)
+
     update_dict = patched_entry.dict(exclude_unset=True)
-    entry.user_id = user.id
     for field, value in update_dict.items():
         setattr(entry, field, value)
 
@@ -101,10 +84,11 @@ async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: Update
     await session.commit()
 
 async def delete_entry_(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
-    entry = await give_entry(session, entry_id, user)
-    if entry.user_id == user.id:
-        await session.delete(entry)
-        await session.commit()
+    entry = await get_entry_by_id(session, entry_id)
+    can_delete_entry(entry, user)
+
+    await session.delete(entry)
+    await session.commit()
 
 async def summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
     stmt = (
@@ -126,3 +110,42 @@ async def summary(session: SessionDep, user: Annotated[UserModel, Depends(get_cu
         data[title] = hours
 
     return data
+
+async def get_entry_by_id(session: SessionDep, entry_id: int):
+    stmt = (
+        select(EntryModel)
+        .where((EntryModel.id == entry_id))
+        .options(selectinload(EntryModel.topics))
+    )
+
+    result = await session.execute(stmt)
+    entry = result.scalar_one_or_none()
+
+    if entry is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Entry with id {entry_id} not found"
+        )
+
+    return entry
+
+def can_read_entry(entry: EntryModel, user: UserModel):
+    if entry.private and user.id != entry.user_id and user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to read this entry"
+        )
+
+def can_update_entry(entry: EntryModel, user: UserModel):
+    if user.id != entry.user_id and user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to update this entry"
+        )
+
+def can_delete_entry(entry: EntryModel, user: UserModel):
+    if user.id != entry.user_id and user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to delete this entry"
+        )
