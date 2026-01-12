@@ -110,6 +110,8 @@ async def get_private(message: types.Message, state: FSMContext):
         await state.update_data(private=True)
     else:
         await state.update_data(private=False)
+    await message.answer("Do you want add id of related topics?")
+    await state.set_state(EntryForm.waiting_ids)
 
 @router.message(EntryForm.waiting_ids)
 async def waiting_ids(message: types.Message, state: FSMContext):

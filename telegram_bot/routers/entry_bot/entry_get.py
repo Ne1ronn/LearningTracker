@@ -63,7 +63,7 @@ async def get_entry(message: types.Message, state: FSMContext):
             f"Entry tags: {data['tags']}\n"
             f"Entry mood_score: {data['mood_score']}\n"
             f"Entry progress_score: {data['progress_score']}\n"
-            f"Entry learning_hours: {data['learning_hours']}"
+            f"Entry learning_hours: {data['learning_hours']}\n"
             f"Entry private: {data['private']}")
     else:
         await message.answer(f"Error:{response.text}")
