@@ -6,6 +6,7 @@ from .entry_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
+API_PERMISSION_URL = "http://127.0.0.1:8000/entries/{entry_id}/edit"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
@@ -54,10 +55,10 @@ async def get_entry(message: types.Message, state: FSMContext):
     token = data["token"]
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(API_URL.format(entry_id=entry_id), headers={"Authorization": f"Bearer {token}"})
+        response = await client.get(API_PERMISSION_URL.format(entry_id=entry_id), headers={"Authorization": f"Bearer {token}"})
 
     if response.status_code != 200:
-        await message.answer("Entered a wrong id, try again ❌")
+        await message.answer(response.text)
         return
 
     await state.update_data(entry_id=entry_id, updates={})

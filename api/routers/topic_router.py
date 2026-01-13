@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status, HTTPException
 from api.crud.topic_crud import add_topic, give_topic, update_topic_, patch_topic_, delete_topic_
 from database.setup import SessionDep
 from models.user_model import UserModel
@@ -12,7 +12,10 @@ router = APIRouter(tags=["Tracker Topics"])
 @router.post("/topics", dependencies=[Depends(require_role)])
 async def insert_topic(session: SessionDep, topic: TopicAddSchema):
     await add_topic(session, topic)
-    return {"message": "Topic added successfully"}
+    raise HTTPException(
+        status_code=status.HTTP_201_CREATED,
+        detail="Topic added successfully"
+    )
 
 @router.get("/topic/{topic_id}")
 async def get_topic(session: SessionDep, topic_id: int):

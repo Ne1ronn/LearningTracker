@@ -62,7 +62,7 @@ async def add_password(message: types.Message, state: FSMContext):
     async with httpx.AsyncClient() as client:
         response = await client.post(API_POST_URL, json=data)
 
-    if response.status_code == 200:
+    if response.status_code == 201:
         await message.answer("User registered successfully")
     else:
         await message.answer(f"Error:{response.text}")

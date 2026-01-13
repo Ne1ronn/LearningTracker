@@ -16,7 +16,10 @@ router = APIRouter(tags=["Authentification"])
 @router.post("/register")
 async def register_user(session: SessionDep, user: UserAddSchema):
     await register(session, user)
-    return {"User created successfully": True}
+    raise HTTPException(
+        status_code=status.HTTP_201_CREATED,
+        detail="User added successfully"
+    )
 
 @router.post("/login")
 async def login_user(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:

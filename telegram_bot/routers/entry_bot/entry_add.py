@@ -147,8 +147,8 @@ async def add_entry(message: types.Message, state: FSMContext):
     async with httpx.AsyncClient() as client:
         response = await client.post(API_URL, json=data, headers={"Authorization": f"Bearer {token}"})
 
-    if response.status_code == 200:
-        await message.answer("Entry added to database ✅")
+    if response.status_code == 201:
+        await message.answer(response.text+"✅")
     else:
         await message.answer(f"Error:{response.text}")
         return

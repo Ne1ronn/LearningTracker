@@ -60,8 +60,8 @@ async def add_score(message: types.Message, state: FSMContext):
     async with httpx.AsyncClient() as client:
         response = await client.post(API_URL, json=data)
 
-    if response.status_code == 200:
-        await message.answer("Topic added to database ✅")
+    if response.status_code == 201:
+        await message.answer(response.text+"✅")
     else:
         await message.answer(f"Error:{response.text}")
 
