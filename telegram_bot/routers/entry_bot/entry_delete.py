@@ -55,6 +55,6 @@ async def delete_entry(message: types.Message, state: FSMContext):
     if response.status_code == 200:
         await message.answer("Entry deleted successfully ✅")
     else:
-        await message.answer("Entered a wrong id, try again ❌")
+        await message.answer(response.text)
         return
     await state.clear()

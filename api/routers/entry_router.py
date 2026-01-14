@@ -1,8 +1,7 @@
 from typing import Annotated
 
-from aiohttp import http_exceptions
 from fastapi import APIRouter, Depends, status, HTTPException
-from api.crud.entry_crud import (add_entry, give_entry, update_entry_, patch_entry_, delete_entry_, summary, can_update_entry, can_delete_entry)
+from api.crud.entry_crud import (add_entry, give_entry, update_entry_, patch_entry_, delete_entry_, summary, can_update_entry, can_delete_entry, get_entry_by_id)
 from api.auth.auth_crud import get_current_user
 from database.setup import SessionDep
 from models import EntryModel
@@ -43,9 +42,6 @@ async def delete_entry(session: SessionDep, entry_id: int, user: Annotated[UserM
     return {"message": "Entry deleted successfully"}
 
 @router.get("/entries/{entry_id}/edit")
-async def can_edit(entry: EntryModel, user: Annotated[UserModel, Depends(get_current_user)]):
+async def can_edit(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
+    entry = await get_entry_by_id(session, entry_id)
     can_update_entry(entry, user)
-
-@router.get("/entries/{entry_id}/delete")
-async def can_delete(entry: EntryModel, user: Annotated[UserModel, Depends(get_current_user)]):
-    can_delete_entry(entry, user)
