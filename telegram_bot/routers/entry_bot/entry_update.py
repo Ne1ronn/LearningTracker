@@ -61,7 +61,7 @@ async def get_entry(message: types.Message, state: FSMContext):
     async with httpx.AsyncClient() as client:
         response = await client.get(API_PERMISSION_URL.format(entry_id=entry_id), headers={"Authorization": f"Bearer {token}"})
 
-    if response.status_code == 403 or 404:
+    if response.status_code in (403, 404):
         await message.answer(response.text)
         return
 
