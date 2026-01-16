@@ -34,7 +34,7 @@ async def give_topic(session: SessionDep, topic_id: int):
     return topic
 
 async def update_topic_(session: SessionDep, new_topic: TopicAddSchema, topic_id: int):
-    topic = give_topic(session, topic_id)
+    topic = await give_topic(session, topic_id)
 
     updated_dic = new_topic.dict()
     for field, value in updated_dic.items():
@@ -43,7 +43,7 @@ async def update_topic_(session: SessionDep, new_topic: TopicAddSchema, topic_id
     await session.commit()
 
 async def patch_topic_(session: SessionDep, patched_topic: UpdateTopicSchema, topic_id: int):
-    topic = give_topic(session, topic_id)
+    topic = await give_topic(session, topic_id)
 
     updated_dic = patched_topic.dict(exclude_unset=True)
     for field, value in updated_dic.items():
@@ -52,7 +52,7 @@ async def patch_topic_(session: SessionDep, patched_topic: UpdateTopicSchema, to
     await session.commit()
 
 async def delete_topic_(session: SessionDep, topic_id: int):
-    topic = give_topic(session, topic_id)
+    topic = await give_topic(session, topic_id)
 
     await session.delete(topic)
     await session.commit()

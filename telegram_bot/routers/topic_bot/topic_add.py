@@ -6,6 +6,9 @@ from .topic_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/topics"
+API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
+API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
+API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
 
 class TopicForm(StatesGroup):
     title = State()
@@ -16,6 +19,34 @@ class TopicForm(StatesGroup):
 
 @router.message(Command("add_topic"))
 async def start_topic(message: types.Message, state: FSMContext):
+    telegram_id = message.from_user.id
+    async with httpx.AsyncClient() as client:
+        response = await client.get(API_GET_URL.format(telegram_id=telegram_id))
+
+    if response.status_code != 200:
+        await message.answer(f"User with telegram id {telegram_id} unauthorized. Use command /login for authorize")
+        await state.clear()
+        return
+
+    token = response.json().get("access_token")
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(API_TOKEN_URL, headers={"Authorization": f"Bearer {token}"})
+
+    if response.status_code != 200:
+        await message.answer(f"User didn't authorize. Use command /login for authorize")
+        await state.clear()
+        return
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(API_ADMIN_URL, headers={"Authorization": f"Bearer {token}"})
+
+    if response.status_code != 200:
+        await message.answer("You don't have enough permissions")
+        await state.clear()
+        return
+
+    await state.update_data(token=token)
     await message.answer("Enter the title of new topic:")
     await state.set_state(TopicForm.title)
 
@@ -55,10 +86,10 @@ async def add_score(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(progress_score=score)
-
     data = await state.get_data()
+    token = data.pop("token")
     async with httpx.AsyncClient() as client:
-        response = await client.post(API_URL, json=data)
+        response = await client.post(API_URL, json=data, headers={"Authorization": f"Bearer {token}"})
 
     if response.status_code == 201:
         await message.answer(response.text+"✅")

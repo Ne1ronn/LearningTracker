@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from models.user_model import UserModel
 from schemas.telegram_schema import TelegramTokenAddSchema
 from schemas.user_schema import UserAddSchema, Token
-from api.auth.auth_crud import register, login, get_user_by_username, create_telegram_token, get_telegram_token, get_current_user, get_user_by_email
+from api.auth.auth_crud import register, login, get_user_by_username, create_telegram_token, get_telegram_token, get_current_user, get_user_by_email, require_role
 
 router = APIRouter(tags=["Authentification"])
 
@@ -35,6 +35,10 @@ async def get_token(session: SessionDep, telegram_id: int):
 
 @router.get("/auth/validate")
 async def token_check(user: Annotated[UserModel, Depends(get_current_user)]):
+    return {"detail": "OK"}
+
+@router.get("/auth/validate/admin")
+async def admin_check(admin=Depends(require_role)):
     return {"detail": "OK"}
 
 @router.get("/user/register/{username}")
