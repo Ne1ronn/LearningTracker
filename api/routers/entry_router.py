@@ -1,13 +1,13 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status, HTTPException
-from api.crud.entry_crud import (add_entry, give_entry, update_entry_, patch_entry_, delete_entry_, summary, can_update_entry, can_delete_entry, get_entry_by_id)
+from api.crud.entry_crud import (add_entry, give_entry, update_entry_, patch_entry_, delete_entry_, summary, can_update_entry, get_entry_by_id, get_entries_by_date_)
 from api.auth.auth_crud import get_current_user
 from database.setup import SessionDep
 from models import EntryModel
 from models.user_model import UserModel
 from schemas.entry_schema import EntryAddSchema, EntrySchema, UpdateEntrySchema
-
+from datetime import date
 router = APIRouter(tags=["Entry Tracking"])
 
 @router.post("/entries")
@@ -40,6 +40,10 @@ async def patch_entry(session: SessionDep, patched_entry: UpdateEntrySchema, ent
 async def delete_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     await delete_entry_(session, entry_id, user)
     return {"message": "Entry deleted successfully"}
+
+@router.get("/entries")
+async def get_entries_by_date(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)], target_date: date):
+    return await get_entries_by_date_(session, user, target_date)
 
 @router.get("/entries/{entry_id}/edit")
 async def can_edit(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):

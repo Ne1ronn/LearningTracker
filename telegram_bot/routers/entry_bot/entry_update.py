@@ -118,10 +118,10 @@ async def get_progress(message: types.Message, state: FSMContext):
 async def get_hours(message: types.Message, state: FSMContext):
     try:
         hours = float(message.text)
-        if hours < 0:
+        if hours < 0 or hours > 24:
             raise ValueError
     except ValueError:
-        await message.answer("Enter number more than 0")
+        await message.answer("Enter number more than 0 and less than 24")
         return
 
     await state.update_data(learning_hours=hours)

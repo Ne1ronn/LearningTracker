@@ -11,6 +11,7 @@ from models.entry_topics_model import entry_topics
 from models.topic_model import TopicModel
 from models.user_model import UserModel
 from schemas.entry_schema import EntryAddSchema, UpdateEntrySchema
+from datetime import datetime, date, timedelta
 
 
 async def missing_topics(session: SessionDep, entry: Union[EntryAddSchema, UpdateEntrySchema]):
@@ -110,6 +111,28 @@ async def summary(session: SessionDep, user: Annotated[UserModel, Depends(get_cu
         data[title] = hours
 
     return data
+
+async def get_entries_by_date_(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)], date: date):
+    start = datetime.combine(date, datetime.min.time())
+    end = start + timedelta(days=1)
+    stmt = (
+        select(EntryModel)
+        .where(EntryModel.created_at >= start,
+               EntryModel.created_at < end,
+               EntryModel.user_id == user.id)
+    )
+
+    result = await session.execute(stmt)
+    entries = result.scalars().all()
+
+    if entries is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Entries with date {date} not found"
+        )
+
+    return entries
+
 
 async def get_entry_by_id(session: SessionDep, entry_id: int):
     stmt = (

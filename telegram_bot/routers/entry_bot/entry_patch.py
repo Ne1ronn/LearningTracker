@@ -106,10 +106,10 @@ async def edit_attribute(message: types.Message, state: FSMContext):
     elif attribute == "learning_hours":
         try:
             value = float(value)
-            if value < 0:
+            if value < 0 or value > 24:
                 raise ValueError
         except ValueError:
-            await message.answer("Enter number more than 0")
+            await message.answer("Enter number more than 0 and less than 24")
             return
     elif attribute == "topic_ids":
         if not (value.startswith("[") and value.endswith("]")):
