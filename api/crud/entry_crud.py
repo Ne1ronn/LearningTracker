@@ -48,11 +48,38 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema, user: Annotated[
     session.add(new_entry)
     await session.commit()
 
-
 async def give_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     entry = await get_entry_by_id(session, entry_id)
     can_read_entry(entry, user)
     return entry
+
+async def give_all_entry(session: SessionDep,
+                         user: Annotated[UserModel, Depends(get_current_user)],
+                         target_date: date = None,
+                         private: bool = None,
+                         min_mood_score: int = None,
+                         max_mood_score: int = None,
+                         min_progress_score: int = None,
+                         max_progress_score: int = None,
+                         min_learning_hours: float = None,
+                         max_learning_hours: float = None,
+                         sort: str = None,
+                         limit: int = 20,
+                         offset: int = 0):
+
+    stmt = select(EntryModel).where(EntryModel.user_id == user.id)
+
+    stmt = apply_filter(stmt, target_date, private, min_mood_score, max_mood_score, min_progress_score, max_progress_score, min_learning_hours, max_learning_hours)
+    stmt = apply_sort(stmt, sort)
+
+    stmt = stmt.offset(offset).limit(limit)
+    result = await session.execute(stmt)
+    entries = result.scalars().all()
+
+    if not entries:
+        return []
+
+    return entries
 
 async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     entry = await get_entry_by_id(session, entry_id)
@@ -112,28 +139,6 @@ async def summary(session: SessionDep, user: Annotated[UserModel, Depends(get_cu
 
     return data
 
-async def get_entries_by_date_(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)], date: date):
-    start = datetime.combine(date, datetime.min.time())
-    end = start + timedelta(days=1)
-    stmt = (
-        select(EntryModel)
-        .where(EntryModel.created_at >= start,
-               EntryModel.created_at < end,
-               EntryModel.user_id == user.id)
-    )
-
-    result = await session.execute(stmt)
-    entries = result.scalars().all()
-
-    if entries is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Entries with date {date} not found"
-        )
-
-    return entries
-
-
 async def get_entry_by_id(session: SessionDep, entry_id: int):
     stmt = (
         select(EntryModel)
@@ -172,3 +177,67 @@ def can_delete_entry(entry: EntryModel, user: UserModel):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to delete this entry"
         )
+
+def apply_filter(stmt,
+                       target_date: date = None,
+                       private: bool = None,
+                       min_mood_score: int = None,
+                       max_mood_score: int = None,
+                       min_progress_score: int = None,
+                       max_progress_score: int = None,
+                       min_learning_hours: int = None,
+                       max_learning_hours: int = None):
+
+    if target_date is not None:
+        start = datetime.combine(target_date, datetime.min.time())
+        end = start + timedelta(days=1)
+        stmt = stmt.where(
+            EntryModel.created_at >= start,
+            EntryModel.created_at < end,
+        )
+
+    if private is not None:
+        stmt = stmt.where(EntryModel.private == private)
+
+    if min_mood_score is not None:
+        stmt = stmt.where(EntryModel.mood_score >= min_mood_score)
+    if max_mood_score is not None:
+        stmt = stmt.where(EntryModel.mood_score <= max_mood_score)
+
+    if min_progress_score is not None:
+        stmt = stmt.where(EntryModel.progress_score >= min_progress_score)
+    if max_progress_score is not None:
+        stmt = stmt.where(EntryModel.progress_score <= max_progress_score)
+
+    if min_learning_hours is not None:
+        stmt = stmt.where(EntryModel.learning_hours >= min_learning_hours)
+    if max_learning_hours is not None:
+        stmt = stmt.where(EntryModel.learning_hours <= max_learning_hours)
+
+    return stmt
+
+def apply_sort(stmt, sort: str = None):
+    if not sort:
+        return stmt.order_by(EntryModel.created_at.desc())
+
+    if sort is not None:
+        desc = sort.startswith("-")
+        key = sort.lstrip("-")
+
+        field = SORT_FIELDS.get(key)
+        if not field:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid sort field: {key}"
+            )
+
+        stmt = stmt.order_by(field.desc() if desc else field.asc())
+
+    return stmt
+
+SORT_FIELDS = {
+    "created_at": EntryModel.created_at,
+    "mood": EntryModel.mood_score,
+    "progress": EntryModel.progress_score,
+    "hours": EntryModel.learning_hours,
+}

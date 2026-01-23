@@ -1,11 +1,12 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status, HTTPException
-from api.crud.entry_crud import (add_entry, give_entry, update_entry_, patch_entry_, delete_entry_, summary, can_update_entry, get_entry_by_id, get_entries_by_date_)
+from api.crud.entry_crud import (add_entry, give_all_entry, give_entry, update_entry_, patch_entry_, delete_entry_, summary, can_update_entry, get_entry_by_id)
 from api.auth.auth_crud import get_current_user
 from database.setup import SessionDep
 from models.user_model import UserModel
 from schemas.entry_schema import EntryAddSchema, EntrySchema, UpdateEntrySchema
+from models.entry_model import EntryModel
 from datetime import date
 router = APIRouter(tags=["Entry Tracking"])
 
@@ -16,6 +17,23 @@ async def insert_entry(session: SessionDep, entry: EntryAddSchema, user: Annotat
         status_code=status.HTTP_201_CREATED,
         detail="Entry added successfully"
     )
+
+@router.get("/entries")
+async def get_all_entries(session: SessionDep,
+                         user: Annotated[UserModel, Depends(get_current_user)],
+                         target_date: date = None,
+                         private: bool = None,
+                         min_mood_score: int = None,
+                         max_mood_score: int = None,
+                         min_progress_score: int = None,
+                         max_progress_score: int = None,
+                         min_learning_hours: float = None,
+                         max_learning_hours: float = None,
+                         sort: str = None,
+                         limit: int = 20,
+                         offset: int = 0):
+
+    return await give_all_entry(session, user, target_date, private, min_mood_score, max_mood_score, min_progress_score, max_progress_score, min_learning_hours, max_learning_hours, sort, limit, offset)
 
 @router.get("/entries/summary")
 async def hours_summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
@@ -39,10 +57,6 @@ async def patch_entry(session: SessionDep, patched_entry: UpdateEntrySchema, ent
 async def delete_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     await delete_entry_(session, entry_id, user)
     return {"message": "Entry deleted successfully"}
-
-@router.get("/entries/date/{target_date}")
-async def get_entries_by_date(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)], target_date: date):
-    return await get_entries_by_date_(session, user, target_date)
 
 @router.get("/entries/{entry_id}/edit")
 async def can_edit(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
