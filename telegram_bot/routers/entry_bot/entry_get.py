@@ -1,7 +1,11 @@
-from aiogram import Router, types
+from aiogram import Router, types, F
+from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
+from aiogram.types import InlineKeyboardMarkup, CallbackQuery
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+
 from .entry_router import router
 import httpx
 
@@ -13,6 +17,25 @@ API_DATE_URL = "http://127.0.0.1:8000/entries/date/{target_date}"
 
 class GetEntryState(StatesGroup):
     waiting_id = State()
+
+class MyCallback(CallbackData, prefix="entries"):
+    action: str
+    fields: str | None = None
+
+def create_filter_buttons():
+    builder = InlineKeyboardBuilder()
+    builder.button(text="Private",
+                   callback_data=MyCallback(action="ask_private", fields="private").pack())
+    builder.button(text="Date",
+                   callback_data=MyCallback(action="ask_date", fields="date").pack())
+    builder.button(text="Mood",
+                   callback_data=MyCallback(action="ask_mood", fields="mood").pack())
+    builder.button(text="Progress",
+                   callback_data=MyCallback(action="ask_progress", fields="progress_score").pack())
+    builder.button(text="Hours",
+                   callback_data=MyCallback(action="ask_hours", fields="mood_score").pack())
+
+    return builder.as_markup()
 
 @router.message(Command("get_all_entries"))
 async def get_all_entries(message: types.Message, state: FSMContext):
@@ -35,28 +58,32 @@ async def get_all_entries(message: types.Message, state: FSMContext):
         await state.clear()
         return
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(API_ALL_URL, headers={"Authorization": f"Bearer {token}"})
+    await message.answer(f"Choose the filter method:", reply_markup=create_filter_buttons())
+    # async with httpx.AsyncClient() as client:
+    #     response = await client.get(API_ALL_URL, headers={"Authorization": f"Bearer {token}"})
+    #
+    # if response.status_code == 200:
+    #     data = response.json()
+    #
+    #     for entry in data:
+    #         await message.answer(
+    #             f"Your entry data:\n"
+    #             f"Entry id: {entry['id']}\n"
+    #             f"Entry title: {entry['title']}\n"
+    #             f"Entry description: {entry['description']}\n"
+    #             f"Entry tags: {entry['tags']}\n"
+    #             f"Entry mood_score: {entry['mood_score']}\n"
+    #             f"Entry progress_score: {entry['progress_score']}\n"
+    #             f"Entry learning_hours: {entry['learning_hours']}\n"
+    #             f"Entry private: {entry['private']}"
+    #         )
+    # else:
+    #     await message.answer(f"Error: {response.text}")
+    #
+    # await state.clear()
 
-    if response.status_code == 200:
-        data = response.json()
-
-        for entry in data:
-            await message.answer(
-                f"Your entry data:\n"
-                f"Entry id: {entry['id']}\n"
-                f"Entry title: {entry['title']}\n"
-                f"Entry description: {entry['description']}\n"
-                f"Entry tags: {entry['tags']}\n"
-                f"Entry mood_score: {entry['mood_score']}\n"
-                f"Entry progress_score: {entry['progress_score']}\n"
-                f"Entry learning_hours: {entry['learning_hours']}\n"
-                f"Entry private: {entry['private']}"
-            )
-    else:
-        await message.answer(f"Error: {response.text}")
-
-    await state.clear()
+# @router.callback_query(MyCallback.filter(F.action == "ask_private"))
+# async def ask_private(cb: CallbackQuery, callback_data: MyCallback):
 
 @router.message(Command("get_entry"))
 async def start_entry(message: types.Message, state: FSMContext):
