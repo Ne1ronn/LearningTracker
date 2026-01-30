@@ -26,6 +26,9 @@ class MyCallback(CallbackData, prefix="entries"):
 class EntriesState(StatesGroup):
     waiting_private = State()
     waiting_date = State()
+    waiting_mood = State()
+    waiting_progress = State()
+    waiting_hours = State()
 
 def is_valid_date(s: str) -> bool:
     try:
@@ -41,11 +44,11 @@ def create_filter_buttons():
     builder.button(text="Date",
                    callback_data=MyCallback(action="ask_date", fields="date").pack())
     builder.button(text="Mood",
-                   callback_data=MyCallback(action="ask_mood", fields="mood").pack())
+                   callback_data=MyCallback(action="ask_mood", fields="mood_score").pack())
     builder.button(text="Progress",
                    callback_data=MyCallback(action="ask_progress", fields="progress_score").pack())
     builder.button(text="Hours",
-                   callback_data=MyCallback(action="ask_hours", fields="mood_score").pack())
+                   callback_data=MyCallback(action="ask_hours", fields="learning_hours").pack())
 
     return builder.as_markup()
 
@@ -162,11 +165,16 @@ async def set_private(message: types.Message, state: FSMContext):
         reply_markup = ReplyKeyboardRemove(),
     )
 
+    await message.answer(
+        "Choose next filter method or show the result:",
+        reply_markup = create_filter_buttons()
+    )
+
 @router.callback_query(MyCallback.filter(F.action == "ask_date"))
 async def ask_date(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_date)
     await cb.message.answer(
-        "Choice the day or enter your own in (YYYY-MM-DD) format:",
+        "Choice the day or enter your own in YYYY-MM-DD format:",
         reply_markup = create_date_reply_buttons()
     )
     await cb.answer()
@@ -192,6 +200,96 @@ async def set_date(message: types.Message, state: FSMContext):
     await message.answer(
         "Date filter updated ✅",
         reply_markup = ReplyKeyboardRemove(),
+    )
+
+    await message.answer(
+        "Choose next filter method or show the result:",
+        reply_markup = create_filter_buttons()
+    )
+
+@router.callback_query(MyCallback.filter(F.action == "ask_mood"))
+async def ask_mood(cb: CallbackQuery, state: FSMContext):
+    await state.set_state(EntriesState.waiting_mood)
+    await cb.message.answer(
+        "Enter a range of numbers from 1 to 10 with a space between them:"
+    )
+    await cb.answer()
+
+@router.message(EntriesState.waiting_mood)
+async def set_mood(message: types.Message, state: FSMContext):
+    try:
+        low, high = map(int, message.text.split())
+        if not (1 <= low <= high <= 10):
+            raise ValueError
+    except ValueError:
+        await message.answer("Wrong input, try again:")
+        return
+
+    data = await state.get_data()
+    filters = data["filters"]
+    filters["min_mood_score"] = low
+    filters["max_mood_score"] = high
+    await state.update_data(filters=filters)
+    await message.answer("Mood filter updated ✅")
+
+@router.callback_query(MyCallback.filter(F.action == "ask_progress"))
+async def ask_progress(cb: CallbackQuery, state: FSMContext):
+    await state.set_state(EntriesState.waiting_progress)
+    await cb.message.answer(
+        "Enter a range of numbers from 1 to 10 with a space between them:"
+    )
+    await cb.answer()
+
+@router.message(EntriesState.waiting_progress)
+async def set_progress(message: types.Message, state: FSMContext):
+    try:
+        low, high = map(int, message.text.split())
+        if not (1 <= low <= high <= 10):
+            raise ValueError
+    except ValueError:
+        await message.answer("Wrong input, try again:")
+        return
+
+    data = await state.get_data()
+    filters = data["filters"]
+    filters["min_progress_score"] = low
+    filters["max_progress_score"] = high
+    await state.update_data(filters=filters)
+    await message.answer("Progress filter updated ✅")
+
+    await message.answer(
+        "Choose next filter method or show the result:",
+        reply_markup = create_filter_buttons()
+    )
+
+@router.callback_query(MyCallback.filter(F.action == "ask_hours"))
+async def ask_hours(cb: CallbackQuery, state: FSMContext):
+    await state.set_state(EntriesState.waiting_hours)
+    await cb.message.answer(
+        "Enter a range of numbers with a space between them:"
+    )
+    await cb.answer()
+
+@router.message(EntriesState.waiting_hours)
+async def set_hours(message: types.Message, state: FSMContext):
+    try:
+        low, high = map(int, message.text.split())
+        if not (1 <= low <= high):
+            raise ValueError
+    except ValueError:
+        await message.answer("Wrong input, try again:")
+        return
+
+    data = await state.get_data()
+    filters = data["filters"]
+    filters["min_learning_hours"] = low
+    filters["max_learning_hours"] = high
+    await state.update_data(filters=filters)
+    await message.answer("Hours filter updated ✅")
+
+    await message.answer(
+        "Choose next filter method or show the result:",
+        reply_markup = create_filter_buttons()
     )
 
 @router.message(Command("get_entry"))
