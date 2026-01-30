@@ -3,8 +3,8 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
-from aiogram.types import InlineKeyboardMarkup, CallbackQuery
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 from .entry_router import router
 import httpx
@@ -22,6 +22,9 @@ class MyCallback(CallbackData, prefix="entries"):
     action: str
     fields: str | None = None
 
+class EntriesState(StatesGroup):
+    waiting_private = State()
+
 def create_filter_buttons():
     builder = InlineKeyboardBuilder()
     builder.button(text="Private",
@@ -34,6 +37,14 @@ def create_filter_buttons():
                    callback_data=MyCallback(action="ask_progress", fields="progress_score").pack())
     builder.button(text="Hours",
                    callback_data=MyCallback(action="ask_hours", fields="mood_score").pack())
+
+    return builder.as_markup()
+
+def create_private_reply_buttons():
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="Only private")
+    builder.button(text="Only public")
+    builder.button(text="All")
 
     return builder.as_markup()
 
@@ -57,6 +68,22 @@ async def get_all_entries(message: types.Message, state: FSMContext):
         await message.answer(f"User didn't authorize. Use command /login for authorize")
         await state.clear()
         return
+
+    await state.update_data(
+        filters={
+            "private": None,
+            "target_date": None,
+            "min_mood_score": None,
+            "max_mood_score": None,
+            "min_progress_score": None,
+            "max_progress_score": None,
+            "min_learning_hours": None,
+            "max_learning_hours": None,
+        },
+        sort=None,
+        limit=20,
+        offset=0,
+    )
 
     await message.answer(f"Choose the filter method:", reply_markup=create_filter_buttons())
     # async with httpx.AsyncClient() as client:
@@ -82,8 +109,36 @@ async def get_all_entries(message: types.Message, state: FSMContext):
     #
     # await state.clear()
 
-# @router.callback_query(MyCallback.filter(F.action == "ask_private"))
-# async def ask_private(cb: CallbackQuery, callback_data: MyCallback):
+@router.callback_query(MyCallback.filter(F.action == "ask_private"))
+async def ask_private(cb: CallbackQuery, state: FSMContext):
+    await state.set_state(EntriesState.waiting_private)
+    await cb.message.answer(
+        "Choose the private:",
+        reply_markup = create_private_reply_buttons()
+    )
+    await cb.answer()
+
+@router.message(EntriesState.waiting_private)
+async def set_private(message: types.Message, state: FSMContext):
+    text = message.text
+
+    if text == "All":
+        value = None
+    elif text == "Only private":
+        value = True
+    elif text == "Only public":
+        value = False
+    else:
+        return
+
+    data = await state.get_data()
+    data["filters"]["private"] = value
+    await state.update_data(data)
+
+    await message.answer(
+        "Private filter updated ✅",
+        reply_markup = ReplyKeyboardRemove(),
+    )
 
 @router.message(Command("get_entry"))
 async def start_entry(message: types.Message, state: FSMContext):
