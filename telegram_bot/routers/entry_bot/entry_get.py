@@ -1,3 +1,4 @@
+from datetime import date, timedelta, datetime
 from aiogram import Router, types, F
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.state import StatesGroup, State
@@ -24,6 +25,14 @@ class MyCallback(CallbackData, prefix="entries"):
 
 class EntriesState(StatesGroup):
     waiting_private = State()
+    waiting_date = State()
+
+def is_valid_date(s: str) -> bool:
+    try:
+        datetime.strptime(s, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
 
 def create_filter_buttons():
     builder = InlineKeyboardBuilder()
@@ -42,9 +51,18 @@ def create_filter_buttons():
 
 def create_private_reply_buttons():
     builder = ReplyKeyboardBuilder()
+
     builder.button(text="Only private")
     builder.button(text="Only public")
     builder.button(text="All")
+
+    return builder.as_markup()
+
+def create_date_reply_buttons():
+    builder = ReplyKeyboardBuilder()
+
+    builder.button(text="Today")
+    builder.button(text="Yesterday")
 
     return builder.as_markup()
 
@@ -85,7 +103,10 @@ async def get_all_entries(message: types.Message, state: FSMContext):
         offset=0,
     )
 
-    await message.answer(f"Choose the filter method:", reply_markup=create_filter_buttons())
+    await message.answer(
+        f"Choose the filter method:",
+        reply_markup=create_filter_buttons()
+    )
     # async with httpx.AsyncClient() as client:
     #     response = await client.get(API_ALL_URL, headers={"Authorization": f"Bearer {token}"})
     #
@@ -129,6 +150,7 @@ async def set_private(message: types.Message, state: FSMContext):
     elif text == "Only public":
         value = False
     else:
+        await message.answer("Choose from buttons, try again:")
         return
 
     data = await state.get_data()
@@ -137,6 +159,38 @@ async def set_private(message: types.Message, state: FSMContext):
 
     await message.answer(
         "Private filter updated ✅",
+        reply_markup = ReplyKeyboardRemove(),
+    )
+
+@router.callback_query(MyCallback.filter(F.action == "ask_date"))
+async def ask_date(cb: CallbackQuery, state: FSMContext):
+    await state.set_state(EntriesState.waiting_date)
+    await cb.message.answer(
+        "Choice the day or enter your own in (YYYY-MM-DD) format:",
+        reply_markup = create_date_reply_buttons()
+    )
+    await cb.answer()
+
+@router.message(EntriesState.waiting_date)
+async def set_date(message: types.Message, state: FSMContext):
+    text = message.text
+
+    if text == "Today":
+        d = date.today()
+    elif text == "Yesterday":
+        d = date.today() - timedelta(days=1)
+    elif is_valid_date(text):
+        d = datetime.strptime(text, "%Y-%m-%d")
+    else:
+        await message.answer("Incorrect date format ❌, try again:")
+        return
+
+    data = await state.get_data()
+    data["filters"]["date"] = d
+    await state.update_data(data)
+
+    await message.answer(
+        "Date filter updated ✅",
         reply_markup = ReplyKeyboardRemove(),
     )
 
