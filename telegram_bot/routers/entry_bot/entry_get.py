@@ -29,6 +29,10 @@ class EntriesState(StatesGroup):
     waiting_mood = State()
     waiting_progress = State()
     waiting_hours = State()
+    sort_date = State()
+    sort_mood = State()
+    sort_progress = State()
+    sort_hours = State()
 
 def is_valid_date(s: str) -> bool:
     try:
@@ -36,6 +40,37 @@ def is_valid_date(s: str) -> bool:
         return True
     except ValueError:
         return False
+
+def create_choose_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="Filtering",
+                   callback_data=MyCallback(action="ask_filter", fields="filter").pack())
+    builder.button(text="Sorting",
+                   callback_data=MyCallback(action="ask_sort", fields="sort").pack())
+
+    return builder.as_markup()
+
+def create_sort_buttons():
+    builder = InlineKeyboardBuilder()
+    builder.button(text="Date",
+                   callback_data=MyCallback(action="sort_date", fields="created_at").pack())
+    builder.button(text="Mood",
+                   callback_data=MyCallback(action="sort_mood", fields="mood").pack())
+    builder.button(text="Progress",
+                   callback_data=MyCallback(action="sort_progress", fields="progress").pack())
+    builder.button(text="Hours",
+                   callback_data=MyCallback(action="sort_hours", fields="learning").pack())
+
+    return builder.as_markup()
+
+def create_choose_reply_buttons():
+    builder = ReplyKeyboardBuilder()
+
+    builder.button(text="Ascending")
+    builder.button(text="Descending")
+
+    return builder.as_markup()
 
 def create_filter_buttons():
     builder = InlineKeyboardBuilder()
@@ -90,25 +125,9 @@ async def get_all_entries(message: types.Message, state: FSMContext):
         await state.clear()
         return
 
-    await state.update_data(
-        filters={
-            "private": None,
-            "target_date": None,
-            "min_mood_score": None,
-            "max_mood_score": None,
-            "min_progress_score": None,
-            "max_progress_score": None,
-            "min_learning_hours": None,
-            "max_learning_hours": None,
-        },
-        sort=None,
-        limit=20,
-        offset=0,
-    )
-
     await message.answer(
-        f"Choose the filter method:",
-        reply_markup=create_filter_buttons()
+        f"Choose the sorting or filtering of result:",
+        reply_markup=create_choose_buttons()
     )
     # async with httpx.AsyncClient() as client:
     #     response = await client.get(API_ALL_URL, headers={"Authorization": f"Bearer {token}"})
@@ -133,6 +152,15 @@ async def get_all_entries(message: types.Message, state: FSMContext):
     #
     # await state.clear()
 
+@router.callback_query(MyCallback.filter(F.action == "ask_filter"))
+async def ask_filter(cb: CallbackQuery):
+    await cb.message.answer(
+        "Choose the filter method:",
+        reply_markup=create_filter_buttons()
+    )
+
+    await cb.answer()
+
 @router.callback_query(MyCallback.filter(F.action == "ask_private"))
 async def ask_private(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_private)
@@ -156,10 +184,7 @@ async def set_private(message: types.Message, state: FSMContext):
         await message.answer("Choose from buttons, try again:")
         return
 
-    data = await state.get_data()
-    data["filters"]["private"] = value
-    await state.update_data(data)
-
+    await state.update_data(private=value)
     await message.answer(
         "Private filter updated ✅",
         reply_markup = ReplyKeyboardRemove(),
@@ -193,9 +218,7 @@ async def set_date(message: types.Message, state: FSMContext):
         await message.answer("Incorrect date format ❌, try again:")
         return
 
-    data = await state.get_data()
-    data["filters"]["date"] = d
-    await state.update_data(data)
+    await state.update_data(date=d)
 
     await message.answer(
         "Date filter updated ✅",
@@ -225,11 +248,7 @@ async def set_mood(message: types.Message, state: FSMContext):
         await message.answer("Wrong input, try again:")
         return
 
-    data = await state.get_data()
-    filters = data["filters"]
-    filters["min_mood_score"] = low
-    filters["max_mood_score"] = high
-    await state.update_data(filters=filters)
+    await state.update_data(min_mood_score=low, max_mood_score=high)
     await message.answer("Mood filter updated ✅")
 
 @router.callback_query(MyCallback.filter(F.action == "ask_progress"))
@@ -250,11 +269,7 @@ async def set_progress(message: types.Message, state: FSMContext):
         await message.answer("Wrong input, try again:")
         return
 
-    data = await state.get_data()
-    filters = data["filters"]
-    filters["min_progress_score"] = low
-    filters["max_progress_score"] = high
-    await state.update_data(filters=filters)
+    await state.update_data(min_progress_score=low, max_progress_score=high)
     await message.answer("Progress filter updated ✅")
 
     await message.answer(
@@ -280,17 +295,109 @@ async def set_hours(message: types.Message, state: FSMContext):
         await message.answer("Wrong input, try again:")
         return
 
-    data = await state.get_data()
-    filters = data["filters"]
-    filters["min_learning_hours"] = low
-    filters["max_learning_hours"] = high
-    await state.update_data(filters=filters)
+    await state.update_data(min_learning_hours=low, max_learning_hours=high)
     await message.answer("Hours filter updated ✅")
 
     await message.answer(
         "Choose next filter method or show the result:",
         reply_markup = create_filter_buttons()
     )
+
+@router.callback_query(MyCallback.filter(F.action == "ask_sort"))
+async def ask_sort(cb: CallbackQuery):
+    await cb.message.answer(
+        "Choose the sorting method:",
+        reply_markup=create_sort_buttons()
+    )
+    await cb.answer()
+
+@router.callback_query(MyCallback.filter(F.action == "sort_date"))
+async def sort_date(cb: CallbackQuery, state: FSMContext):
+    await state.set_state(EntriesState.sort_date)
+    await cb.message.answer(
+        "Choose the sorting method:",
+        reply_markup=create_choose_reply_buttons()
+    )
+    await cb.answer()
+
+@router.message(EntriesState.sort_date)
+async def set_sort_date(message: types.Message, state: FSMContext):
+    text = message.text
+    field = asc_or_desc(text, sort="created_at")
+
+    if not field:
+        await message.answer("Wrong input, try again:")
+        return
+
+    await state.update_data(sort=field)
+    await message.answer("Sorting by date is enabled ✅",
+                         reply_markup = ReplyKeyboardRemove(),)
+
+@router.callback_query(MyCallback.filter(F.action == "sort_mood"))
+async def sort_mood(cb: CallbackQuery, state: FSMContext):
+    await state.set_state(EntriesState.sort_mood)
+    await cb.message.answer(
+        "Choose the sorting method:",
+        reply_markup=create_choose_reply_buttons()
+    )
+    await cb.answer()
+
+@router.message(EntriesState.sort_mood)
+async def set_sort_mood(message: types.Message, state: FSMContext):
+    text = message.text
+    field = asc_or_desc(text, sort="mood")
+
+    if not field:
+        await message.answer("Wrong input, try again:")
+        return
+
+    await state.update_data(sort=field)
+    await message.answer("Sorting by mood is enabled ✅",
+                         reply_markup = ReplyKeyboardRemove(),)
+
+@router.callback_query(MyCallback.filter(F.action == "sort_progress"))
+async def sort_progress(cb: CallbackQuery, state: FSMContext):
+    await state.set_state(EntriesState.sort_progress)
+    await cb.message.answer(
+        "Choose the sorting method:",
+        reply_markup=create_choose_reply_buttons()
+    )
+    await cb.answer()
+
+@router.message(EntriesState.sort_progress)
+async def set_sort_progress(message: types.Message, state: FSMContext):
+    text = message.text
+    field = asc_or_desc(text, sort="progress")
+
+    if not field:
+        await message.answer("Wrong input, try again:")
+        return
+
+    await state.update_data(sort=field)
+    await message.answer("Sorting by progress is enabled ✅",
+                         reply_markup = ReplyKeyboardRemove())
+
+@router.callback_query(MyCallback.filter(F.action == "sort_hours"))
+async def sort_hours(cb: CallbackQuery, state: FSMContext):
+    await state.set_state(EntriesState.sort_hours)
+    await cb.message.answer(
+        "Choose the sorting method:",
+        reply_markup=create_choose_reply_buttons()
+    )
+    await cb.answer()
+
+@router.message(EntriesState.sort_hours)
+async def set_sort_hours(message: types.Message, state: FSMContext):
+    text = message.text
+    field = asc_or_desc(text, sort="hours")
+
+    if not field:
+        await message.answer("Wrong input, try again:")
+        return
+
+    await state.update_data(sort=field)
+    await message.answer("Sorting by hours is enabled ✅",
+                         reply_markup = ReplyKeyboardRemove(),)
 
 @router.message(Command("get_entry"))
 async def start_entry(message: types.Message, state: FSMContext):
@@ -349,3 +456,11 @@ async def get_entry(message: types.Message, state: FSMContext):
         await message.answer(f"Error:{response.text}")
 
     await state.clear()
+
+def asc_or_desc(text, sort: str):
+    if text == "Ascending":
+        return sort
+    elif text == "Descending":
+        return f"-{sort}"
+    else:
+        return False
