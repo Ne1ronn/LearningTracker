@@ -14,7 +14,6 @@ API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 API_ALL_URL = "http://127.0.0.1:8000/entries"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
-API_DATE_URL = "http://127.0.0.1:8000/entries/date/{target_date}"
 
 class GetEntryState(StatesGroup):
     waiting_id = State()
