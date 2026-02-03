@@ -106,14 +106,15 @@ def create_date_reply_buttons():
 
     return builder.as_markup()
 
-@router.message(Command("get_all_entries"))
-async def get_all_entries(message: types.Message, state: FSMContext):
-    telegram_id = message.from_user.id
+@router.callback_query(F.data == "get_all_entries")
+async def get_all_entries(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
+    telegram_id = cb.from_user.id
     async with httpx.AsyncClient() as client:
         response = await client.get(API_GET_URL.format(telegram_id=telegram_id))
 
     if response.status_code != 200:
-        await message.answer(f"User with telegram id {telegram_id} unauthorized. Use command /login for authorize")
+        await cb.message.answer(f"User with telegram id {telegram_id} unauthorized. Use command /login for authorize")
         await state.clear()
         return
 
@@ -123,7 +124,7 @@ async def get_all_entries(message: types.Message, state: FSMContext):
         response = await client.get(API_TOKEN_URL, headers={"Authorization": f"Bearer {token}"})
 
     if response.status_code != 200:
-        await message.answer(f"User didn't authorize. Use command /login for authorize")
+        await cb.message.answer(f"User didn't authorize. Use command /login for authorize")
         await state.clear()
         return
 
@@ -140,7 +141,7 @@ async def get_all_entries(message: types.Message, state: FSMContext):
         "sort": None,
     })
 
-    await message.answer(
+    await cb.message.answer(
         f"Choose the sorting or filtering of result, or show the result:",
         reply_markup=create_choose_buttons(),
     )
@@ -182,6 +183,7 @@ async def show_result(cb: CallbackQuery, state: FSMContext):
         "Want to enhance filtering and sorting?",
         reply_markup=create_choose_buttons()
     )
+    await cb.answer()
 
 @router.callback_query(MyCallback.filter(F.action == "ask_filter"))
 async def ask_filter(cb: CallbackQuery):
@@ -457,14 +459,15 @@ async def set_sort_hours(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
-@router.message(Command("get_entry"))
-async def start_entry(message: types.Message, state: FSMContext):
-    telegram_id = message.from_user.id
+@router.callback_query(F.data == "get_entry")
+async def start_entry(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
+    telegram_id = cb.from_user.id
     async with httpx.AsyncClient() as client:
         response = await client.get(API_GET_URL.format(telegram_id=telegram_id))
 
     if response.status_code != 200:
-        await message.answer(f"User with telegram id {telegram_id} unauthorized. Use command /login for authorize")
+        await cb.message.answer(f"User with telegram id {telegram_id} unauthorized. Use command /login for authorize")
         await state.clear()
         return
 
@@ -474,12 +477,12 @@ async def start_entry(message: types.Message, state: FSMContext):
         response = await client.get(API_TOKEN_URL, headers={"Authorization": f"Bearer {token}"})
 
     if response.status_code != 200:
-        await message.answer(f"User didn't authorize. Use command /login for authorize")
+        await cb.message.answer(f"User didn't authorize. Use command /login for authorize")
         await state.clear()
         return
 
     await state.update_data(token=token)
-    await message.answer("Enter the id of entry:")
+    await cb.message.answer("Enter the id of entry:")
     await state.set_state(GetEntryState.waiting_id)
 
 @router.message(GetEntryState.waiting_id)

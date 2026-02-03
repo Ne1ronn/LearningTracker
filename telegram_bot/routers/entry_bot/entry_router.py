@@ -9,12 +9,3 @@ from . import entry_delete
 from . import entry_update
 from . import entry_patch
 from . import summary
-
-@router.message(Command("start_entry"))
-async def start(message: types.Message):
-    await message.answer("Hello, what do you want?\n"
-                         "Add entry? Command /add_entry\n"
-                         "To get? Command /get_entry?\n"
-                         "To update? Command /update_entry\n"
-                         "To update some attributes? Command /edit_entry\n"
-                         "Or even delete? Command /delete_entry")

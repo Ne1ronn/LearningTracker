@@ -18,6 +18,7 @@ def create_crud_reply_buttons():
     builder.button(text="✏️Edit entry", callback_data="patch_entry")
     builder.button(text="🔁Completely update entry", callback_data="update_entry")
     builder.button(text="🗑Delete entry", callback_data="delete_entry")
+    builder.button(text="📊Summary", callback_data="summary")
 
     builder.adjust(2)
     return builder.as_markup()
