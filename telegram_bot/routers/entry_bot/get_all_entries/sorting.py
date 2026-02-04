@@ -2,7 +2,7 @@ from aiogram import types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 from ..entry_states import EntriesState
-from ..keyboards import create_choose_buttons, create_sort_buttons, create_choose_reply_buttons
+from telegram_bot.keyboards import create_choose_buttons, create_sort_buttons, create_choose_reply_buttons
 from ..entry_router import router
 
 @router.callback_query(F.data == "ask_sort")

@@ -12,6 +12,7 @@ API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
 @router.callback_query(F.data == "delete_entry")
 async def get_id(cb: CallbackQuery, state: FSMContext):
+    await state.clear()
     await cb.answer()
     telegram_id = cb.from_user.id
     async with httpx.AsyncClient() as client:

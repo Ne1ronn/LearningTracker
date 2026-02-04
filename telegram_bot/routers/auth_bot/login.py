@@ -15,6 +15,7 @@ class UserLoginForm(StatesGroup):
 
 @router.message(Command("login"))
 async def wait_username(message: types.Message, state: FSMContext):
+    await state.clear()
     await message.answer("Enter the username of your user:")
     await state.set_state(UserLoginForm.username)
 

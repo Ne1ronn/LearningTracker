@@ -1,7 +1,7 @@
 from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from ..keyboards import create_choose_buttons
+from telegram_bot.keyboards import create_choose_buttons
 from ..entry_router import router
 import httpx
 
@@ -11,6 +11,7 @@ API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
 @router.callback_query(F.data == "get_all_entries")
 async def get_all_entries(cb: CallbackQuery, state: FSMContext):
+    await state.clear()
     await cb.answer()
     telegram_id = cb.from_user.id
     async with httpx.AsyncClient() as client:

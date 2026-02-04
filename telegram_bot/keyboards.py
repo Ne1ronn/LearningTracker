@@ -58,3 +58,17 @@ def create_date_reply_buttons():
     builder.button(text="Clear filter")
 
     return builder.as_markup()
+
+def create_crud_reply_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="➕Add new entry", callback_data="add_entry")
+    builder.button(text="🔍Get entry", callback_data="get_entry")
+    builder.button(text="📋Get all entries", callback_data="get_all_entries")
+    builder.button(text="✏️Edit entry", callback_data="patch_entry")
+    builder.button(text="🔁Completely update entry", callback_data="update_entry")
+    builder.button(text="🗑Delete entry", callback_data="delete_entry")
+    builder.button(text="📊Summary", callback_data="summary")
+
+    builder.adjust(2)
+    return builder.as_markup()

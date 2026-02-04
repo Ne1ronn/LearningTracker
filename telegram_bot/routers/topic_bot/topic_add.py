@@ -12,6 +12,7 @@ API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
 
 @router.message(Command("add_topic"))
 async def start_topic(message: types.Message, state: FSMContext):
+    await state.clear()
     telegram_id = message.from_user.id
     async with httpx.AsyncClient() as client:
         response = await client.get(API_GET_URL.format(telegram_id=telegram_id))

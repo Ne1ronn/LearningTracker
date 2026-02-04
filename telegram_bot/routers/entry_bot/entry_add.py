@@ -11,6 +11,8 @@ API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
 @router.callback_query(F.data == "add_entry")
 async def start_entry(cb: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await cb.answer()
     telegram_id = cb.from_user.id
     async with httpx.AsyncClient() as client:
         response = await client.get(API_GET_URL.format(telegram_id=telegram_id))

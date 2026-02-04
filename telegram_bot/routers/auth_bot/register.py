@@ -17,6 +17,7 @@ class UserForm(StatesGroup):
 
 @router.message(Command("register"))
 async def register(message: types.Message, state: FSMContext):
+    await state.clear()
     await message.answer("Enter the username:")
     await state.set_state(UserForm.username)
 
