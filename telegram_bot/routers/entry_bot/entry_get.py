@@ -1,10 +1,9 @@
 from datetime import date, timedelta, datetime
 from aiogram import types, F
-from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
-
+from .entry_states import EntriesState, GetEntryState
 from .entry_router import router
 import httpx
 
@@ -12,20 +11,6 @@ API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 API_ALL_URL = "http://127.0.0.1:8000/entries"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
-
-class GetEntryState(StatesGroup):
-    waiting_id = State()
-
-class EntriesState(StatesGroup):
-    waiting_private = State()
-    waiting_date = State()
-    waiting_mood = State()
-    waiting_progress = State()
-    waiting_hours = State()
-    sort_date = State()
-    sort_mood = State()
-    sort_progress = State()
-    sort_hours = State()
 
 def is_valid_date(s: str) -> bool:
     try:

@@ -1,5 +1,5 @@
 from aiogram import types, F
-from aiogram.fsm.state import StatesGroup, State
+from .entry_states import DeleteEntryState
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
@@ -9,9 +9,6 @@ import httpx
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
-
-class DeleteEntryState(StatesGroup):
-    waiting_id = State()
 
 @router.callback_query(F.data == "delete_entry")
 async def get_id(cb: CallbackQuery, state: FSMContext):

@@ -1,5 +1,5 @@
-from aiogram import Router, types
-from aiogram.fsm.state import StatesGroup, State
+from aiogram import types
+from .topic_states import UpdateTopicForm
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from .topic_router import router
@@ -9,14 +9,6 @@ API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
-
-class UpdateTopicForm(StatesGroup):
-    waiting_id = State()
-    title = State()
-    skill = State()
-    need = State()
-    progress_score = State()
-    is_active = State()
 
 @router.message(Command("update_topic"))
 async def start_update(message: types.Message, state: FSMContext):

@@ -1,5 +1,5 @@
 from aiogram import types, F
-from aiogram.fsm.state import StatesGroup, State
+from .entry_states import PatchEntryForm
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
@@ -10,12 +10,6 @@ API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 API_PERMISSION_URL = "http://127.0.0.1:8000/entries/{entry_id}/edit"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
-
-class PatchEntryForm(StatesGroup):
-    waiting_id = State()
-    waiting_attribute = State()
-    edit_attribute = State()
-    waiting_confirm = State()
 
 @router.callback_query(F.data == "patch_entry")
 async def start_patch(cb: CallbackQuery, state: FSMContext):

@@ -1,5 +1,5 @@
-from aiogram import Router, types
-from aiogram.fsm.state import StatesGroup, State
+from aiogram import types
+from .topic_states import GetTopicState
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from .topic_router import router
@@ -8,9 +8,6 @@ import httpx
 API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
-
-class GetTopicState(StatesGroup):
-    waiting_id = State()
 
 @router.message(Command("get_topic"))
 async def start_get(message: types.Message, state: FSMContext):

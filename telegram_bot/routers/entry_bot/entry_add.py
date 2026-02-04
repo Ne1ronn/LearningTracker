@@ -1,5 +1,5 @@
 from aiogram import types, F
-from aiogram.fsm.state import StatesGroup, State
+from .entry_states import EntryForm
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from .entry_router import router
@@ -8,17 +8,6 @@ import httpx
 API_URL = "http://127.0.0.1:8000/entries"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
-
-class EntryForm(StatesGroup):
-    title = State()
-    description = State()
-    tags = State()
-    mood_score = State()
-    progress_score = State()
-    learning_hours = State()
-    private = State()
-    waiting_ids = State()
-    topic_ids = State()
 
 @router.callback_query(F.data == "add_entry")
 async def start_entry(cb: CallbackQuery, state: FSMContext):

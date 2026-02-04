@@ -1,5 +1,5 @@
-from aiogram import Router, types
-from aiogram.fsm.state import StatesGroup, State
+from aiogram import types
+from .topic_states import PatchTopicForm
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from .topic_router import router
@@ -9,12 +9,6 @@ API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
-
-class PatchTopicForm(StatesGroup):
-    waiting_id = State()
-    waiting_attribute = State()
-    edit_attribute = State()
-    waiting_confirm = State()
 
 @router.message(Command("edit_topic"))
 async def start_patch(message: types.Message, state: FSMContext):
