@@ -2,8 +2,8 @@ from datetime import date, timedelta, datetime
 from aiogram import types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from .entry_states import EntriesState, GetEntryState
+from .keyboards import create_date_reply_buttons, create_filter_buttons, create_choose_buttons, create_sort_buttons, create_choose_reply_buttons, create_private_reply_buttons
 from .entry_router import router
 import httpx
 
@@ -18,65 +18,6 @@ def is_valid_date(s: str) -> bool:
         return True
     except ValueError:
         return False
-
-def create_choose_buttons():
-    builder = InlineKeyboardBuilder()
-
-    builder.button(text="Filtering", callback_data="ask_filter")
-    builder.button(text="Sorting", callback_data="ask_sort")
-    builder.button(text="Result", callback_data="show_result")
-
-    return builder.as_markup()
-
-def create_sort_buttons():
-    builder = InlineKeyboardBuilder()
-    builder.button(text="Date", callback_data="sort_date")
-    builder.button(text="Mood", callback_data="sort_mood")
-    builder.button(text="Progress", callback_data="sort_progress")
-    builder.button(text="Hours", callback_data="sort_hours")
-
-    return builder.as_markup()
-
-def create_choose_reply_buttons():
-    builder = ReplyKeyboardBuilder()
-
-    builder.button(text="Ascending")
-    builder.button(text="Descending")
-
-    return builder.as_markup()
-
-def create_filter_buttons():
-    builder = InlineKeyboardBuilder()
-    builder.button(text="Private",
-                   callback_data="ask_private")
-    builder.button(text="Date",
-                   callback_data="ask_date")
-    builder.button(text="Mood",
-                   callback_data="ask_mood")
-    builder.button(text="Progress",
-                   callback_data="ask_progress")
-    builder.button(text="Hours",
-                   callback_data="ask_hours")
-
-    return builder.as_markup()
-
-def create_private_reply_buttons():
-    builder = ReplyKeyboardBuilder()
-
-    builder.button(text="Only private")
-    builder.button(text="Only public")
-    builder.button(text="All")
-
-    return builder.as_markup()
-
-def create_date_reply_buttons():
-    builder = ReplyKeyboardBuilder()
-
-    builder.button(text="Today")
-    builder.button(text="Yesterday")
-    builder.button(text="Clear filter")
-
-    return builder.as_markup()
 
 @router.callback_query(F.data == "get_all_entries")
 async def get_all_entries(cb: CallbackQuery, state: FSMContext):
