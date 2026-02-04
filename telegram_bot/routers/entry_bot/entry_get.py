@@ -1,9 +1,7 @@
 from datetime import date, timedelta, datetime
 from aiogram import types, F
-from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import Command
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
@@ -17,10 +15,6 @@ API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
 class GetEntryState(StatesGroup):
     waiting_id = State()
-
-class MyCallback(CallbackData, prefix="entries"):
-    action: str
-    fields: str | None = None
 
 class EntriesState(StatesGroup):
     waiting_private = State()
@@ -43,25 +37,18 @@ def is_valid_date(s: str) -> bool:
 def create_choose_buttons():
     builder = InlineKeyboardBuilder()
 
-    builder.button(text="Filtering",
-                   callback_data=MyCallback(action="ask_filter", fields="filter").pack())
-    builder.button(text="Sorting",
-                   callback_data=MyCallback(action="ask_sort", fields="sort").pack())
-    builder.button(text="Result",
-                   callback_data=MyCallback(action="show_result", fields="result").pack())
+    builder.button(text="Filtering", callback_data="ask_filter")
+    builder.button(text="Sorting", callback_data="ask_sort")
+    builder.button(text="Result", callback_data="show_result")
 
     return builder.as_markup()
 
 def create_sort_buttons():
     builder = InlineKeyboardBuilder()
-    builder.button(text="Date",
-                   callback_data=MyCallback(action="sort_date", fields="created_at").pack())
-    builder.button(text="Mood",
-                   callback_data=MyCallback(action="sort_mood", fields="mood").pack())
-    builder.button(text="Progress",
-                   callback_data=MyCallback(action="sort_progress", fields="progress").pack())
-    builder.button(text="Hours",
-                   callback_data=MyCallback(action="sort_hours", fields="learning").pack())
+    builder.button(text="Date", callback_data="sort_date")
+    builder.button(text="Mood", callback_data="sort_mood")
+    builder.button(text="Progress", callback_data="sort_progress")
+    builder.button(text="Hours", callback_data="sort_hours")
 
     return builder.as_markup()
 
@@ -76,15 +63,15 @@ def create_choose_reply_buttons():
 def create_filter_buttons():
     builder = InlineKeyboardBuilder()
     builder.button(text="Private",
-                   callback_data=MyCallback(action="ask_private", fields="private").pack())
+                   callback_data="ask_private")
     builder.button(text="Date",
-                   callback_data=MyCallback(action="ask_date", fields="date").pack())
+                   callback_data="ask_date")
     builder.button(text="Mood",
-                   callback_data=MyCallback(action="ask_mood", fields="mood_score").pack())
+                   callback_data="ask_mood")
     builder.button(text="Progress",
-                   callback_data=MyCallback(action="ask_progress", fields="progress_score").pack())
+                   callback_data="ask_progress")
     builder.button(text="Hours",
-                   callback_data=MyCallback(action="ask_hours", fields="learning_hours").pack())
+                   callback_data="ask_hours")
 
     return builder.as_markup()
 
@@ -146,7 +133,7 @@ async def get_all_entries(cb: CallbackQuery, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
-@router.callback_query(MyCallback.filter(F.action == "show_result"))
+@router.callback_query(F.data == "show_result")
 async def show_result(cb: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     token = data.pop("token")
@@ -185,7 +172,7 @@ async def show_result(cb: CallbackQuery, state: FSMContext):
     )
     await cb.answer()
 
-@router.callback_query(MyCallback.filter(F.action == "ask_filter"))
+@router.callback_query(F.data == "ask_filter")
 async def ask_filter(cb: CallbackQuery):
     await cb.message.answer(
         "Choose the filter method:",
@@ -194,7 +181,7 @@ async def ask_filter(cb: CallbackQuery):
 
     await cb.answer()
 
-@router.callback_query(MyCallback.filter(F.action == "ask_private"))
+@router.callback_query(F.data == "ask_private")
 async def ask_private(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_private)
     await cb.message.answer(
@@ -228,7 +215,7 @@ async def set_private(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
-@router.callback_query(MyCallback.filter(F.action == "ask_date"))
+@router.callback_query(F.data == "ask_date")
 async def ask_date(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_date)
     await cb.message.answer(
@@ -265,7 +252,7 @@ async def set_date(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
-@router.callback_query(MyCallback.filter(F.action == "ask_mood"))
+@router.callback_query(F.data == "ask_mood")
 async def ask_mood(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_mood)
     await cb.message.answer(
@@ -291,7 +278,7 @@ async def set_mood(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
-@router.callback_query(MyCallback.filter(F.action == "ask_progress"))
+@router.callback_query(F.data == "ask_progress")
 async def ask_progress(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_progress)
     await cb.message.answer(
@@ -317,7 +304,7 @@ async def set_progress(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
-@router.callback_query(MyCallback.filter(F.action == "ask_hours"))
+@router.callback_query(F.data == "ask_hours")
 async def ask_hours(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_hours)
     await cb.message.answer(
@@ -343,7 +330,7 @@ async def set_hours(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
-@router.callback_query(MyCallback.filter(F.action == "ask_sort"))
+@router.callback_query(F.data == "ask_sort")
 async def ask_sort(cb: CallbackQuery):
     await cb.message.answer(
         "Choose the sorting method:",
@@ -351,7 +338,7 @@ async def ask_sort(cb: CallbackQuery):
     )
     await cb.answer()
 
-@router.callback_query(MyCallback.filter(F.action == "sort_date"))
+@router.callback_query(F.data == "sort_date")
 async def sort_date(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.sort_date)
     await cb.message.answer(
@@ -378,7 +365,7 @@ async def set_sort_date(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
-@router.callback_query(MyCallback.filter(F.action == "sort_mood"))
+@router.callback_query(F.data == "sort_mood")
 async def sort_mood(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.sort_mood)
     await cb.message.answer(
@@ -405,7 +392,7 @@ async def set_sort_mood(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
-@router.callback_query(MyCallback.filter(F.action == "sort_progress"))
+@router.callback_query(F.data == "sort_progress")
 async def sort_progress(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.sort_progress)
     await cb.message.answer(
@@ -432,7 +419,7 @@ async def set_sort_progress(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
-@router.callback_query(MyCallback.filter(F.action == "sort_hours"))
+@router.callback_query(F.data == "sort_hours")
 async def sort_hours(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.sort_hours)
     await cb.message.answer(
