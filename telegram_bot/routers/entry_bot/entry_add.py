@@ -111,7 +111,6 @@ async def waiting_ids(message: types.Message, state: FSMContext):
     else:
         await add_entry(message, state)
 
-
 @router.message(EntryForm.topic_ids)
 async def add_topics(message: types.Message, state: FSMContext):
     text = message.text.strip()
@@ -129,7 +128,6 @@ async def add_topics(message: types.Message, state: FSMContext):
     topic_ids = list(map(int, items))
     await state.update_data(topic_ids=topic_ids)
     await add_entry(message, state)
-
 
 async def add_entry(message: types.Message, state: FSMContext):
     data = await state.get_data()
