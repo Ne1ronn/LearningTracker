@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import List, Optional
 from pydantic.v1 import Field
 
 class TopicAddSchema(BaseModel):

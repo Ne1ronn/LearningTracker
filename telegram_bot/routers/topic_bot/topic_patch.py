@@ -11,26 +11,8 @@ API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
 
 @router.message(Command("edit_topic"))
-async def start_patch(message: types.Message, state: FSMContext):
+async def start_patch(message: types.Message, state: FSMContext, token: str):
     await state.clear()
-    telegram_id = message.from_user.id
-    async with httpx.AsyncClient() as client:
-        response = await client.get(API_GET_URL.format(telegram_id=telegram_id))
-
-    if response.status_code != 200:
-        await message.answer(f"User with telegram id {telegram_id} unauthorized. Use command /login for authorize")
-        await state.clear()
-        return
-
-    token = response.json().get("access_token")
-
-    async with httpx.AsyncClient() as client:
-        response = await client.get(API_TOKEN_URL, headers={"Authorization": f"Bearer {token}"})
-
-    if response.status_code != 200:
-        await message.answer(f"User didn't authorize. Use command /login for authorize")
-        await state.clear()
-        return
 
     async with httpx.AsyncClient() as client:
         response = await client.get(API_ADMIN_URL, headers={"Authorization": f"Bearer {token}"})

@@ -1,11 +1,8 @@
-from typing import Annotated
 from sqlalchemy import select
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status
 from database.setup import SessionDep
 from models.topic_model import TopicModel
-from models.user_model import UserModel
 from schemas.topic_schema import TopicAddSchema, UpdateTopicSchema
-from api.auth.auth_crud import get_current_user, require_role
 
 
 async def add_topic(session: SessionDep, topic: TopicAddSchema):

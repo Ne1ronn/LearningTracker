@@ -1,9 +1,5 @@
 from pydantic import BaseModel
 from datetime import datetime
-from pydantic import Field
-from typing import List, Optional
-
-from schemas.topic_schema import TopicSchema
 
 class TelegramTokenAddSchema(BaseModel):
     user_id: int
