@@ -7,8 +7,6 @@ from .entry_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
-API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
-API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
 @router.callback_query(F.data == "delete_entry")
 async def get_id(cb: CallbackQuery, state: FSMContext, token: str):

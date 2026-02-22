@@ -8,8 +8,6 @@ import httpx
 
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 API_PERMISSION_URL = "http://127.0.0.1:8000/entries/{entry_id}/edit"
-API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
-API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
 @router.callback_query(F.data == "update_entry")
 async def start_update(cb: CallbackQuery, state: FSMContext, token: str):

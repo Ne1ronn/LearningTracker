@@ -1,6 +1,4 @@
-from aiogram import Router, types
-from aiogram.filters import Command
-
+from aiogram import Router
 from ...middleware import AuthMiddleware
 
 router = Router()

@@ -6,8 +6,6 @@ from .topic_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
-API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
-API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
 
 @router.message(Command("edit_topic"))

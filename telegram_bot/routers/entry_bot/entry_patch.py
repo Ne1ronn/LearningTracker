@@ -8,8 +8,6 @@ import httpx
 
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 API_PERMISSION_URL = "http://127.0.0.1:8000/entries/{entry_id}/edit"
-API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
-API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
 @router.callback_query(F.data == "patch_entry")
 async def start_patch(cb: CallbackQuery, state: FSMContext, token: str):
@@ -31,7 +29,7 @@ async def get_entry(message: types.Message, state: FSMContext):
         return
 
     data = await state.get_data()
-    token = data["token"]
+    token = data.pop("token")
 
     async with httpx.AsyncClient() as client:
         response = await client.get(API_PERMISSION_URL.format(entry_id=entry_id), headers={"Authorization": f"Bearer {token}"})
