@@ -1,7 +1,8 @@
-from aiogram import types
+from aiogram import types, F
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import Command
+from aiogram.types import CallbackQuery
+
 from .auth_router import router
 import httpx
 
@@ -13,10 +14,12 @@ class UserLoginForm(StatesGroup):
     username = State()
     password = State()
 
-@router.message(Command("login"))
-async def wait_username(message: types.Message, state: FSMContext):
+@router.callback_query(F.data == "login")
+async def wait_username(cb: CallbackQuery, state: FSMContext):
     await state.clear()
-    await message.answer("Enter the username of your user:")
+    await cb.answer()
+
+    await cb.message.answer("Enter the username of your user:")
     await state.set_state(UserLoginForm.username)
 
 @router.message(UserLoginForm.username)

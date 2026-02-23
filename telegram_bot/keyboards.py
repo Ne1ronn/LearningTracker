@@ -72,3 +72,11 @@ def create_crud_reply_buttons():
 
     builder.adjust(2)
     return builder.as_markup()
+
+def create_auth_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="Sign in", callback_data="login")
+    builder.button(text="Register", callback_data="register")
+
+    return builder.as_markup()

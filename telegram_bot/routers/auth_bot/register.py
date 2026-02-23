@@ -1,7 +1,7 @@
-from aiogram import types
+from aiogram import types, F
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import Command
+from aiogram.types import CallbackQuery
 from email_validator import validate_email, EmailNotValidError
 from .auth_router import router
 import httpx
@@ -15,10 +15,12 @@ class UserForm(StatesGroup):
     email = State()
     hashed_password = State()
 
-@router.message(Command("register"))
-async def register(message: types.Message, state: FSMContext):
+@router.callback_query(F.data == "register")
+async def register(cb: CallbackQuery, state: FSMContext):
     await state.clear()
-    await message.answer("Enter the username:")
+    await cb.answer()
+
+    await cb.message.answer("Enter the username:")
     await state.set_state(UserForm.username)
 
 @router.message(UserForm.username)

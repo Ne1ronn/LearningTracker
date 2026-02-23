@@ -15,7 +15,6 @@ async def start_entry(cb: CallbackQuery, state: FSMContext, token: str):
     await state.update_data(token=token)
     await cb.message.answer("Enter the title of entry:")
     await state.set_state(EntryForm.title)
-    await cb.answer()
 
 @router.message(EntryForm.title)
 async def get_title(message: types.Message, state: FSMContext):
