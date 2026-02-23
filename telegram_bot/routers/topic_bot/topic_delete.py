@@ -1,18 +1,19 @@
-from aiogram import types
+from aiogram import types, F
+from aiogram.types import CallbackQuery
 from .topic_states import DeleteTopicState
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import Command
 from .topic_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
 
-@router.message(Command("delete_topic"))
-async def start_get(message: types.Message, state: FSMContext, token: str):
+@router.callback_query(F.data == "delete_topic")
+async def start_get(cb: CallbackQuery, state: FSMContext, token: str):
     await state.clear()
+    await cb.answer()
 
     await state.update_data(token=token)
-    await message.answer("Enter the id of topic:")
+    await cb.message.answer("Enter the id of topic:")
     await state.set_state(DeleteTopicState.waiting_id)
 
 @router.message(DeleteTopicState.waiting_id)

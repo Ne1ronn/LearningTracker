@@ -1,17 +1,18 @@
-from aiogram import types
+from aiogram import types, F
+from aiogram.types import CallbackQuery
 from .topic_states import GetTopicState
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import Command
 from .topic_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
 
-@router.message(Command("get_topic"))
-async def start_get(message: types.Message, state: FSMContext):
+@router.callback_query(F.data == "get_topic")
+async def start_get(cb: CallbackQuery, state: FSMContext):
     await state.clear()
+    await cb.answer()
 
-    await message.answer("Enter the id of topic:")
+    await cb.message.answer("Enter the id of topic:")
     await state.set_state(GetTopicState.waiting_id)
 
 @router.message(GetTopicState.waiting_id)

@@ -59,7 +59,7 @@ def create_date_reply_buttons():
 
     return builder.as_markup()
 
-def create_crud_reply_buttons():
+def create_entry_crud_buttons():
     builder = InlineKeyboardBuilder()
 
     builder.button(text="➕Add new entry", callback_data="add_entry")
@@ -69,6 +69,28 @@ def create_crud_reply_buttons():
     builder.button(text="🔁Completely update entry", callback_data="update_entry")
     builder.button(text="🗑Delete entry", callback_data="delete_entry")
     builder.button(text="📊Summary", callback_data="summary")
+
+    builder.adjust(2)
+    return builder.as_markup()
+
+def create_topic_crud_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="➕Add new topic", callback_data="add_topic")
+    builder.button(text="🔍Get topic", callback_data="get_topic")
+    builder.button(text="✏️Edit topic", callback_data="edit_topic")
+    builder.button(text="🔁Completely update topic", callback_data="update_topic")
+    builder.button(text="🗑Delete topic", callback_data="delete_topic")
+
+    builder.adjust(2)
+    return builder.as_markup()
+
+def create_start_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="Entry actions", callback_data="entry_actions")
+    builder.button(text="Topic actions", callback_data="topic_actions")
+    builder.button(text="Auth actions", callback_data="auth_actions")
 
     builder.adjust(2)
     return builder.as_markup()

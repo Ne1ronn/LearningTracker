@@ -1,27 +1,29 @@
-from aiogram import types
+from aiogram import types, F
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery
+
 from .topic_states import TopicForm
-from aiogram.filters import Command
 from .topic_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/topics"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
 
-@router.message(Command("add_topic"))
-async def start_topic(message: types.Message, state: FSMContext, token: str):
+@router.callback_query(F.data == "add_topic")
+async def start_topic(cb: CallbackQuery, state: FSMContext, token: str):
     await state.clear()
+    await cb.answer()
 
     async with httpx.AsyncClient() as client:
         response = await client.get(API_ADMIN_URL, headers={"Authorization": f"Bearer {token}"})
 
     if response.status_code != 200:
-        await message.answer("You don't have enough permissions")
+        await cb.message.answer("You don't have enough permissions")
         await state.clear()
         return
 
     await state.update_data(token=token)
-    await message.answer("Enter the title of new topic:")
+    await cb.message.answer("Enter the title of new topic:")
     await state.set_state(TopicForm.title)
 
 @router.message(TopicForm.title)

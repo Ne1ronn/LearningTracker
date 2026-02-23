@@ -1,16 +1,18 @@
-from aiogram import types
+from aiogram import types, F
+from aiogram.types import CallbackQuery
+
 from .topic_states import PatchTopicForm
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import Command
 from .topic_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
 
-@router.message(Command("edit_topic"))
-async def start_patch(message: types.Message, state: FSMContext, token: str):
+@router.callback_query(F.data == "edit_entry")
+async def start_patch(cb: CallbackQuery, state: FSMContext, token: str):
     await state.clear()
+    await cb.answer()
 
     async with httpx.AsyncClient() as client:
         response = await client.get(API_ADMIN_URL, headers={"Authorization": f"Bearer {token}"})
