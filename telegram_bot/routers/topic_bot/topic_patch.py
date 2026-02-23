@@ -9,22 +9,12 @@ import httpx
 API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
 
-@router.callback_query(F.data == "edit_entry")
+@router.callback_query(F.data == "edit_topic")
 async def start_patch(cb: CallbackQuery, state: FSMContext, token: str):
     await state.clear()
     await cb.answer()
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(API_ADMIN_URL, headers={"Authorization": f"Bearer {token}"})
-
-    if response.status_code != 200:
-        await message.answer("You don't have enough permissions")
-        await state.clear()
-        return
-
-    await state.update_data(token=token)
-
-    await message.answer("Enter the id of topic:")
+    await cb.message.answer("Enter the id of topic:")
     await state.set_state(PatchTopicForm.waiting_id)
 
 @router.message(PatchTopicForm.waiting_id)

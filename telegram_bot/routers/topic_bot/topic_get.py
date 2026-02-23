@@ -25,7 +25,6 @@ async def get_topic(message: types.Message, state: FSMContext):
         await message.answer("Enter a integer number")
         return
 
-    data = await state.get_data()
     async with httpx.AsyncClient() as client:
         response = await client.get(API_URL.format(topic_id=topic_id))
 

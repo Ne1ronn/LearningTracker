@@ -14,14 +14,6 @@ async def start_topic(cb: CallbackQuery, state: FSMContext, token: str):
     await state.clear()
     await cb.answer()
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(API_ADMIN_URL, headers={"Authorization": f"Bearer {token}"})
-
-    if response.status_code != 200:
-        await cb.message.answer("You don't have enough permissions")
-        await state.clear()
-        return
-
     await state.update_data(token=token)
     await cb.message.answer("Enter the title of new topic:")
     await state.set_state(TopicForm.title)
