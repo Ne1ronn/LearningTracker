@@ -8,7 +8,6 @@ class UserAddSchema(BaseModel):
     username: str
     email: EmailStr
     password: str
-    role: str = "user"
 
 class UserSchema(UserAddSchema):
     id: int

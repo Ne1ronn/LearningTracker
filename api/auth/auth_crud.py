@@ -31,7 +31,6 @@ async def register(session: SessionDep, user: UserAddSchema):
     new_user = UserModel(
         username = user.username,
         email = user.email,
-        role = user.role,
         hashed_password = hashed_passwd
     )
 
