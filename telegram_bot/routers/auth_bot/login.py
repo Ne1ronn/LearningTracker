@@ -1,3 +1,5 @@
+import os
+
 from aiogram import types, F
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
@@ -9,6 +11,7 @@ import httpx
 API_URL = "http://127.0.0.1:8000/login"
 API_GET_URL = "http://127.0.0.1:8000/user/login/{username}"
 API_POST_URL = "http://127.0.0.1:8000/token"
+BOT_SECRET = os.getenv("BOT_SECRET")
 
 class UserLoginForm(StatesGroup):
     username = State()
@@ -33,7 +36,7 @@ async def check_username(message: types.Message, state: FSMContext):
         return
 
     await message.answer("Enter the password:")
-    await state.update_data(username=message.text, user_id=response.json().get("id"))
+    await state.update_data(username=message.text)
     await state.set_state(UserLoginForm.password)
 
 @router.message(UserLoginForm.password)
@@ -53,10 +56,12 @@ async def check_password(message: types.Message, state: FSMContext):
 
 async def add_token(message: types. Message, state: FSMContext):
     data = await state.get_data()
+    token = data.pop("access_token")
+    telegram_id = data.pop("telegram_id")
     async with httpx.AsyncClient() as client:
-        response = await client.post(API_POST_URL, json=data)
+        response = await client.post(API_POST_URL, params={"telegram_id": telegram_id}, headers={"Authorization": f"Bearer {token}", "X-Bot-Secret": BOT_SECRET})
 
-    if response.status_code != 200:
-        await message.answer(f"Error:{response.text}")
+    if response.status_code != 201:
+        await message.answer(f"{response.text}")
 
     await state.clear()

@@ -120,7 +120,7 @@ async def require_role(user=Depends(get_current_user)):
             detail="Don't have enough permissions"
         )
 
-async def verify_bot_secret(x_bot_secret: str = Header()):
+async def verify_bot_secret(x_bot_secret: str = Header(...)):
     if x_bot_secret != BOT_SECRET:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

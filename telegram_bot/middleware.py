@@ -1,3 +1,5 @@
+import os
+
 from aiogram import BaseMiddleware
 import httpx
 from aiogram.types import CallbackQuery
@@ -7,13 +9,14 @@ from telegram_bot.keyboards import create_auth_buttons
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
+BOT_SECRET = os.getenv("BOT_SECRET")
 
 class AuthMiddleware(BaseMiddleware):
     async def __call__(self, handler, event, data):
         state = data.get("state")
         telegram_id = event.from_user.id
         async with httpx.AsyncClient() as client:
-            response = await client.get(API_GET_URL.format(telegram_id=telegram_id))
+            response = await client.get(API_GET_URL.format(telegram_id=telegram_id), headers={"X-Bot-Secret": BOT_SECRET})
 
         if response.status_code != 200:
             await event.answer(f"User with telegram id {telegram_id} unauthorized. Use this buttons to authorize", reply_markup=create_auth_buttons())

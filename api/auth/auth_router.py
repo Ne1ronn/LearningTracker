@@ -26,7 +26,7 @@ async def register_user(session: SessionDep, user: UserAddSchema):
 async def login_user(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     return await login(session, form_data)
 
-@router.post("/token")
+@router.post("/token", status_code=status.HTTP_201_CREATED, dependencies=[Depends(verify_bot_secret)])
 async def insert_token(
         session: SessionDep,
         telegram_id: int,
@@ -35,6 +35,7 @@ async def insert_token(
         token: str = Depends(oauth2_scheme)
 ):
     await create_telegram_token(session, telegram_id, user, token)
+    return {"detail": "Token added successfully"}
 
 @router.get("/token/{telegram_id}", dependencies=[Depends(verify_bot_secret)])
 async def get_token(session: SessionDep, telegram_id: int):
