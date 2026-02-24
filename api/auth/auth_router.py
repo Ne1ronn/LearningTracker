@@ -26,12 +26,12 @@ async def login_user(session: SessionDep, form_data: Annotated[OAuth2PasswordReq
     return await login(session, form_data)
 
 @router.post("/token")
-async def insert_token(session: SessionDep, data: TelegramTokenAddSchema):
-    await create_telegram_token(session, data)
+async def insert_token(session: SessionDep, data: TelegramTokenAddSchema, user: Annotated[UserModel, Depends(get_current_user)]):
+    await create_telegram_token(session, data, user)
 
 @router.get("/token/{telegram_id}")
-async def get_token(session: SessionDep, telegram_id: int):
-    return await get_telegram_token(session, telegram_id)
+async def get_token(session: SessionDep, telegram_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
+    return await get_telegram_token(session, telegram_id, user)
 
 @router.get("/auth/validate")
 async def token_check(user: Annotated[UserModel, Depends(get_current_user)]):

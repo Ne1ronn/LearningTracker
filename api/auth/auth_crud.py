@@ -51,14 +51,22 @@ async def login(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestF
     access_token = create_access_token(data={"sub": form_data.username, "role": db_user.role})
     return Token(access_token=access_token, token_type="bearer")
 
-async def create_telegram_token(session: SessionDep, data: TelegramTokenAddSchema):
-    token = await get_telegram_token(session, data.telegram_id)
+async def create_telegram_token(session: SessionDep, data: TelegramTokenAddSchema, user: UserModel):
+    stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == data.telegram_id)
+    result = await session.execute(stmt)
+    token = result.scalar_one_or_none()
 
     if token:
+        if user.id != token.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"You do not have permission to access this user",
+            )
+
         token.access_token = data.access_token
     else:
         telegram_token = TelegramTokenModel(
-            user_id = data.user_id,
+            user_id = user.id,
             telegram_id = data.telegram_id,
             access_token = data.access_token
         )
@@ -67,10 +75,22 @@ async def create_telegram_token(session: SessionDep, data: TelegramTokenAddSchem
 
     await session.commit()
 
-async def get_telegram_token(session: SessionDep, telegram_id: int):
+async def get_telegram_token(session: SessionDep, telegram_id: int, user: UserModel):
     stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == telegram_id)
     result = await session.execute(stmt)
     token = result.scalar_one_or_none()
+
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Token for {telegram_id} telegram_id not found",
+        )
+
+    if user.id != token.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You do not have permission to access this user",
+        )
 
     return token
 
