@@ -3,13 +3,14 @@ from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 
+from api.auth.functions import oauth2_scheme
 from database.setup import SessionDep
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from models.user_model import UserModel
-from schemas.telegram_schema import TelegramTokenAddSchema
 from schemas.user_schema import UserAddSchema, Token
-from api.auth.auth_crud import register, login, get_user_by_username, create_telegram_token, get_telegram_token, get_current_user, get_user_by_email, require_role
+from api.auth.auth_crud import register, login, get_user_by_username, create_telegram_token, get_telegram_token, \
+    get_current_user, get_user_by_email, require_role, verify_bot_secret
 
 router = APIRouter(tags=["Authentification"])
 
@@ -26,12 +27,18 @@ async def login_user(session: SessionDep, form_data: Annotated[OAuth2PasswordReq
     return await login(session, form_data)
 
 @router.post("/token")
-async def insert_token(session: SessionDep, data: TelegramTokenAddSchema, user: Annotated[UserModel, Depends(get_current_user)]):
-    await create_telegram_token(session, data, user)
+async def insert_token(
+        session: SessionDep,
+        telegram_id: int,
+        user: Annotated[UserModel,
+        Depends(get_current_user)],
+        token: str = Depends(oauth2_scheme)
+):
+    await create_telegram_token(session, telegram_id, user, token)
 
-@router.get("/token/{telegram_id}")
-async def get_token(session: SessionDep, telegram_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
-    return await get_telegram_token(session, telegram_id, user)
+@router.get("/token/{telegram_id}", dependencies=[Depends(verify_bot_secret)])
+async def get_token(session: SessionDep, telegram_id: int):
+    return await get_telegram_token(session, telegram_id)
 
 @router.get("/auth/validate")
 async def token_check(user: Annotated[UserModel, Depends(get_current_user)]):

@@ -1,7 +1,8 @@
+import os
 from typing import Annotated
 
 import jwt
-from fastapi import  HTTPException, status, Depends
+from fastapi import  HTTPException, status, Depends, Header
 from fastapi.security import OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 
@@ -10,9 +11,10 @@ from api.auth.functions import get_password_hash, create_access_token, verify_pa
 from database.setup import SessionDep
 from models.telegram_model import TelegramTokenModel
 from models.user_model import UserModel
-from schemas.telegram_schema import TelegramTokenAddSchema
 from schemas.user_schema import UserAddSchema, Token, TokenData
 from sqlalchemy import select
+
+BOT_SECRET = os.getenv("BOT_SECRET")
 
 async def register(session: SessionDep, user: UserAddSchema):
     if await get_user_by_username(session, user.username):
@@ -50,31 +52,26 @@ async def login(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestF
     access_token = create_access_token(data={"sub": form_data.username, "role": db_user.role})
     return Token(access_token=access_token, token_type="bearer")
 
-async def create_telegram_token(session: SessionDep, data: TelegramTokenAddSchema, user: UserModel):
-    stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == data.telegram_id)
+async def create_telegram_token(session: SessionDep, telegram_id: int, user: UserModel, access_token: str):
+    stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == telegram_id)
     result = await session.execute(stmt)
     token = result.scalar_one_or_none()
 
     if token:
-        if user.id != token.user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"You do not have permission to access this user",
-            )
-
-        token.access_token = data.access_token
+        token.user_id = user.id
+        token.access_token = access_token
     else:
         telegram_token = TelegramTokenModel(
             user_id = user.id,
-            telegram_id = data.telegram_id,
-            access_token = data.access_token
+            telegram_id = telegram_id,
+            access_token = access_token
         )
 
         session.add(telegram_token)
 
     await session.commit()
 
-async def get_telegram_token(session: SessionDep, telegram_id: int, user: UserModel):
+async def get_telegram_token(session: SessionDep, telegram_id: int):
     stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == telegram_id)
     result = await session.execute(stmt)
     token = result.scalar_one_or_none()
@@ -83,12 +80,6 @@ async def get_telegram_token(session: SessionDep, telegram_id: int, user: UserMo
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Token for {telegram_id} telegram_id not found",
-        )
-
-    if user.id != token.user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"You do not have permission to access this user",
         )
 
     return token
@@ -127,4 +118,11 @@ async def require_role(user=Depends(get_current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Don't have enough permissions"
+        )
+
+async def verify_bot_secret(x_bot_secret: str = Header()):
+    if x_bot_secret != BOT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid bot secret"
         )
