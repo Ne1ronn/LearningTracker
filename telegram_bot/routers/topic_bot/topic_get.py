@@ -19,8 +19,6 @@ async def start_get(cb: CallbackQuery, state: FSMContext):
 async def get_topic(message: types.Message, state: FSMContext):
     try:
         topic_id = int(message.text)
-        if not topic_id.is_integer():
-            raise ValueError
     except ValueError:
         await message.answer("Enter a integer number")
         return

@@ -21,8 +21,6 @@ async def get_id(cb: CallbackQuery, state: FSMContext, token: str):
 async def delete_entry(message: types.Message, state: FSMContext):
     try:
         entry_id = int(message.text)
-        if not entry_id.is_integer():
-            raise ValueError
     except ValueError:
         await message.answer("Enter a integer number")
         return

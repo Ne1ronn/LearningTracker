@@ -70,7 +70,7 @@ async def set_date(message: types.Message, state: FSMContext):
     elif text == "Clear filter":
         d = None
     elif is_valid_date(text):
-        d = datetime.strptime(text, "%Y-%m-%d")
+        d = datetime.strptime(text, "%Y-%m-%d").date()
     else:
         await message.answer("Incorrect date format ❌, try again:")
         return
