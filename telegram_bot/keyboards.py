@@ -98,7 +98,7 @@ def create_start_buttons():
 def create_auth_buttons():
     builder = InlineKeyboardBuilder()
 
-    builder.button(text="Sign in", callback_data="login")
-    builder.button(text="Register", callback_data="register")
+    builder.button(text="Log in", callback_data="login")
+    builder.button(text="Sign in", callback_data="register")
 
     return builder.as_markup()

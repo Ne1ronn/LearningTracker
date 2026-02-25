@@ -56,18 +56,16 @@ async def get_user_for_register(session: SessionDep, username: str):
             status_code=status.HTTP_409_CONFLICT,
             detail="User with this name already exists"
         )
+    return {"detail": "OK"}
 
 @router.get("/user/login/{username}")
 async def get_user_for_login(session: SessionDep, username: str):
-    user = await get_user_by_username(session, username)
-    if not user:
+    if await get_user_by_username(session, username) is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with username {username} does not exist",
         )
-
-    return user
+    return {"detail": "OK"}
 
 @router.get("/userm/{email}")
 async def get_user_email(session: SessionDep, email: EmailStr):
@@ -76,3 +74,4 @@ async def get_user_email(session: SessionDep, email: EmailStr):
             status_code=status.HTTP_409_CONFLICT,
             detail="User with this email already exists"
         )
+    return {"detail": "OK"}

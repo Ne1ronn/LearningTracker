@@ -31,8 +31,8 @@ async def check_username(message: types.Message, state: FSMContext):
     async with httpx.AsyncClient() as client:
         response = await client.get(API_GET_URL.format(username=message.text))
 
-    if response.status_code == 401:
-        await message.answer("This username don't exists. Enter another:")
+    if response.status_code == 404:
+        await message.answer(f"{response.text}")
         return
 
     await message.answer("Enter the password:")

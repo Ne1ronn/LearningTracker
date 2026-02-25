@@ -5,6 +5,7 @@ import jwt
 from fastapi import  HTTPException, status, Depends, Header
 from fastapi.security import OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
+from pydantic import EmailStr
 
 from api.auth.functions import get_password_hash, create_access_token, verify_password, SECRET_KEY, ALGORITHM, \
     oauth2_scheme
@@ -108,7 +109,7 @@ async def get_user_by_username(session: SessionDep, username: str):
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
-async def get_user_by_email(session: SessionDep, email: str):
+async def get_user_by_email(session: SessionDep, email: EmailStr):
     stmt = select(UserModel).where(UserModel.email == email)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
