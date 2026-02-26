@@ -1,15 +1,17 @@
+from datetime import datetime
 import os
 from typing import Annotated
 
 import jwt
-from fastapi import  HTTPException, status, Depends, Header
+from fastapi import HTTPException, status, Depends, Header
 from fastapi.security import OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from pydantic import EmailStr
 
-from api.auth.functions import get_password_hash, create_access_token, verify_password, SECRET_KEY, ALGORITHM, \
-    oauth2_scheme
+from api.auth.functions import get_password_hash, create_access_token, verify_password, ACCESS_SECRET_KEY, ALGORITHM, \
+    oauth2_scheme, create_refresh_token, REFRESH_SECRET_KEY
 from database.setup import SessionDep
+from models.refresh_token_model import RefreshTokenModel
 from models.telegram_model import TelegramTokenModel
 from models.user_model import UserModel
 from schemas.user_schema import UserAddSchema, Token, TokenData
@@ -32,9 +34,9 @@ async def register(session: SessionDep, user: UserAddSchema):
 
     hashed_passwd = get_password_hash(user.password)
     new_user = UserModel(
-        username = user.username,
-        email = user.email,
-        hashed_password = hashed_passwd
+        username=user.username,
+        email=user.email,
+        hashed_password=hashed_passwd
     )
 
     session.add(new_user)
@@ -50,8 +52,60 @@ async def login(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestF
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = create_access_token(data={"sub": form_data.username, "role": db_user.role})
-    return Token(access_token=access_token, token_type="bearer")
+    access_token = create_access_token(username=form_data.username, role=db_user.role)
+    refresh_token = await create_refresh_token(session, user_id=db_user.id)
+    return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+
+async def verify_refresh(session: SessionDep, token: str):
+    try:
+        payload = jwt.decode(token, REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.PyJWTError:
+        raise HTTPException(401, detail="Invalid refresh token")
+
+    if payload.get("type") != "refresh":
+        raise HTTPException(401, detail="Wrong token type")
+
+    sub = payload.get("sub")
+    if not sub:
+        raise HTTPException(401, detail="Invalid refresh token")
+
+    try:
+        user_id = int(sub)
+    except ValueError:
+        raise HTTPException(401, detail="Invalid refresh token")
+
+    jti = payload.get("jti")
+    if not jti:
+        raise HTTPException(status_code=401, detail="JTI not found")
+
+    db_token = await session.get(RefreshTokenModel, jti)
+    user = await get_user_by_id(session, user_id)
+
+    if not db_token:
+        raise HTTPException(404, detail="Token not found")
+    if db_token.revoked:
+        raise HTTPException(401, detail="Token has been revoked")
+    if db_token.expires_at < datetime.utcnow():
+        raise HTTPException(401, detail="Token has expired")
+    if user is None:
+        raise HTTPException(404, detail="User not found")
+    if db_token.user_id != user.id:
+        raise HTTPException(401, detail="Invalid user id")
+    return {"user": user, "db_token": db_token}
+
+async def refresh(session: SessionDep, token: str):
+    data = await verify_refresh(session, token)
+    db_token = data["db_token"]
+
+    db_token.revoked = True
+    await session.commit()
+
+    user = data["user"]
+
+    access_token = create_access_token(username=user.username, role=user.role)
+    refresh_token = await create_refresh_token(session, user_id=user.id)
+
+    return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 
 async def create_telegram_token(session: SessionDep, telegram_id: int, user: UserModel, access_token: str):
     stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == telegram_id)
@@ -63,9 +117,9 @@ async def create_telegram_token(session: SessionDep, telegram_id: int, user: Use
         token.access_token = access_token
     else:
         telegram_token = TelegramTokenModel(
-            user_id = user.id,
-            telegram_id = telegram_id,
-            access_token = access_token
+            user_id=user.id,
+            telegram_id=telegram_id,
+            access_token=access_token
         )
 
         session.add(telegram_token)
@@ -92,7 +146,7 @@ async def get_current_user(session: SessionDep, token: str = Depends(oauth2_sche
         headers={"WWW-Authenticate": "Bearer"}
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, ACCESS_SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
             raise credential_exceptions
@@ -114,6 +168,11 @@ async def get_user_by_email(session: SessionDep, email: EmailStr):
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
+async def get_user_by_id(session: SessionDep, user_id: int):
+    stmt = select(UserModel).where(UserModel.id == user_id)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
 async def require_role(user=Depends(get_current_user)):
     if user.role != "admin":
         raise HTTPException(
@@ -124,6 +183,6 @@ async def require_role(user=Depends(get_current_user)):
 async def verify_bot_secret(x_bot_secret: str = Header(...)):
     if x_bot_secret != BOT_SECRET:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid bot secret"
         )

@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from models.user_model import UserModel
 from schemas.user_schema import UserAddSchema, Token
 from api.auth.auth_crud import register, login, get_user_by_username, create_telegram_token, get_telegram_token, \
-    get_current_user, get_user_by_email, require_role, verify_bot_secret
+    get_current_user, get_user_by_email, require_role, verify_bot_secret, refresh
 
 router = APIRouter(tags=["Authentification"])
 
@@ -25,6 +25,10 @@ async def register_user(session: SessionDep, user: UserAddSchema):
 @router.post("/login")
 async def login_user(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     return await login(session, form_data)
+
+@router.post("/refresh")
+async def refresh_token(session: SessionDep, token: str = Depends(oauth2_scheme)):
+    return await refresh(session, token)
 
 @router.post("/token", status_code=status.HTTP_201_CREATED, dependencies=[Depends(verify_bot_secret)])
 async def insert_token(

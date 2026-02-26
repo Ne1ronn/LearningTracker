@@ -5,7 +5,7 @@ from typing import List
 class UserModel(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(unique=True)
+    username: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
     email: Mapped[str] = mapped_column(unique=True)
     hashed_password: Mapped[str]
     role: Mapped[str] = mapped_column(nullable=False, default="user")
