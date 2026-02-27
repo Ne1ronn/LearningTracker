@@ -56,6 +56,12 @@ async def login(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestF
     refresh_token = await create_refresh_token(session, user_id=db_user.id)
     return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 
+async def logout(session: SessionDep, token: str):
+    data = await verify_refresh(session, token)
+    db_token = data["db_token"]
+    db_token.revoked = True
+    await session.commit()
+
 async def verify_refresh(session: SessionDep, token: str):
     try:
         payload = jwt.decode(token, REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
@@ -67,12 +73,12 @@ async def verify_refresh(session: SessionDep, token: str):
 
     sub = payload.get("sub")
     if not sub:
-        raise HTTPException(401, detail="Invalid refresh token")
+        raise HTTPException(401, detail="Empty refresh token")
 
     try:
         user_id = int(sub)
     except ValueError:
-        raise HTTPException(401, detail="Invalid refresh token")
+        raise HTTPException(401, detail="Invalid user id")
 
     jti = payload.get("jti")
     if not jti:

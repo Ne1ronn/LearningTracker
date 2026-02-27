@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from models.user_model import UserModel
 from schemas.user_schema import UserAddSchema, Token
 from api.auth.auth_crud import register, login, get_user_by_username, create_telegram_token, get_telegram_token, \
-    get_current_user, get_user_by_email, require_role, verify_bot_secret, refresh
+    get_current_user, get_user_by_email, require_role, verify_bot_secret, refresh, logout
 
 router = APIRouter(tags=["Authentification"])
 
@@ -26,6 +26,11 @@ async def register_user(session: SessionDep, user: UserAddSchema):
 async def login_user(session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     return await login(session, form_data)
 
+@router.post("/logout")
+async def logout_user(session: SessionDep, token: str = Depends(oauth2_scheme)):
+    await logout(session, token)
+    return {"detail": "User logged out successfully"}
+
 @router.post("/refresh")
 async def refresh_token(session: SessionDep, token: str = Depends(oauth2_scheme)):
     return await refresh(session, token)
@@ -34,8 +39,7 @@ async def refresh_token(session: SessionDep, token: str = Depends(oauth2_scheme)
 async def insert_token(
         session: SessionDep,
         telegram_id: int,
-        user: Annotated[UserModel,
-        Depends(get_current_user)],
+        user: Annotated[UserModel, Depends(get_current_user)],
         token: str = Depends(oauth2_scheme)
 ):
     await create_telegram_token(session, telegram_id, user, token)
