@@ -113,7 +113,7 @@ async def refresh(session: SessionDep, token: str):
 
     return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 
-async def create_telegram_token(session: SessionDep, telegram_id: int, user: UserModel, access_token: str):
+async def create_telegram_token(session: SessionDep, telegram_id: int, user: UserModel, access_token: str, refresh_token: str):
     stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == telegram_id)
     result = await session.execute(stmt)
     token = result.scalar_one_or_none()
@@ -121,11 +121,13 @@ async def create_telegram_token(session: SessionDep, telegram_id: int, user: Use
     if token:
         token.user_id = user.id
         token.access_token = access_token
+        token.refresh_token = refresh_token
     else:
         telegram_token = TelegramTokenModel(
             user_id=user.id,
             telegram_id=telegram_id,
-            access_token=access_token
+            access_token=access_token,
+            refresh_token=refresh_token
         )
 
         session.add(telegram_token)

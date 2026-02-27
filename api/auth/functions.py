@@ -12,7 +12,7 @@ from models.refresh_token_model import RefreshTokenModel
 ACCESS_SECRET_KEY = os.environ["ACCESS_SECRET_KEY"]
 REFRESH_SECRET_KEY = os.environ["REFRESH_SECRET_KEY"]
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 10
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 password_hash = PasswordHash.recommended()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
