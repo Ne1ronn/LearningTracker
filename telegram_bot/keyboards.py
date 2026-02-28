@@ -100,5 +100,6 @@ def create_auth_buttons():
 
     builder.button(text="Log in", callback_data="login")
     builder.button(text="Sign in", callback_data="register")
+    builder.button(text="Log out", callback_data="logout")
 
     return builder.as_markup()

@@ -1,7 +1,8 @@
-from aiogram import Router, types
-from aiogram.filters import Command
+from aiogram import Router
+from  .logout import logout_router
 
 router = Router()
+router.include_router(logout_router)
 
 from . import login
 from . import register

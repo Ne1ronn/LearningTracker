@@ -61,7 +61,7 @@ async def add_token(message: types. Message, state: FSMContext):
     telegram_id = data.pop("telegram_id")
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(API_POST_URL, params={"telegram_id": telegram_id}, json={"refresh_token": refresh_token}, headers={"Authorization": f"Bearer {access_token}", "X-Bot-Secret": BOT_SECRET})
+        response = await client.post(API_POST_URL, params={"telegram_id": telegram_id}, json={"token": refresh_token}, headers={"Authorization": f"Bearer {access_token}", "X-Bot-Secret": BOT_SECRET})
 
     if response.status_code != 201:
         await message.answer(f"{response.text}")

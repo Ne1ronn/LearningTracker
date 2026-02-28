@@ -38,7 +38,7 @@ class AuthMiddleware(BaseMiddleware):
 
             if auth_response.status_code != 200:
                 if auth_response.status_code == 401:
-                    refresh_response = await client.post(API_REFRESH_URL, json={"refresh_token": refresh_token})
+                    refresh_response = await client.post(API_REFRESH_URL, json={"token": refresh_token})
 
                     if refresh_response.status_code != 201:
                         await event.answer("Logged session ended. Use this buttons to authorize",
@@ -57,7 +57,7 @@ class AuthMiddleware(BaseMiddleware):
 
                     response = await client.post(API_POST_URL,
                                                 params={"telegram_id": telegram_id},
-                                                     json={"refresh_token": refresh_token},
+                                                     json={"token": refresh_token},
                                                      headers={"Authorization": f"Bearer {access_token}",
                                                               "X-Bot-Secret": BOT_SECRET})
 
@@ -76,6 +76,7 @@ class AuthMiddleware(BaseMiddleware):
             return
 
         data["token"] = access_token
+        data["refresh_token"] = refresh_token
         return await handler(event, data)
 
 class RoleMiddleware(BaseMiddleware):
