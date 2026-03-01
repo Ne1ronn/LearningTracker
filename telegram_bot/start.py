@@ -11,6 +11,7 @@ API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
 router = Router()
 router.message.middleware(AuthMiddleware())
+router.callback_query.middleware(AuthMiddleware())
 
 @router.message(Command("start"))
 async def start(message: types.Message, state: FSMContext):
@@ -35,13 +36,4 @@ async def topic_actions(cb: CallbackQuery):
     await cb.message.answer(
         "All topic actions:",
         reply_markup=create_topic_crud_buttons(),
-    )
-
-@router.callback_query(F.data == "auth_actions")
-async def auth_actions(cb: CallbackQuery):
-    await cb.answer()
-
-    await cb.message.answer(
-        "All auth actions:",
-        reply_markup=create_auth_buttons(),
     )

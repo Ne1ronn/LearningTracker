@@ -32,10 +32,12 @@ async def logout(cb: CallbackQuery, state: FSMContext, refresh_token: str | None
             await state.clear()
             return
 
-        telegram_id = cb.message.from_user.id
+        telegram_id = cb.from_user.id
 
         delete_response = await client.delete(API_DELETE_URL.format(telegram_id=telegram_id), headers={"X-Bot-Secret": BOT_SECRET})
         if delete_response.status_code != 200:
             await cb.message.answer(f"Error:{delete_response.text}")
+            await state.clear()
+            return
 
     await cb.message.answer("Successfully logged out")
