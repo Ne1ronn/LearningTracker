@@ -147,6 +147,20 @@ async def get_telegram_token(session: SessionDep, telegram_id: int):
 
     return token
 
+async def delete_telegram_token(session: SessionDep, telegram_id: int):
+    stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == telegram_id)
+    result = await session.execute(stmt)
+    token = result.scalar_one_or_none()
+
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Token for {telegram_id} telegram_id not found",
+        )
+
+    await session.delete(token)
+    await session.commit()
+
 async def get_current_user(session: SessionDep, token: str = Depends(oauth2_scheme)):
     credential_exceptions = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

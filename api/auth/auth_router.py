@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from models.user_model import UserModel
 from schemas.user_schema import UserAddSchema, Token, RefreshData
 from api.auth.auth_crud import register, login, get_user_by_username, create_telegram_token, get_telegram_token, \
-    get_current_user, get_user_by_email, require_role, verify_bot_secret, refresh, logout
+    delete_telegram_token, get_current_user, get_user_by_email, require_role, verify_bot_secret, refresh, logout
 
 router = APIRouter(tags=["Authentification"])
 
@@ -49,6 +49,11 @@ async def insert_token(
 @router.get("/token/{telegram_id}", dependencies=[Depends(verify_bot_secret)])
 async def get_token(session: SessionDep, telegram_id: int):
     return await get_telegram_token(session, telegram_id)
+
+@router.delete("/token/{telegram_id}", dependencies=[Depends(verify_bot_secret)])
+async def delete_token(session: SessionDep, telegram_id: int):
+    await delete_telegram_token(session, telegram_id)
+    return {"detail": "Token deleted successfully"}
 
 @router.get("/auth/validate")
 async def token_check(user: Annotated[UserModel, Depends(get_current_user)]):
