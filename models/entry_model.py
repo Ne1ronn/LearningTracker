@@ -21,3 +21,4 @@ class EntryModel(Base):
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="entries")
     topics: Mapped[List["TopicModel"]] = relationship("TopicModel", secondary=entry_topics, back_populates="entries")
+    daily_stats: Mapped["DailyStatsModel"] = relationship("DailyStatsModel", back_populates="entries")
