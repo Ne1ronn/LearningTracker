@@ -6,6 +6,7 @@ from fastapi import HTTPException, status, Depends
 
 from api.auth.auth_crud import get_current_user
 from database.setup import SessionDep
+from models import DailyStatsModel
 from models.entry_model import EntryModel
 from models.entry_topics_model import entry_topics
 from models.topic_model import TopicModel
@@ -46,6 +47,28 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema, user: Annotated[
         new_entry.topics.extend(topics)
 
     session.add(new_entry)
+    await session.commit()
+
+    entry_date = new_entry.created_at.date()
+    await add_daily_stat(session, user.id, entry_date, entry.learning_hours)
+
+async def add_daily_stat(session: SessionDep, user_id: int, entry_date: date, entry_hours: float):
+    stmt = select(DailyStatsModel).where(DailyStatsModel.date == entry_date, DailyStatsModel.user_id == user_id)
+    result = await session.execute(stmt)
+    daily_stat = result.scalar_one_or_none()
+
+    if not daily_stat:
+        new_daily_stat = DailyStatsModel(
+            user_id = user_id,
+            date = entry_date,
+            total_hours=entry_hours,
+            entries_count=1
+        )
+        session.add(new_daily_stat)
+    else:
+        daily_stat.total_hours += entry_hours
+        daily_stat.entries_count += 1
+
     await session.commit()
 
 async def give_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
