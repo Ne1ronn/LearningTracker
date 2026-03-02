@@ -14,6 +14,8 @@ from models.user_model import UserModel
 from schemas.entry_schema import EntryAddSchema, UpdateEntrySchema
 from datetime import datetime, date, timedelta
 
+from schemas.weekly_stats_schema import WeeklyStatsResponseSchema
+
 
 async def missing_topics(session: SessionDep, entry: Union[EntryAddSchema, UpdateEntrySchema]):
     stmt = select(TopicModel).where(TopicModel.id.in_(entry.topic_ids))
@@ -49,6 +51,7 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema, user: Annotated[
     session.add(new_entry)
     await session.commit()
 
+    await session.refresh(new_entry)
     entry_date = new_entry.created_at.date()
     await add_daily_stat(session, user.id, entry_date, entry.learning_hours)
 
@@ -70,6 +73,72 @@ async def add_daily_stat(session: SessionDep, user_id: int, entry_date: date, en
         daily_stat.entries_count += 1
 
     await session.commit()
+
+async def get_weekly_stats(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
+    last = date.today() - timedelta(days=6)
+
+    stmt = (
+        select(DailyStatsModel.total_hours)
+        .where(DailyStatsModel.user_id == user.id, DailyStatsModel.date >= last)
+        .order_by(DailyStatsModel.date.asc())
+    )
+    result = await session.execute(stmt)
+    last_7_days_stats = result.scalars().all()
+
+    prev = date.today() - timedelta(days=13)
+    stmt = (
+        select(DailyStatsModel.total_hours)
+        .where(DailyStatsModel.user_id == user.id, DailyStatsModel.date < last, DailyStatsModel.date >= prev)
+        .order_by(DailyStatsModel.date.asc())
+    )
+    result = await session.execute(stmt)
+    prev_7_days_stats = result.scalars().all()
+
+    last_7_days_hours = 0
+    prev_7_days_hours = 0
+
+    for hours in last_7_days_stats:
+        last_7_days_hours += hours
+    for hours in prev_7_days_stats:
+        prev_7_days_hours += hours
+
+    if not prev_7_days_hours:
+        delta_percent = 100
+    else:
+        delta_percent = 100 * (last_7_days_hours / prev_7_days_hours)
+
+    streak = await count_streak(session, user.id)
+
+    return WeeklyStatsResponseSchema(
+        last_7_days_hours=last_7_days_hours,
+        previous_7_days_hours=prev_7_days_hours,
+        delta_percent=delta_percent,
+        current_streak=streak
+    )
+
+async def count_streak(session: SessionDep, user_id: int):
+    stmt = (
+        select(DailyStatsModel.date, DailyStatsModel.total_hours)
+        .where(DailyStatsModel.user_id == user_id)
+        .order_by(DailyStatsModel.date.desc())
+    )
+    result = await session.execute(stmt)
+    daily_stats = result.all()
+
+    streak = 0
+    expected_day = date.today()
+
+    for stat_date, hours in daily_stats:
+        if stat_date != expected_day:
+            break
+
+        if hours <= 0:
+            break
+
+        streak += 1
+        expected_day -= timedelta(days=1)
+
+    return streak
 
 async def give_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     entry = await get_entry_by_id(session, entry_id)

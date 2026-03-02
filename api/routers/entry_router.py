@@ -1,12 +1,16 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status, HTTPException
-from api.crud.entry_crud import (add_entry, give_all_entry, give_entry, update_entry_, patch_entry_, delete_entry_, summary, can_update_entry, get_entry_by_id)
+from api.crud.entry_crud import (add_entry, give_all_entry, give_entry, update_entry_, patch_entry_, delete_entry_,
+                                 summary, can_update_entry, get_entry_by_id, get_weekly_stats)
 from api.auth.auth_crud import get_current_user
 from database.setup import SessionDep
 from models.user_model import UserModel
 from schemas.entry_schema import EntryAddSchema, EntrySchema, UpdateEntrySchema
 from datetime import date
+
+from schemas.weekly_stats_schema import WeeklyStatsResponseSchema
+
 router = APIRouter(tags=["Entry Tracking"])
 
 @router.post("/entries")
@@ -41,6 +45,10 @@ async def hours_summary(session: SessionDep, user: Annotated[UserModel, Depends(
 @router.get("/entries/{entry_id}", response_model=EntrySchema)
 async def get_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     return await give_entry(session, entry_id, user)
+
+@router.get("/entries/stats/weekly", response_model=WeeklyStatsResponseSchema)
+async def weekly_stats(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
+    return await get_weekly_stats(session, user)
 
 @router.put("/entries/{entry_id}")
 async def update_entry(session: SessionDep, entry: EntryAddSchema, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):

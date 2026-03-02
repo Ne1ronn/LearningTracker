@@ -12,4 +12,3 @@ class DailyStatsModel(Base):
     entries_count = Column(Integer, nullable=False, default=0)
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="daily_stats")
-    entries: Mapped[List["EntryModel"]] = relationship("EntryModel", back_populates="daily_stats")
