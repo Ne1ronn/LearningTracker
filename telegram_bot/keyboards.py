@@ -73,7 +73,7 @@ def create_entry_crud_buttons():
     builder.adjust(2)
     return builder.as_markup()
 
-def create_topic_crud_buttons():
+def create_topic_admin_buttons():
     builder = InlineKeyboardBuilder()
 
     builder.button(text="➕Add new topic", callback_data="add_topic")
@@ -83,6 +83,11 @@ def create_topic_crud_buttons():
     builder.button(text="🗑Delete topic", callback_data="delete_topic")
 
     builder.adjust(2)
+    return builder.as_markup()
+
+def create_topic_user_buttons():
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🔍Get topic", callback_data="get_topic")
     return builder.as_markup()
 
 def create_start_buttons():

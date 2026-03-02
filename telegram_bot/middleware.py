@@ -84,7 +84,7 @@ class RoleMiddleware(BaseMiddleware):
         state = data.get("state")
         token = data.get("token")
 
-        if isinstance(event, CallbackQuery) and event.data == "get_topic":
+        if isinstance(event, CallbackQuery) and event.data in ["get_topic", "entry_actions"]:
             return await handler(event, data)
 
         if state:
@@ -96,8 +96,14 @@ class RoleMiddleware(BaseMiddleware):
             response = await client.get(API_ADMIN_URL, headers={"Authorization": f"Bearer {token}"})
 
         if response.status_code != 200:
-            await event.answer("You don't have enough permissions")
-            await state.clear()
-            return
+            if isinstance(event, CallbackQuery) and event.data == "topic_actions":
+                data["is_admin"] = False
+                return await handler(event, data)
+            else:
+                await event.answer("You don't have enough permissions")
+                await state.clear()
+                return
+        else:
+            data["is_admin"] = True
 
         return await handler(event, data)

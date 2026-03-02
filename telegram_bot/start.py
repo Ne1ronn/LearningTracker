@@ -3,8 +3,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery
 
-from .keyboards import create_start_buttons, create_entry_crud_buttons, create_topic_crud_buttons, create_auth_buttons
-from .middleware import AuthMiddleware
+from .keyboards import create_start_buttons, create_entry_crud_buttons, create_topic_admin_buttons, create_topic_user_buttons
+from .middleware import AuthMiddleware, RoleMiddleware
 
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
@@ -12,6 +12,7 @@ API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 router = Router()
 router.message.middleware(AuthMiddleware())
 router.callback_query.middleware(AuthMiddleware())
+router.callback_query.middleware(RoleMiddleware())
 
 @router.message(Command("start"))
 async def start(message: types.Message, state: FSMContext):
@@ -30,10 +31,16 @@ async def entry_actions(cb: CallbackQuery):
     )
 
 @router.callback_query(F.data == "topic_actions")
-async def topic_actions(cb: CallbackQuery):
+async def topic_actions(cb: CallbackQuery, is_admin: bool):
     await cb.answer()
 
-    await cb.message.answer(
-        "All topic actions:",
-        reply_markup=create_topic_crud_buttons(),
-    )
+    if is_admin:
+        await cb.message.answer(
+            "All topic actions:",
+            reply_markup=create_topic_admin_buttons(),
+        )
+    else:
+        await cb.message.answer(
+            "All topic actions:",
+            reply_markup=create_topic_user_buttons(),
+        )
