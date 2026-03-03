@@ -10,6 +10,7 @@ from . import entry_delete
 from . import entry_update
 from . import entry_patch
 from . import summary
+from . import entry_stats
 
 router.message.middleware(AuthMiddleware())
 router.callback_query.middleware(AuthMiddleware())
