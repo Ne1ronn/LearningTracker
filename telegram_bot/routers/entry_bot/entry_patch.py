@@ -2,7 +2,7 @@ from aiogram import types, F
 from .entry_states import PatchEntryForm
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-
+from ...keyboards import create_attribute_choose_buttons, create_yes_no_buttons
 from .entry_router import router
 import httpx
 
@@ -37,30 +37,31 @@ async def get_entry(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(entry_id=entry_id, updates={})
-    await message.answer("What exactly you want update?\n"
-                         "Title?\n"
-                         "Description?\n"
-                         "Tags?\n"
-                         "Mood_score?\n"
-                         "Progress_score?\n"
-                         "Learning_hours?\n"
-                         "Private?\n"
-                         "Topic_id?")
+    await message.answer("What exactly you want update?", reply_markup=create_attribute_choose_buttons())
     await state.set_state(PatchEntryForm.waiting_attribute)
 
-@router.message(PatchEntryForm.waiting_attribute)
-async def wait_attribute(message: types.Message, state: FSMContext):
-    attributes = ["user_id", "title", "description", "tags", "mood_score", "progress_score", "learning_hours", "topic_ids"]
-    try:
-        attribute = message.text.strip().lower()
-        if not attribute in attributes:
-            raise ValueError
-    except ValueError:
-        await message.answer("Enter a attribute that exists:")
+@router.callback_query(PatchEntryForm.waiting_attribute)
+async def wait_attribute(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
+    attribute = cb.data
+
+    attributes = [
+        "title",
+        "description",
+        "tags",
+        "mood_score",
+        "progress_score",
+        "learning_hours",
+        "private",
+        "topic_ids",
+    ]
+
+    if attribute not in attributes:
+        await cb.answer("Invalid attribute", show_alert=True)
         return
 
     await state.update_data(current_attribute=attribute)
-    await message.answer("Enter a new value for attribute:")
+    await cb.message.answer("Enter a new value for attribute:")
     await state.set_state(PatchEntryForm.edit_attribute)
 
 @router.message(PatchEntryForm.edit_attribute)
@@ -103,20 +104,15 @@ async def edit_attribute(message: types.Message, state: FSMContext):
     await state.update_data(updates=updates)
 
     await message.answer("Field added to changes\n"
-                         "Would you update anything else?(yes/no)")
+                         "Would you update anything else?",
+                         reply_markup=create_yes_no_buttons("field"))
     await state.set_state(PatchEntryForm.waiting_confirm)
 
-@router.message(PatchEntryForm.waiting_confirm)
-async def confirm(message: types.Message, state: FSMContext):
-    if message.text.strip().lower() in ["да", "yes"]:
-        await message.answer("What exactly you want update?\n"
-                             "Title?\n"
-                             "Description?\n"
-                             "Tags?\n"
-                             "Mood score?\n"
-                             "Progress score?\n"
-                             "Learning hours?\n"
-                             "Topic id?")
+@router.callback_query(PatchEntryForm.waiting_confirm)
+async def confirm(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
+    if cb.data == "yes_field":
+        await cb.message.answer("What exactly you want update?", reply_markup=create_attribute_choose_buttons())
         await state.set_state(PatchEntryForm.waiting_attribute)
         return
 
@@ -129,8 +125,8 @@ async def confirm(message: types.Message, state: FSMContext):
         response = await client.patch(API_URL.format(entry_id=entry_id), json=updates, headers={"Authorization": f"Bearer {token}"})
 
     if response.status_code == 200:
-        await message.answer("Entry successfully updated ✅")
+        await cb.message.answer("Entry successfully updated ✅")
     else:
-        await message.answer(f"Error:{response.text}")
+        await cb.message.answer(f"Error:{response.text}")
 
     await state.clear()

@@ -108,3 +108,26 @@ def create_auth_buttons():
     builder.button(text="Sign in", callback_data="register")
 
     return builder.as_markup()
+
+def create_yes_no_buttons(prefix: str):
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="Yes", callback_data=f"yes_{prefix}")
+    builder.button(text="No", callback_data=f"no_{prefix}")
+
+    return builder.as_markup()
+
+def create_attribute_choose_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="Title", callback_data="title")
+    builder.button(text="Description", callback_data="description")
+    builder.button(text="Tags", callback_data="tags")
+    builder.button(text="Mood score", callback_data="mood_score")
+    builder.button(text="Progress score", callback_data="progress_score")
+    builder.button(text="Learning hours", callback_data="learning_hours")
+    builder.button(text="Privacy", callback_data="private")
+    builder.button(text="Topics", callback_data="topic_ids")
+
+    builder.adjust(2)
+    return builder.as_markup()

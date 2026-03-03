@@ -27,7 +27,7 @@ async def weekly_stats(cb: CallbackQuery, state: FSMContext, token: str):
     await cb.message.answer(
         f"Your hour stats for last 7 days: {last_7_days_hours}\n"
         f"Your hour stats for previous 7 days: {prev_7_days_hours}\n"
-        f"Your delta percentage: {delta_percent}\n"
+        f"Your delta percentage: {delta_percent}%\n"
         f"Your current streak: {current_streak}"
     )
 

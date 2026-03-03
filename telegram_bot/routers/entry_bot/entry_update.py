@@ -6,6 +6,8 @@ from aiogram.types import CallbackQuery
 from .entry_router import router
 import httpx
 
+from ...keyboards import create_yes_no_buttons
+
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 API_PERMISSION_URL = "http://127.0.0.1:8000/entries/{entry_id}/edit"
 
@@ -96,25 +98,27 @@ async def get_hours(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(learning_hours=hours)
-    await message.answer("Your entry will be private or not?")
+    await message.answer("Your entry will be private or not?", reply_markup=create_yes_no_buttons("private_update"))
     await state.set_state(UpdateEntryForm.private)
 
-@router.message(UpdateEntryForm.private)
-async def get_private(message: types.Message, state: FSMContext):
-    if message.text.lower() == "private" or message.text.lower() == "yes":
+@router.callback_query(UpdateEntryForm.private)
+async def add_private(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
+    if cb.data == "yes_private_update":
         await state.update_data(private=True)
-    else:
+    elif cb.data == "no_private_update":
         await state.update_data(private=False)
-    await message.answer("Do you want add id of related topics?")
+    await cb.message.answer("Do you want add id of related topics?", reply_markup=create_yes_no_buttons("topics_update"))
     await state.set_state(UpdateEntryForm.waiting_ids)
 
-@router.message(UpdateEntryForm.waiting_ids)
-async def waiting_ids(message: types.Message, state: FSMContext):
-    if message.text.lower() == "yes":
-        await message.answer("Enter the id's by square brackets: [1, 2]")
+@router.callback_query(UpdateEntryForm.waiting_ids)
+async def wait_topics(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
+    if cb.data == "yes_topics_update":
+        await cb.message.answer("Enter the id's by square brackets: [1, 2]")
         await state.set_state(UpdateEntryForm.topic_ids)
-    else:
-        await update_entry(message, state)
+    elif cb.data == "no_topics_update":
+        await update_entry(cb.message, state)
 
 @router.message(UpdateEntryForm.topic_ids)
 async def add_topics(message: types.Message, state: FSMContext):
