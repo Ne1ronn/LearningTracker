@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery
 from .entry_router import router
 import httpx
 
-from ...keyboards import create_yes_no_buttons
+from ...keyboards import create_yes_no_buttons, create_cancel_button
 
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 API_PERMISSION_URL = "http://127.0.0.1:8000/entries/{entry_id}/edit"
@@ -17,7 +17,7 @@ async def start_update(cb: CallbackQuery, state: FSMContext, token: str):
     await cb.answer()
 
     await state.update_data(token=token)
-    await cb.message.answer("Enter the id of entry:")
+    await cb.message.answer("Enter the id of entry:", reply_markup=create_cancel_button())
     await state.set_state(UpdateEntryForm.waiting_id)
 
 @router.message(UpdateEntryForm.waiting_id)
@@ -25,7 +25,7 @@ async def get_entry(message: types.Message, state: FSMContext):
     try:
         entry_id = int(message.text)
     except ValueError:
-        await message.answer("Enter a integer number")
+        await message.answer("Enter a integer number", reply_markup=create_cancel_button())
         return
 
     data = await state.get_data()
@@ -36,28 +36,29 @@ async def get_entry(message: types.Message, state: FSMContext):
 
     if response.status_code in (403, 404):
         await message.answer(response.text)
+        await state.clear()
         return
 
     await state.update_data(entry_id=entry_id)
-    await message.answer("Enter the updated title of entry:")
+    await message.answer("Enter the updated title of entry:", reply_markup=create_cancel_button())
     await state.set_state(UpdateEntryForm.title)
 
 @router.message(UpdateEntryForm.title)
 async def get_title(message: types.Message, state: FSMContext):
     await state.update_data(title=message.text)
-    await message.answer("Now the updated description:")
+    await message.answer("Now the updated description:", reply_markup=create_cancel_button())
     await state.set_state(UpdateEntryForm.description)
 
 @router.message(UpdateEntryForm.description)
 async def get_description(message: types.Message, state: FSMContext):
     await state.update_data(description=message.text)
-    await message.answer("Now the updated tags(separated by commas):")
+    await message.answer("Now the updated tags(separated by commas):", reply_markup=create_cancel_button())
     await state.set_state(UpdateEntryForm.tags)
 
 @router.message(UpdateEntryForm.tags)
 async def get_tags(message: types.Message, state: FSMContext):
     await state.update_data(tags=message.text)
-    await message.answer("Now the updated mood score:")
+    await message.answer("Now the updated mood score:", reply_markup=create_cancel_button())
     await state.set_state(UpdateEntryForm.mood_score)
 
 @router.message(UpdateEntryForm.mood_score)
@@ -67,10 +68,10 @@ async def get_mood(message: types.Message, state: FSMContext):
         if not (0 <= score <= 10):
             raise ValueError
     except ValueError:
-        await message.answer("Enter number between 0 and 10")
+        await message.answer("Enter number between 0 and 10", reply_markup=create_cancel_button())
         return
     await state.update_data(mood_score=score)
-    await message.answer("Now the updated progress score:")
+    await message.answer("Now the updated progress score:", reply_markup=create_cancel_button())
     await state.set_state(UpdateEntryForm.progress_score)
 
 @router.message(UpdateEntryForm.progress_score)
@@ -80,11 +81,11 @@ async def get_progress(message: types.Message, state: FSMContext):
         if not (0 <= score <= 10):
             raise ValueError
     except ValueError:
-        await message.answer("Enter number between 0 and 10")
+        await message.answer("Enter number between 0 and 10", reply_markup=create_cancel_button())
         return
 
     await state.update_data(progress_score=score)
-    await message.answer("Now the updated learning hours:")
+    await message.answer("Now the updated learning hours:", reply_markup=create_cancel_button())
     await state.set_state(UpdateEntryForm.learning_hours)
 
 @router.message(UpdateEntryForm.learning_hours)
@@ -94,7 +95,7 @@ async def get_hours(message: types.Message, state: FSMContext):
         if hours < 0 or hours > 24:
             raise ValueError
     except ValueError:
-        await message.answer("Enter number more than 0 and less than 24")
+        await message.answer("Enter number more than 0 and less than 24", reply_markup=create_cancel_button())
         return
 
     await state.update_data(learning_hours=hours)
@@ -115,7 +116,7 @@ async def add_private(cb: CallbackQuery, state: FSMContext):
 async def wait_topics(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
     if cb.data == "yes_topics_update":
-        await cb.message.answer("Enter the id's by square brackets: [1, 2]")
+        await cb.message.answer("Enter the id's by square brackets: [1, 2]", reply_markup=create_cancel_button())
         await state.set_state(UpdateEntryForm.topic_ids)
     elif cb.data == "no_topics_update":
         await update_entry(cb.message, state)
@@ -125,13 +126,13 @@ async def add_topics(message: types.Message, state: FSMContext):
     text = message.text.strip()
 
     if not (text.startswith("[") and text.endswith("]")):
-        await message.answer("Enter in this format: [1, 2, 3]")
+        await message.answer("Enter in this format: [1, 2, 3]", reply_markup=create_cancel_button())
         return
 
     items = text[1:-1].replace(" ", "").split(",")
 
     if not all(item.isdigit() for item in items):
-        await message.answer("Enter only integers by comma: [1, 2, 3]")
+        await message.answer("Enter only integers by comma: [1, 2, 3]", reply_markup=create_cancel_button())
         return
 
     topic_ids = list(map(int, items))
@@ -149,5 +150,7 @@ async def update_entry(message: types.Message, state: FSMContext):
         await message.answer("Entry successfully updated ✅")
     else:
         await message.answer(f"Error:{response.text}")
+        await state.clear()
+        return
 
     await state.clear()

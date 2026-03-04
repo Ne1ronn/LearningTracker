@@ -2,7 +2,7 @@ from aiogram import types, F
 from .entry_states import PatchEntryForm
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from ...keyboards import create_entry_attribute_choose_buttons, create_yes_no_buttons
+from ...keyboards import create_entry_attribute_choose_buttons, create_yes_no_buttons, create_cancel_button
 from .entry_router import router
 import httpx
 
@@ -15,7 +15,7 @@ async def start_patch(cb: CallbackQuery, state: FSMContext, token: str):
     await cb.answer()
 
     await state.update_data(token=token)
-    await cb.message.answer("Enter the id of entry:")
+    await cb.message.answer("Enter the id of entry:", reply_markup=create_cancel_button())
     await state.set_state(PatchEntryForm.waiting_id)
 
 @router.message(PatchEntryForm.waiting_id)
@@ -23,7 +23,7 @@ async def get_entry(message: types.Message, state: FSMContext):
     try:
         entry_id = int(message.text)
     except ValueError:
-        await message.answer("Enter a integer number")
+        await message.answer("Enter a integer number", reply_markup=create_cancel_button())
         return
 
     data = await state.get_data()
@@ -34,6 +34,7 @@ async def get_entry(message: types.Message, state: FSMContext):
 
     if response.status_code in (403, 404):
         await message.answer(response.text)
+        await state.clear()
         return
 
     await state.update_data(entry_id=entry_id, updates={})
@@ -44,6 +45,11 @@ async def get_entry(message: types.Message, state: FSMContext):
 async def wait_attribute(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
     attribute = cb.data
+
+    if cb.data == "cancel":
+        await state.clear()
+        await cb.message.answer("Operation cancelled")
+        return
 
     attributes = [
         "title",
@@ -61,7 +67,7 @@ async def wait_attribute(cb: CallbackQuery, state: FSMContext):
         return
 
     await state.update_data(current_attribute=attribute)
-    await cb.message.answer("Enter a new value for attribute:")
+    await cb.message.answer("Enter a new value for attribute:", reply_markup=create_cancel_button())
     await state.set_state(PatchEntryForm.edit_attribute)
 
 @router.message(PatchEntryForm.edit_attribute)
@@ -77,7 +83,7 @@ async def edit_attribute(message: types.Message, state: FSMContext):
             if not (0 <= value <= 10):
                 raise ValueError
         except ValueError:
-            await message.answer("Enter number between 0 and 10")
+            await message.answer("Enter number between 0 and 10", reply_markup=create_cancel_button())
             return
     elif attribute == "learning_hours":
         try:
@@ -85,17 +91,17 @@ async def edit_attribute(message: types.Message, state: FSMContext):
             if value < 0 or value > 24:
                 raise ValueError
         except ValueError:
-            await message.answer("Enter number more than 0 and less than 24")
+            await message.answer("Enter number more than 0 and less than 24", reply_markup=create_cancel_button())
             return
     elif attribute == "topic_ids":
         if not (value.startswith("[") and value.endswith("]")):
-            await message.answer("Enter in this format: [1, 2, 3]")
+            await message.answer("Enter in this format: [1, 2, 3]", reply_markup=create_cancel_button())
             return
 
         items = value[1:-1].replace(" ", "").split(",")
 
         if not all(item.isdigit() for item in items):
-            await message.answer("Enter only integers by comma: [1, 2, 3]")
+            await message.answer("Enter only integers by comma: [1, 2, 3]", reply_markup=create_cancel_button())
             return
 
         value = list(map(int, items))
@@ -128,5 +134,7 @@ async def confirm(cb: CallbackQuery, state: FSMContext):
         await cb.message.answer("Entry successfully updated ✅")
     else:
         await cb.message.answer(f"Error:{response.text}")
+        await state.clear()
+        return
 
     await state.clear()

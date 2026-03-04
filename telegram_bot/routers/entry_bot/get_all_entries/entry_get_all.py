@@ -63,6 +63,7 @@ async def show_result(cb: CallbackQuery, state: FSMContext):
     else:
         await cb.message.answer(f"Error: {response.text}")
         await state.clear()
+        return
 
     await state.update_data(token=token)
     await cb.message.answer(

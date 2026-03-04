@@ -20,6 +20,7 @@ async def summary(cb: CallbackQuery, state: FSMContext, token: str):
     if response.status_code != 200:
         await cb.message.answer("Received some error")
         await state.clear()
+        return
 
     data = response.json()
     lines = []

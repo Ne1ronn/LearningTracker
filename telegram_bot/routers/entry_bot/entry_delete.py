@@ -6,6 +6,8 @@ from aiogram.types import CallbackQuery
 from .entry_router import router
 import httpx
 
+from ...keyboards import create_cancel_button
+
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 
 @router.callback_query(F.data == "delete_entry")
@@ -14,7 +16,7 @@ async def get_id(cb: CallbackQuery, state: FSMContext, token: str):
     await cb.answer()
 
     await state.update_data(token=token)
-    await cb.message.answer("Enter the id of entry:")
+    await cb.message.answer("Enter the id of entry:", reply_markup=create_cancel_button())
     await state.set_state(DeleteEntryState.waiting_id)
 
 @router.message(DeleteEntryState.waiting_id)
@@ -22,7 +24,7 @@ async def delete_entry(message: types.Message, state: FSMContext):
     try:
         entry_id = int(message.text)
     except ValueError:
-        await message.answer("Enter a integer number")
+        await message.answer("Enter a integer number", reply_markup=create_cancel_button())
         return
 
     data = await state.get_data()
@@ -34,5 +36,7 @@ async def delete_entry(message: types.Message, state: FSMContext):
         await message.answer("Entry deleted successfully ✅")
     else:
         await message.answer(response.text)
+        await state.clear()
         return
+
     await state.clear()

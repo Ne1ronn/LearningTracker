@@ -15,6 +15,7 @@ def create_sort_buttons():
     builder.button(text="Mood", callback_data="sort_mood")
     builder.button(text="Progress", callback_data="sort_progress")
     builder.button(text="Hours", callback_data="sort_hours")
+    builder.button(text="Cancel", callback_data="cancel")
 
     return builder.as_markup()
 
@@ -23,6 +24,7 @@ def create_asc_desc_buttons():
 
     builder.button(text="Ascending", callback_data="Ascending")
     builder.button(text="Descending", callback_data="Descending")
+    builder.button(text="Cancel", callback_data="cancel")
 
     return builder.as_markup()
 
@@ -38,6 +40,7 @@ def create_filter_buttons():
                    callback_data="ask_progress")
     builder.button(text="Hours",
                    callback_data="ask_hours")
+    builder.button(text="Cancel", callback_data="cancel")
 
     return builder.as_markup()
 
@@ -47,6 +50,7 @@ def create_private_buttons():
     builder.button(text="Only private", callback_data="private")
     builder.button(text="Only public", callback_data="public")
     builder.button(text="All", callback_data="all")
+    builder.button(text="Cancel", callback_data="cancel")
 
     return builder.as_markup()
 
@@ -56,6 +60,7 @@ def create_date_reply_buttons():
     builder.button(text="Today")
     builder.button(text="Yesterday")
     builder.button(text="Clear filter")
+    builder.button(text="Cancel", callback_data="cancel")
 
     return builder.as_markup()
 
@@ -114,6 +119,7 @@ def create_yes_no_buttons(prefix: str):
 
     builder.button(text="Yes", callback_data=f"yes_{prefix}")
     builder.button(text="No", callback_data=f"no_{prefix}")
+    builder.button(text="Cancel", callback_data="cancel")
 
     return builder.as_markup()
 
@@ -128,6 +134,7 @@ def create_entry_attribute_choose_buttons():
     builder.button(text="Learning hours", callback_data="learning_hours")
     builder.button(text="Privacy", callback_data="private")
     builder.button(text="Topics", callback_data="topic_ids")
+    builder.button(text="Cancel", callback_data="cancel")
 
     builder.adjust(2)
     return builder.as_markup()
@@ -140,3 +147,12 @@ def create_topic_attribute_choose_buttons():
     builder.button(text="Need", callback_data="need")
     builder.button(text="Progress score", callback_data="progress_score")
     builder.button(text="Is active", callback_data="is_active")
+    builder.button(text="Cancel", callback_data="cancel")
+
+    builder.adjust(2)
+    return builder.as_markup()
+
+def create_cancel_button():
+    builder = InlineKeyboardBuilder()
+    builder.button(text="Cancel", callback_data="cancel")
+    return builder.as_markup()

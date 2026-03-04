@@ -8,6 +8,8 @@ from aiogram.types import CallbackQuery
 from .auth_router import router
 import httpx
 
+from ...keyboards import create_cancel_button
+
 API_URL = "http://127.0.0.1:8000/login"
 API_GET_URL = "http://127.0.0.1:8000/user/login/{username}"
 API_POST_URL = "http://127.0.0.1:8000/token"
@@ -22,7 +24,7 @@ async def wait_username(cb: CallbackQuery, state: FSMContext):
     await state.clear()
     await cb.answer()
 
-    await cb.message.answer("Enter the username of your user:")
+    await cb.message.answer("Enter the username of your user:", reply_markup=create_cancel_button())
     await state.set_state(UserLoginForm.username)
 
 @router.message(UserLoginForm.username)
@@ -33,9 +35,10 @@ async def check_username(message: types.Message, state: FSMContext):
 
     if response.status_code == 404:
         await message.answer(f"{response.text}")
+        await state.clear()
         return
 
-    await message.answer("Enter the password:")
+    await message.answer("Enter the password:", reply_markup=create_cancel_button())
     await state.update_data(username=message.text)
     await state.set_state(UserLoginForm.password)
 
@@ -53,6 +56,7 @@ async def check_password(message: types.Message, state: FSMContext):
     else:
         await message.answer(f"Error:{response.text}")
         await state.clear()
+        return
 
 async def add_token(message: types. Message, state: FSMContext):
     data = await state.get_data()
@@ -65,5 +69,7 @@ async def add_token(message: types. Message, state: FSMContext):
 
     if response.status_code != 201:
         await message.answer(f"{response.text}")
+        await state.clear()
+        return
 
     await state.clear()

@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 from ..entry_states import EntriesState
 from telegram_bot.keyboards import create_date_reply_buttons, create_filter_buttons, create_choose_buttons, \
-    create_private_buttons
+    create_private_buttons, create_cancel_button
 from ..entry_router import router
 
 @router.callback_query(F.data == "ask_filter")
@@ -37,7 +37,7 @@ async def set_private(cb: CallbackQuery, state: FSMContext):
     elif text == "Only public":
         value = False
     else:
-        await cb.message.answer("Choose from buttons, try again:")
+        await cb.message.answer("Choose from buttons, try again:", reply_markup=create_cancel_button())
         return
 
     await state.update_data(private=value)
@@ -92,7 +92,8 @@ async def set_date(message: types.Message, state: FSMContext):
 async def ask_mood(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_mood)
     await cb.message.answer(
-        "Enter a range of numbers from 1 to 10 with a space between them:"
+        "Enter a range of numbers from 1 to 10 with a space between them:",
+        reply_markup=create_cancel_button(),
     )
     await cb.answer()
 
@@ -103,7 +104,7 @@ async def set_mood(message: types.Message, state: FSMContext):
         if not (1 <= low <= high <= 10):
             raise ValueError
     except ValueError:
-        await message.answer("Wrong input, try again:")
+        await message.answer("Wrong input, try again:", reply_markup=create_cancel_button())
         return
 
     await state.update_data(min_mood_score=low, max_mood_score=high)
@@ -118,7 +119,8 @@ async def set_mood(message: types.Message, state: FSMContext):
 async def ask_progress(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_progress)
     await cb.message.answer(
-        "Enter a range of numbers from 1 to 10 with a space between them:"
+        "Enter a range of numbers from 1 to 10 with a space between them:",
+        reply_markup=create_cancel_button()
     )
     await cb.answer()
 
@@ -129,7 +131,7 @@ async def set_progress(message: types.Message, state: FSMContext):
         if not (1 <= low <= high <= 10):
             raise ValueError
     except ValueError:
-        await message.answer("Wrong input, try again:")
+        await message.answer("Wrong input, try again:", reply_markup=create_cancel_button())
         return
 
     await state.update_data(min_progress_score=low, max_progress_score=high)
@@ -144,7 +146,8 @@ async def set_progress(message: types.Message, state: FSMContext):
 async def ask_hours(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_hours)
     await cb.message.answer(
-        "Enter a range of numbers with a space between them:"
+        "Enter a range of numbers with a space between them:",
+        reply_markup=create_cancel_button()
     )
     await cb.answer()
 
@@ -156,7 +159,7 @@ async def set_hours(message: types.Message, state: FSMContext):
         if not (1 <= low <= high):
             raise ValueError
     except ValueError:
-        await message.answer("Wrong input, try again:")
+        await message.answer("Wrong input, try again:", reply_markup=create_cancel_button())
         return
 
     await state.update_data(min_learning_hours=low, max_learning_hours=high)

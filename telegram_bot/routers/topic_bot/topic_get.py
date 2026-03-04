@@ -5,6 +5,8 @@ from aiogram.fsm.context import FSMContext
 from .topic_router import router
 import httpx
 
+from ...keyboards import create_cancel_button
+
 API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
 
 @router.callback_query(F.data == "get_topic")
@@ -12,7 +14,7 @@ async def start_get(cb: CallbackQuery, state: FSMContext):
     await state.clear()
     await cb.answer()
 
-    await cb.message.answer("Enter the id of topic:")
+    await cb.message.answer("Enter the id of topic:", reply_markup=create_cancel_button())
     await state.set_state(GetTopicState.waiting_id)
 
 @router.message(GetTopicState.waiting_id)
@@ -20,7 +22,7 @@ async def get_topic(message: types.Message, state: FSMContext):
     try:
         topic_id = int(message.text)
     except ValueError:
-        await message.answer("Enter a integer number")
+        await message.answer("Enter a integer number", reply_markup=create_cancel_button())
         return
 
     async with httpx.AsyncClient() as client:
@@ -38,5 +40,7 @@ async def get_topic(message: types.Message, state: FSMContext):
             f"Topic is_active: {data['is_active']}")
     else:
         await message.answer(f"Error:{response.text}")
+        await state.clear()
+        return
 
     await state.clear()

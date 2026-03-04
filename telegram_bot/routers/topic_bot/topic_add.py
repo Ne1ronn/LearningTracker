@@ -6,6 +6,8 @@ from .topic_states import TopicForm
 from .topic_router import router
 import httpx
 
+from ...keyboards import create_cancel_button
+
 API_URL = "http://127.0.0.1:8000/topics"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
 
@@ -15,19 +17,19 @@ async def start_topic(cb: CallbackQuery, state: FSMContext, token: str):
     await cb.answer()
 
     await state.update_data(token=token)
-    await cb.message.answer("Enter the title of new topic:")
+    await cb.message.answer("Enter the title of new topic:", reply_markup=create_cancel_button())
     await state.set_state(TopicForm.title)
 
 @router.message(TopicForm.title)
 async def add_title(message: types.Message, state: FSMContext):
     await state.update_data(title=message.text)
-    await message.answer("Now the skill of topic:")
+    await message.answer("Now the skill of topic:", reply_markup=create_cancel_button())
     await state.set_state(TopicForm.skill)
 
 @router.message(TopicForm.skill)
 async def add_skill(message: types.Message, state: FSMContext):
     await state.update_data(skill=message.text)
-    await message.answer("Now the need of topic:")
+    await message.answer("Now the need of topic:", reply_markup=create_cancel_button())
     await state.set_state(TopicForm.need)
 
 @router.message(TopicForm.need)
@@ -37,10 +39,10 @@ async def add_need(message: types.Message, state: FSMContext):
         if not (0 <= score <= 10):
             raise ValueError
     except ValueError:
-        await message.answer("Enter number between 0 and 10")
+        await message.answer("Enter number between 0 and 10", reply_markup=create_cancel_button())
         return
     await state.update_data(need=score)
-    await message.answer("Now the progress score of topic:")
+    await message.answer("Now the progress score of topic:", reply_markup=create_cancel_button())
     await state.set_state(TopicForm.progress_score)
 
 @router.message(TopicForm.progress_score)
@@ -50,7 +52,7 @@ async def add_score(message: types.Message, state: FSMContext):
         if not (0 <= score <= 10):
             raise ValueError
     except ValueError:
-        await message.answer("Enter number between 0 and 10")
+        await message.answer("Enter number between 0 and 10", reply_markup=create_cancel_button())
         return
 
     await state.update_data(progress_score=score)
@@ -63,5 +65,7 @@ async def add_score(message: types.Message, state: FSMContext):
         await message.answer(response.text+"✅")
     else:
         await message.answer(f"Error:{response.text}")
+        await state.clear()
+        return
 
     await state.clear()

@@ -5,6 +5,8 @@ from .entry_states import GetEntryState
 from .entry_router import router
 import httpx
 
+from ...keyboards import create_cancel_button
+
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 
 @router.callback_query(F.data == "get_entry")
@@ -13,7 +15,7 @@ async def start_entry(cb: CallbackQuery, state: FSMContext, token: str):
     await cb.answer()
 
     await state.update_data(token=token)
-    await cb.message.answer("Enter the id of entry:")
+    await cb.message.answer("Enter the id of entry:", reply_markup=create_cancel_button())
     await state.set_state(GetEntryState.waiting_id)
 
 @router.message(GetEntryState.waiting_id)
@@ -21,7 +23,7 @@ async def get_entry(message: types.Message, state: FSMContext):
     try:
         entry_id = int(message.text)
     except ValueError:
-        await message.answer("Enter a integer number")
+        await message.answer("Enter a integer number", reply_markup=create_cancel_button())
         return
 
     data = await state.get_data()
@@ -44,5 +46,7 @@ async def get_entry(message: types.Message, state: FSMContext):
             f"Entry private: {data['private']}")
     else:
         await message.answer(f"Error:{response.text}")
+        await state.clear()
+        return
 
     await state.clear()

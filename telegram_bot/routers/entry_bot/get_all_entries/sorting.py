@@ -2,7 +2,8 @@ from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 from ..entry_states import EntriesState
-from telegram_bot.keyboards import create_choose_buttons, create_sort_buttons, create_asc_desc_buttons
+from telegram_bot.keyboards import create_choose_buttons, create_sort_buttons, create_asc_desc_buttons, \
+    create_cancel_button
 from ..entry_router import router
 
 @router.callback_query(F.data == "ask_sort")
@@ -29,7 +30,7 @@ async def set_sort_date(cb: CallbackQuery, state: FSMContext):
     field = asc_or_desc(text, sort="created_at")
 
     if not field:
-        await cb.message.answer("Wrong input, try again:")
+        await cb.message.answer("Wrong input, try again:", reply_markup=create_cancel_button())
         return
 
     await state.update_data(sort=field)
@@ -57,7 +58,7 @@ async def set_sort_mood(cb: CallbackQuery, state: FSMContext):
     field = asc_or_desc(text, sort="mood")
 
     if not field:
-        await cb.message.answer("Wrong input, try again:")
+        await cb.message.answer("Wrong input, try again:", reply_markup=create_cancel_button())
         return
 
     await state.update_data(sort=field)
@@ -85,7 +86,7 @@ async def set_sort_progress(cb: CallbackQuery, state: FSMContext):
     field = asc_or_desc(text, sort="progress")
 
     if not field:
-        await cb.message.answer("Wrong input, try again:")
+        await cb.message.answer("Wrong input, try again:", reply_markup=create_cancel_button())
         return
 
     await state.update_data(sort=field)
@@ -113,7 +114,7 @@ async def set_sort_hours(cb: CallbackQuery, state: FSMContext):
     field = asc_or_desc(text, sort="hours")
 
     if not field:
-        await cb.message.answer("Wrong input, try again:")
+        await cb.message.answer("Wrong input, try again:", reply_markup=create_cancel_button())
         return
 
     await state.update_data(sort=field)

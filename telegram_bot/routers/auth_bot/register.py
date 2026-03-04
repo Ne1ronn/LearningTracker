@@ -6,6 +6,8 @@ from email_validator import validate_email, EmailNotValidError
 from .auth_router import router
 import httpx
 
+from ...keyboards import create_cancel_button
+
 API_GET_URL = "http://127.0.0.1:8000/user/register/{username}"
 API_EMAIL_URL = "http://127.0.0.1:8000/userm/{email}"
 API_POST_URL = "http://127.0.0.1:8000/register"
@@ -20,7 +22,7 @@ async def register(cb: CallbackQuery, state: FSMContext):
     await state.clear()
     await cb.answer()
 
-    await cb.message.answer("Enter the username:")
+    await cb.message.answer("Enter the username:", reply_markup=create_cancel_button())
     await state.set_state(UserForm.username)
 
 @router.message(UserForm.username)
@@ -29,11 +31,11 @@ async def add_username(message: types.Message, state: FSMContext):
         response = await client.get(API_GET_URL.format(username=message.text))
 
     if response.status_code == 409:
-        await message.answer("This username already exists. Enter another:")
+        await message.answer("This username already exists. Enter another:", reply_markup=create_cancel_button())
         return
 
     await state.update_data(username=message.text)
-    await message.answer("Enter the email:")
+    await message.answer("Enter the email:", reply_markup=create_cancel_button())
     await state.set_state(UserForm.email)
 
 @router.message(UserForm.email)
@@ -42,20 +44,19 @@ async def add_email(message: types.Message, state: FSMContext):
         valid = validate_email(message.text)
         email = valid.email
     except EmailNotValidError:
-        await message.answer("Incorrect email, try again:")
+        await message.answer("Incorrect email, try again:", reply_markup=create_cancel_button())
         return
 
     async with httpx.AsyncClient() as client:
         response = await client.get(API_EMAIL_URL.format(email=email))
 
     if response.status_code == 409:
-        await message.answer("This email already exists. Enter another:")
+        await message.answer("This email already exists. Enter another:", reply_markup=create_cancel_button())
         return
 
     await state.update_data(email=email)
-    await message.answer("Enter the password:")
+    await message.answer("Enter the password:", reply_markup=create_cancel_button())
     await state.set_state(UserForm.hashed_password)
-
 
 @router.message(UserForm.hashed_password)
 async def add_password(message: types.Message, state: FSMContext):
@@ -69,5 +70,7 @@ async def add_password(message: types.Message, state: FSMContext):
         await message.answer("User registered successfully")
     else:
         await message.answer(f"Error:{response.text}")
+        await state.clear()
+        return
 
     await state.clear()
