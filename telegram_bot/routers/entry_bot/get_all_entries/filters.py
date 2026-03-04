@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 from ..entry_states import EntriesState
 from telegram_bot.keyboards import create_date_reply_buttons, create_filter_buttons, create_choose_buttons, \
-    create_private_reply_buttons
+    create_private_buttons
 from ..entry_router import router
 
 @router.callback_query(F.data == "ask_filter")
@@ -21,13 +21,14 @@ async def ask_private(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_private)
     await cb.message.answer(
         "Choose the private:",
-        reply_markup=create_private_reply_buttons()
+        reply_markup=create_private_buttons()
     )
     await cb.answer()
 
-@router.message(EntriesState.waiting_private)
-async def set_private(message: types.Message, state: FSMContext):
-    text = message.text
+@router.callback_query(EntriesState.waiting_private)
+async def set_private(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
+    text = cb.data
 
     if text == "All":
         value = None
@@ -36,16 +37,16 @@ async def set_private(message: types.Message, state: FSMContext):
     elif text == "Only public":
         value = False
     else:
-        await message.answer("Choose from buttons, try again:")
+        await cb.message.answer("Choose from buttons, try again:")
         return
 
     await state.update_data(private=value)
-    await message.answer(
+    await cb.message.answer(
         "Private filter updated ✅",
         reply_markup=ReplyKeyboardRemove(),
     )
 
-    await message.answer(
+    await cb.message.answer(
         f"Choose the sorting or filtering of result, or show the result:",
         reply_markup=create_choose_buttons(),
     )

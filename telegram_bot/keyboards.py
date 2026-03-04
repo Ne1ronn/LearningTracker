@@ -18,11 +18,11 @@ def create_sort_buttons():
 
     return builder.as_markup()
 
-def create_choose_reply_buttons():
-    builder = ReplyKeyboardBuilder()
+def create_asc_desc_buttons():
+    builder = InlineKeyboardBuilder()
 
-    builder.button(text="Ascending")
-    builder.button(text="Descending")
+    builder.button(text="Ascending", callback_data="Ascending")
+    builder.button(text="Descending", callback_data="Descending")
 
     return builder.as_markup()
 
@@ -41,12 +41,12 @@ def create_filter_buttons():
 
     return builder.as_markup()
 
-def create_private_reply_buttons():
-    builder = ReplyKeyboardBuilder()
+def create_private_buttons():
+    builder = InlineKeyboardBuilder()
 
-    builder.button(text="Only private")
-    builder.button(text="Only public")
-    builder.button(text="All")
+    builder.button(text="Only private", callback_data="private")
+    builder.button(text="Only public", callback_data="public")
+    builder.button(text="All", callback_data="all")
 
     return builder.as_markup()
 
