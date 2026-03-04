@@ -6,6 +6,8 @@ from aiogram.fsm.context import FSMContext
 from .topic_router import router
 import httpx
 
+from ...keyboards import create_topic_attribute_choose_buttons
+
 API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
 
@@ -33,27 +35,28 @@ async def get_topic(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(topic_id=topic_id, updates={})
-    await message.answer("What exactly you want update?\n"
-                         "Title?\n"
-                         "Skill?\n"
-                         "Need?\n"
-                         "Progress_score?\n"
-                         "Is active?")
+    await message.answer("What exactly you want update?", reply_markup=create_topic_attribute_choose_buttons())
     await state.set_state(PatchTopicForm.waiting_attribute)
 
-@router.message(PatchTopicForm.waiting_attribute)
-async def wait_attribute(message: types.Message, state: FSMContext):
-    attributes = ["title", "skill", "need", "progress_score", "is_active"]
-    try:
-        attribute = message.text.strip().lower()
-        if not attribute in attributes:
-            raise ValueError
-    except ValueError:
-        await message.answer("Enter a attribute that exists:")
+@router.callback_query(PatchTopicForm.waiting_attribute)
+async def wait_attribute(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
+    attribute = cb.data
+
+    attributes = [
+        "title",
+        "skill",
+        "need",
+        "progress_score",
+        "is_active"
+    ]
+
+    if attribute not in attributes:
+        await cb.answer("Invalid attribute", show_alert=True)
         return
 
     await state.update_data(current_attribute=attribute)
-    await message.answer("Enter a new value for attribute:")
+    await cb.message.answer("Enter a new value for attribute:")
     await state.set_state(PatchTopicForm.edit_attribute)
 
 @router.message(PatchTopicForm.edit_attribute)

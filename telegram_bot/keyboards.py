@@ -117,7 +117,7 @@ def create_yes_no_buttons(prefix: str):
 
     return builder.as_markup()
 
-def create_attribute_choose_buttons():
+def create_entry_attribute_choose_buttons():
     builder = InlineKeyboardBuilder()
 
     builder.button(text="Title", callback_data="title")
@@ -131,3 +131,12 @@ def create_attribute_choose_buttons():
 
     builder.adjust(2)
     return builder.as_markup()
+
+def create_topic_attribute_choose_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="Title", callback_data="title")
+    builder.button(text="Skill", callback_data="skill")
+    builder.button(text="Need", callback_data="need")
+    builder.button(text="Progress score", callback_data="progress_score")
+    builder.button(text="Is active", callback_data="is_active")

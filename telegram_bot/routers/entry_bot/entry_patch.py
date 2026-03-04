@@ -2,7 +2,7 @@ from aiogram import types, F
 from .entry_states import PatchEntryForm
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from ...keyboards import create_attribute_choose_buttons, create_yes_no_buttons
+from ...keyboards import create_entry_attribute_choose_buttons, create_yes_no_buttons
 from .entry_router import router
 import httpx
 
@@ -37,7 +37,7 @@ async def get_entry(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(entry_id=entry_id, updates={})
-    await message.answer("What exactly you want update?", reply_markup=create_attribute_choose_buttons())
+    await message.answer("What exactly you want update?", reply_markup=create_entry_attribute_choose_buttons())
     await state.set_state(PatchEntryForm.waiting_attribute)
 
 @router.callback_query(PatchEntryForm.waiting_attribute)
@@ -112,7 +112,7 @@ async def edit_attribute(message: types.Message, state: FSMContext):
 async def confirm(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
     if cb.data == "yes_field":
-        await cb.message.answer("What exactly you want update?", reply_markup=create_attribute_choose_buttons())
+        await cb.message.answer("What exactly you want update?", reply_markup=create_entry_attribute_choose_buttons())
         await state.set_state(PatchEntryForm.waiting_attribute)
         return
 
