@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status, HTTPException
-from api.crud.topic_crud import add_topic, give_topic, update_topic_, patch_topic_, delete_topic_
+from api.crud.topic_crud import add_topic, give_topic, update_topic_, patch_topic_, delete_topic_, get_all_topics_db
 from database.setup import SessionDep
 from schemas.topic_schema import TopicAddSchema, UpdateTopicSchema
 from api.auth.auth_crud import require_role
@@ -17,6 +17,10 @@ async def insert_topic(session: SessionDep, topic: TopicAddSchema):
 @router.get("/topic/{topic_id}")
 async def get_topic(session: SessionDep, topic_id: int):
     return await give_topic(session, topic_id)
+
+@router.get("/topics")
+async def get_all_topics(session: SessionDep):
+    return await get_all_topics_db(session)
 
 @router.put("/topic/{topic_id}", dependencies=[Depends(require_role)])
 async def update_topic(session: SessionDep, topic: TopicAddSchema, topic_id: int):

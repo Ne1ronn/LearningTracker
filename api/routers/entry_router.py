@@ -69,3 +69,4 @@ async def delete_entry(session: SessionDep, entry_id: int, user: Annotated[UserM
 async def can_edit(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     entry = await get_entry_by_id(session, entry_id)
     can_update_entry(entry, user)
+    return entry

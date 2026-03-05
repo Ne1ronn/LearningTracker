@@ -2,12 +2,14 @@ from aiogram import types, F
 from .entry_states import PatchEntryForm
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from ...keyboards import create_entry_attribute_choose_buttons, create_yes_no_buttons, create_cancel_button
+from ...keyboards import create_entry_attribute_choose_buttons, create_yes_no_buttons, create_cancel_button, \
+    create_topics_buttons
 from .entry_router import router
 import httpx
 
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 API_PERMISSION_URL = "http://127.0.0.1:8000/entries/{entry_id}/edit"
+API_TOPICS_URL = "http://127.0.0.1:8000/topics"
 
 @router.callback_query(F.data == "patch_entry")
 async def start_patch(cb: CallbackQuery, state: FSMContext, token: str):
@@ -37,7 +39,11 @@ async def get_entry(message: types.Message, state: FSMContext):
         await state.clear()
         return
 
-    await state.update_data(entry_id=entry_id, updates={})
+    topic_ids = []
+    if response.status_code == 200:
+        topic_ids = [t["id"] for t in response.json()["topics"]]
+
+    await state.update_data(entry_id=entry_id, topic_ids=topic_ids, updates={})
     await message.answer("What exactly you want update?", reply_markup=create_entry_attribute_choose_buttons())
     await state.set_state(PatchEntryForm.waiting_attribute)
 
@@ -45,7 +51,7 @@ async def get_entry(message: types.Message, state: FSMContext):
 async def wait_attribute(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
     attribute = cb.data
-
+    data = await state.get_data()
     if cb.data == "cancel":
         await state.clear()
         await cb.message.answer("Operation cancelled")
@@ -67,6 +73,31 @@ async def wait_attribute(cb: CallbackQuery, state: FSMContext):
         return
 
     await state.update_data(current_attribute=attribute)
+
+    if attribute == "topic_ids":
+        async with httpx.AsyncClient() as client:
+            response = await client.get(API_TOPICS_URL)
+
+        if response.status_code == 200:
+            topics = response.json()
+        else:
+            await cb.message.answer(f"Received error: {response.text}")
+            await state.set_state(PatchEntryForm.waiting_confirm)
+            return
+
+        topic_map = {int(t["id"]): t["title"] for t in topics}
+        topics_ids = data["topic_ids"]
+        if not topics_ids:
+            await cb.message.answer("Existed topics of entry: none")
+        else:
+            titles = [topic_map.get(i, str(i)) for i in topics_ids]
+            text = "Existed topics of entry:\n" + "\n".join(f"• {t}" for t in titles)
+            await cb.message.answer(text)
+        await cb.message.answer("Add or clear topics:", reply_markup=create_topics_buttons(topics))
+        await state.update_data(topics=topics, topic_map=topic_map)
+        await state.set_state(PatchEntryForm.edit_topic_ids)
+        return
+
     await cb.message.answer("Enter a new value for attribute:", reply_markup=create_cancel_button())
     await state.set_state(PatchEntryForm.edit_attribute)
 
@@ -93,18 +124,6 @@ async def edit_attribute(message: types.Message, state: FSMContext):
         except ValueError:
             await message.answer("Enter number more than 0 and less than 24", reply_markup=create_cancel_button())
             return
-    elif attribute == "topic_ids":
-        if not (value.startswith("[") and value.endswith("]")):
-            await message.answer("Enter in this format: [1, 2, 3]", reply_markup=create_cancel_button())
-            return
-
-        items = value[1:-1].replace(" ", "").split(",")
-
-        if not all(item.isdigit() for item in items):
-            await message.answer("Enter only integers by comma: [1, 2, 3]", reply_markup=create_cancel_button())
-            return
-
-        value = list(map(int, items))
 
     updates[attribute] = value
     await state.update_data(updates=updates)
@@ -113,6 +132,53 @@ async def edit_attribute(message: types.Message, state: FSMContext):
                          "Would you update anything else?",
                          reply_markup=create_yes_no_buttons("field"))
     await state.set_state(PatchEntryForm.waiting_confirm)
+
+
+@router.callback_query(PatchEntryForm.edit_topic_ids)
+async def add_topics(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
+    data = await state.get_data()
+    topics = data["topics"]
+    if cb.data == "cancel":
+        await state.clear()
+        await cb.message.answer("Operation cancelled")
+        return
+
+    elif cb.data == "clear":
+        await state.update_data(topic_ids=[])
+        await cb.message.answer("Topics cleared", reply_markup=create_topics_buttons(topics))
+        return
+
+    elif cb.data == "ready":
+        await cb.message.answer("Field added to changes\n"
+                             "Would you update anything else?",
+                             reply_markup=create_yes_no_buttons("field"))
+        updates = data["updates"]
+        updates["topic_ids"] = data["topic_ids"]
+        await state.update_data(updates=updates)
+        await state.set_state(PatchEntryForm.waiting_confirm)
+        return
+
+    elif cb.data.startswith("topic_"):
+        topic_id = int(cb.data.split("_")[1])
+        topics_ids = data["topic_ids"]
+
+        if topic_id in topics_ids:
+            await cb.message.answer(f"Topic {topic_id} already in list")
+            return
+
+        topics_ids.append(topic_id)
+
+        topic_map = data["topic_map"]
+        titles = [topic_map.get(i, str(i)) for i in topics_ids]
+        text = "Selected topics:\n" + "\n".join(f"• {t}" for t in titles)
+
+        await state.update_data(topic_ids=topics_ids)
+        await cb.message.answer(text, reply_markup=create_topics_buttons(topics))
+        return
+    else:
+        await cb.message.answer("Wrong button. Please choose right one")
+        return
 
 @router.callback_query(PatchEntryForm.waiting_confirm)
 async def confirm(cb: CallbackQuery, state: FSMContext):

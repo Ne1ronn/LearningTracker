@@ -16,6 +16,7 @@ class PatchEntryForm(StatesGroup):
     waiting_id = State()
     waiting_attribute = State()
     edit_attribute = State()
+    edit_topic_ids = State()
     waiting_confirm = State()
 
 class DeleteEntryState(StatesGroup):

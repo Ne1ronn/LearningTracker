@@ -7,6 +7,7 @@ def create_choose_buttons():
     builder.button(text="Sorting", callback_data="ask_sort")
     builder.button(text="Result", callback_data="show_result")
 
+    builder.adjust(2)
     return builder.as_markup()
 
 def create_sort_buttons():
@@ -17,6 +18,7 @@ def create_sort_buttons():
     builder.button(text="Hours", callback_data="sort_hours")
     builder.button(text="Cancel", callback_data="cancel")
 
+    builder.adjust(2)
     return builder.as_markup()
 
 def create_asc_desc_buttons():
@@ -26,6 +28,7 @@ def create_asc_desc_buttons():
     builder.button(text="Descending", callback_data="Descending")
     builder.button(text="Cancel", callback_data="cancel")
 
+    builder.adjust(2)
     return builder.as_markup()
 
 def create_filter_buttons():
@@ -42,6 +45,7 @@ def create_filter_buttons():
                    callback_data="ask_hours")
     builder.button(text="Cancel", callback_data="cancel")
 
+    builder.adjust(2)
     return builder.as_markup()
 
 def create_private_buttons():
@@ -52,6 +56,7 @@ def create_private_buttons():
     builder.button(text="All", callback_data="all")
     builder.button(text="Cancel", callback_data="cancel")
 
+    builder.adjust(2)
     return builder.as_markup()
 
 def create_date_reply_buttons():
@@ -62,6 +67,7 @@ def create_date_reply_buttons():
     builder.button(text="Clear filter")
     builder.button(text="Cancel", callback_data="cancel")
 
+    builder.adjust(2)
     return builder.as_markup()
 
 def create_entry_crud_buttons():
@@ -121,6 +127,7 @@ def create_yes_no_buttons(prefix: str):
     builder.button(text="No", callback_data=f"no_{prefix}")
     builder.button(text="Cancel", callback_data="cancel")
 
+    builder.adjust(2)
     return builder.as_markup()
 
 def create_entry_attribute_choose_buttons():
@@ -155,4 +162,16 @@ def create_topic_attribute_choose_buttons():
 def create_cancel_button():
     builder = InlineKeyboardBuilder()
     builder.button(text="Cancel", callback_data="cancel")
+    return builder.as_markup()
+
+def create_topics_buttons(topics):
+    builder = InlineKeyboardBuilder()
+
+    for topic in topics:
+        builder.button(text=topic["title"], callback_data=f"topic_{topic['id']}")
+    builder.button(text="Ready", callback_data="ready")
+    builder.button(text="Clear", callback_data="clear")
+    builder.button(text="Cancel", callback_data="cancel")
+
+    builder.adjust(2)
     return builder.as_markup()

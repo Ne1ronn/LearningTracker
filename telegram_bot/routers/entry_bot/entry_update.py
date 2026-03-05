@@ -6,10 +6,11 @@ from aiogram.types import CallbackQuery
 from .entry_router import router
 import httpx
 
-from ...keyboards import create_yes_no_buttons, create_cancel_button
+from ...keyboards import create_yes_no_buttons, create_cancel_button, create_topics_buttons
 
 API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
 API_PERMISSION_URL = "http://127.0.0.1:8000/entries/{entry_id}/edit"
+API_TOPICS_URL = "http://127.0.0.1:8000/topics"
 
 @router.callback_query(F.data == "update_entry")
 async def start_update(cb: CallbackQuery, state: FSMContext, token: str):
@@ -116,33 +117,68 @@ async def add_private(cb: CallbackQuery, state: FSMContext):
 async def wait_topics(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
     if cb.data == "yes_topics_update":
-        await cb.message.answer("Enter the id's by square brackets: [1, 2]", reply_markup=create_cancel_button())
+        async with httpx.AsyncClient() as client:
+            response = await client.get(API_TOPICS_URL)
+
+        if response.status_code == 200:
+            topics = response.json()
+        else:
+            await cb.message.answer(f"Received error: {response.text}")
+            await update_entry(cb.message, state)
+            return
+
+        await cb.message.answer("Choose the topics:", reply_markup=create_topics_buttons(topics))
+        await state.update_data(topics=topics, topic_ids=[], topic_map={int(t["id"]): t["title"] for t in topics})
         await state.set_state(UpdateEntryForm.topic_ids)
     elif cb.data == "no_topics_update":
         await update_entry(cb.message, state)
-
-@router.message(UpdateEntryForm.topic_ids)
-async def add_topics(message: types.Message, state: FSMContext):
-    text = message.text.strip()
-
-    if not (text.startswith("[") and text.endswith("]")):
-        await message.answer("Enter in this format: [1, 2, 3]", reply_markup=create_cancel_button())
         return
 
-    items = text[1:-1].replace(" ", "").split(",")
-
-    if not all(item.isdigit() for item in items):
-        await message.answer("Enter only integers by comma: [1, 2, 3]", reply_markup=create_cancel_button())
+@router.callback_query(UpdateEntryForm.topic_ids)
+async def add_topics(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
+    data = await state.get_data()
+    topics = data["topics"]
+    if cb.data == "cancel":
+        await state.clear()
+        await cb.message.answer("Operation cancelled")
         return
 
-    topic_ids = list(map(int, items))
-    await state.update_data(topic_ids=topic_ids)
-    await update_entry(message, state)
+    elif cb.data == "clear":
+        await state.update_data(topic_ids=[])
+        await cb.message.answer("Topics cleared", reply_markup=create_topics_buttons(topics))
+        return
+
+    elif cb.data == "ready":
+        await update_entry(cb.message, state)
+        return
+
+    elif cb.data.startswith("topic_"):
+        topic_id = int(cb.data.split("_")[1])
+        topics_ids = data["topic_ids"]
+
+        if topic_id in topics_ids:
+            await cb.message.answer(f"Topic {topic_id} already in list")
+            return
+
+        topics_ids.append(topic_id)
+
+        topic_map = data["topic_map"]
+        titles = [topic_map.get(i, str(i)) for i in topics_ids]
+        text = "Selected topics:\n" + "\n".join(f"• {t}" for t in titles)
+
+        await state.update_data(topic_ids=topics_ids)
+        await cb.message.answer(text, reply_markup=create_topics_buttons(topics))
+        return
+    else:
+        await cb.message.answer("Wrong button. Please choose right one")
+        return
 
 async def update_entry(message: types.Message, state: FSMContext):
     data = await state.get_data()
     token = data.pop("token")
     entry_id = data.pop('entry_id')
+    data.pop("topic_map", None)
     async with httpx.AsyncClient() as client:
         response = await client.put(API_URL.format(entry_id=entry_id), json=data, headers={"Authorization": f"Bearer {token}"})
 

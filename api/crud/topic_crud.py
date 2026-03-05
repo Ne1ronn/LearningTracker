@@ -30,6 +30,13 @@ async def give_topic(session: SessionDep, topic_id: int):
 
     return topic
 
+async def get_all_topics_db(session: SessionDep, limit: int = 10, offset: int = 0):
+    stmt = select(TopicModel).offset(offset).limit(limit)
+    result = await session.execute(stmt)
+    topics = result.scalars().all()
+
+    return topics
+
 async def update_topic_(session: SessionDep, new_topic: TopicAddSchema, topic_id: int):
     topic = await give_topic(session, topic_id)
 
