@@ -51,8 +51,8 @@ async def wait_attribute(cb: CallbackQuery, state: FSMContext):
     attributes = [
         "title",
         "skill",
-        "need",
-        "progress_score",
+        "description",
+        "category",
         "is_active"
     ]
 
@@ -70,15 +70,6 @@ async def patch_topic(message: types.Message, state: FSMContext):
     attribute = data["current_attribute"]
     updates = data["updates"]
     value = message.text.strip()
-
-    if attribute in ["need", "progress_score"]:
-        try:
-            value = int(value)
-            if not (0 <= value <= 10):
-                raise ValueError
-        except ValueError:
-            await message.answer("Enter number between 0 and 10", reply_markup=create_cancel_button())
-            return
 
     updates[attribute] = value
     await state.update_data(updates=updates)

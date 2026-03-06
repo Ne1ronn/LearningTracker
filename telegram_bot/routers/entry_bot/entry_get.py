@@ -34,16 +34,23 @@ async def get_entry(message: types.Message, state: FSMContext):
 
     if response.status_code == 200:
         data = response.json()
-        await message.answer(
-            f"Your entry data: \n"
-            f"Entry id: {data['id']}\n"
-            f"Entry title: {data['title']}\n"
-            f"Entry description: {data['description']}\n"
-            f"Entry tags: {data['tags']}\n"
-            f"Entry mood_score: {data['mood_score']}\n"
-            f"Entry progress_score: {data['progress_score']}\n"
-            f"Entry learning_hours: {data['learning_hours']}\n"
-            f"Entry private: {data['private']}")
+        private_emoji = "🔒" if data['private'] else "🌐"
+        mood_emoji = "😄" if data['mood_score'] >= 8 else "😐" if data['mood_score'] == 5 else "😔"
+
+        text = (
+            f"{private_emoji} <b>{data['title']}</b>\n"
+            f"\n"
+            f"📝 {data['description']}\n"
+            f"\n"
+            f"🏷 <i>{data['tags'] if data['tags'] else 'no tags'}</i>\n"
+            f"\n"
+            f"{mood_emoji} Mood: <b>{data['mood_score']}/10</b>  "
+            f"⭐️ Progress: <b>{data['progress_score']}/10</b>  "
+            f"⏱ <b>{data['learning_hours']}ч</b>\n"
+            f"🆔 <code>{data['id']}</code>"
+        )
+
+        await message.answer(text, parse_mode="HTML")
     else:
         await message.answer(f"Error:{response.text}")
         await state.clear()

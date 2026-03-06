@@ -24,8 +24,8 @@ async def summary(cb: CallbackQuery, state: FSMContext, token: str):
 
     data = response.json()
     lines = []
-    for topics, hours in data.items():
-        lines.append(f"{topics}: {hours} hours")
+    for topic, hours in data.items():
+        lines.append(f"  📌 {topic}: <b>{hours}h</b>")
 
-    text = f"Statistics by topics:\n\n" + "\n".join(lines)
-    await cb.message.answer(text)
+    text = "📚 <b>Statistics by topics</b>\n\n" + "\n".join(lines)
+    await cb.message.answer(text, parse_mode="HTML")

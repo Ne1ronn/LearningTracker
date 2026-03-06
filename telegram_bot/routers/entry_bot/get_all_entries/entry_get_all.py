@@ -49,17 +49,23 @@ async def show_result(cb: CallbackQuery, state: FSMContext):
         data = response.json()
 
         for entry in data:
-            await cb.message.answer(
-                f"Your entry data:\n"
-                f"Entry id: {entry['id']}\n"
-                f"Entry title: {entry['title']}\n"
-                f"Entry description: {entry['description']}\n"
-                f"Entry tags: {entry['tags']}\n"
-                f"Entry mood_score: {entry['mood_score']}\n"
-                f"Entry progress_score: {entry['progress_score']}\n"
-                f"Entry learning_hours: {entry['learning_hours']}\n"
-                f"Entry private: {entry['private']}"
+            private_emoji = "🔒" if entry['private'] else "🌐"
+            mood_emoji = "😄" if entry['mood_score'] >= 8 else "😐" if entry['mood_score'] == 5 else "😔"
+
+            text = (
+                f"{private_emoji} <b>{entry['title']}</b>\n"
+                f"\n"
+                f"📝 {entry['description']}\n"
+                f"\n"
+                f"🏷 <i>{entry['tags'] if entry['tags'] else 'no tags'}</i>\n"
+                f"\n"
+                f"{mood_emoji} Mood: <b>{entry['mood_score']}/10</b>  "
+                f"⭐️ Progress: <b>{entry['progress_score']}/10</b>  "
+                f"⏱ <b>{entry['learning_hours']}ч</b>\n"
+                f"🆔 <code>{entry['id']}</code>"
             )
+
+            await cb.message.answer(text, parse_mode="HTML")
     else:
         await cb.message.answer(f"Error: {response.text}")
         await state.clear()

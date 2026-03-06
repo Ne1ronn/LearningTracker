@@ -151,8 +151,8 @@ def create_topic_attribute_choose_buttons():
 
     builder.button(text="Title", callback_data="title")
     builder.button(text="Skill", callback_data="skill")
-    builder.button(text="Need", callback_data="need")
-    builder.button(text="Progress score", callback_data="progress_score")
+    builder.button(text="Description", callback_data="description")
+    builder.button(text="Category", callback_data="category")
     builder.button(text="Is active", callback_data="is_active")
     builder.button(text="Cancel", callback_data="cancel")
 

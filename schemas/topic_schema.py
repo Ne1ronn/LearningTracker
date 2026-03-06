@@ -1,18 +1,17 @@
 from pydantic import BaseModel
-from pydantic.v1 import Field
 
 class TopicAddSchema(BaseModel):
     title: str
     skill: str
-    need: int = Field(ge=1, le=10)
-    progress_score: int = Field(ge=1, le=10)
+    description: str
+    category: str
     is_active: bool | None = True
 
 class UpdateTopicSchema(BaseModel):
     title: str | None = None
     skill: str | None = None
-    need: int | None = Field(default=None, ge=1, le=10)
-    progress_score: int | None = Field(default=None, ge=1, le=10)
+    description: str | None = None
+    category: str | None = None
     is_active: bool | None = True
 
 class TopicSchema(TopicAddSchema):

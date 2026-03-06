@@ -9,8 +9,8 @@ async def add_topic(session: SessionDep, topic: TopicAddSchema):
     new_topic = TopicModel(
         title = topic.title,
         skill = topic.skill,
-        need = topic.need,
-        progress_score = topic.progress_score,
+        description = topic.description,
+        category = topic.category,
         is_active = topic.is_active
     )
 

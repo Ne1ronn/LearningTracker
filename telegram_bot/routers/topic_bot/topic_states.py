@@ -3,8 +3,8 @@ from aiogram.fsm.state import StatesGroup, State
 class TopicForm(StatesGroup):
     title = State()
     skill = State()
-    need = State()
-    progress_score = State()
+    description = State()
+    category = State()
     is_active = State()
 
 class DeleteTopicState(StatesGroup):
@@ -23,6 +23,6 @@ class UpdateTopicForm(StatesGroup):
     waiting_id = State()
     title = State()
     skill = State()
-    need = State()
-    progress_score = State()
+    description = State()
+    category = State()
     is_active = State()

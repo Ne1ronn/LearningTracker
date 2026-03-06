@@ -30,14 +30,20 @@ async def get_topic(message: types.Message, state: FSMContext):
 
     if response.status_code == 200:
         data = response.json()
-        await message.answer(
-            f"Your topic data: \n"
-            f"Topic id: {data['id']}\n"
-            f"Topic title: {data['title']}\n"
-            f"Topic skill: {data['skill']}\n"
-            f"Topic need: {data['need']}\n"
-            f"Topic progress_score: {data['progress_score']}\n"
-            f"Topic is_active: {data['is_active']}")
+        active_emoji = "✅" if data['is_active'] else "❌"
+
+        text = (
+            f"📖 <b>{data['title']}</b>\n"
+            f"\n"
+            f"📝 {data['description']}\n"
+            f"\n"
+            f"🎯 Skill: <b>{data['skill']}</b>\n"
+            f"📂 Category: <b>{data['category']}</b>\n"
+            f"{active_emoji} Active\n"
+            f"🆔 <code>{data['id']}</code>"
+        )
+
+        await message.answer(text, parse_mode="HTML")
     else:
         await message.answer(f"Error:{response.text}")
         await state.clear()

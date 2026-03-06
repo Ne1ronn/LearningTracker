@@ -24,11 +24,16 @@ async def weekly_stats(cb: CallbackQuery, state: FSMContext, token: str):
     delta_percent = response.json().get("delta_percent")
     current_streak = response.json().get("current_streak")
 
-    await cb.message.answer(
-        f"Your hour stats for last 7 days: {last_7_days_hours}\n"
-        f"Your hour stats for previous 7 days: {prev_7_days_hours}\n"
-        f"Your delta percentage: {delta_percent}%\n"
-        f"Your current streak: {current_streak}"
+    delta_emoji = "📈" if delta_percent > 0 else "📉" if delta_percent < 0 else "➡️"
+    streak_emoji = "🔥" if current_streak > 2 else "✨"
+
+    text = (
+        "📊 <b>Your statistics:</b>\n\n"
+        f"⏱ This week: <b>{last_7_days_hours}h</b>\n"
+        f"⏱ Previous week: <b>{prev_7_days_hours}h</b>\n"
+        f"{delta_emoji} Changes: <b>{delta_percent:+.1f}%</b>\n\n"
+        f"{streak_emoji} Streak: <b>{current_streak} days</b>"
     )
+    await cb.message.answer(text, parse_mode="HTML")
 
     await state.clear()

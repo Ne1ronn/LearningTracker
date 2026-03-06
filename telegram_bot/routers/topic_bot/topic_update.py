@@ -48,33 +48,18 @@ async def add_title(message: types.Message, state: FSMContext):
 @router.message(UpdateTopicForm.skill)
 async def add_skill(message: types.Message, state: FSMContext):
     await state.update_data(skill=message.text)
-    await message.answer("Now the need of topic:", reply_markup=create_cancel_button())
-    await state.set_state(UpdateTopicForm.need)
+    await message.answer("Now the description of topic:", reply_markup=create_cancel_button())
+    await state.set_state(UpdateTopicForm.description)
 
-@router.message(UpdateTopicForm.need)
-async def add_need(message: types.Message, state: FSMContext):
-    try:
-        score = int(message.text)
-        if not (0 <= score <= 10):
-            raise ValueError
-    except ValueError:
-        await message.answer("Enter number between 0 and 10", reply_markup=create_cancel_button())
-        return
-    await state.update_data(need=score)
-    await message.answer("Now the progress score of topic:", reply_markup=create_cancel_button())
-    await state.set_state(UpdateTopicForm.progress_score)
+@router.message(UpdateTopicForm.description)
+async def add_description(message: types.Message, state: FSMContext):
+    await state.update_data(description=message.text)
+    await message.answer("Now the category of topic:", reply_markup=create_cancel_button())
+    await state.set_state(UpdateTopicForm.category)
 
-@router.message(UpdateTopicForm.progress_score)
-async def add_score(message: types.Message, state: FSMContext):
-    try:
-        score = int(message.text)
-        if not (0 <= score <= 10):
-            raise ValueError
-    except ValueError:
-        await message.answer("Enter number between 0 and 10", reply_markup=create_cancel_button())
-        return
-
-    await state.update_data(progress_score=score)
+@router.message(UpdateTopicForm.category)
+async def add_category(message: types.Message, state: FSMContext):
+    await state.update_data(category=message.text)
 
     data = await state.get_data()
     topic_id = data.pop('topic_id')
