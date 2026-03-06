@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status, HTTPException
 from api.crud.entry_crud import (add_entry, give_all_entry, give_entry, update_entry_, patch_entry_, delete_entry_,
-                                 summary, can_update_entry, get_entry_by_id, get_weekly_stats)
+                                 summary, can_update_entry, get_entry_by_id, get_weekly_stats, get_entry_count)
 from api.auth.auth_crud import get_current_user
 from database.setup import SessionDep
 from models.user_model import UserModel
@@ -36,7 +36,30 @@ async def get_all_entries(session: SessionDep,
                          limit: int = 20,
                          offset: int = 0):
 
-    return await give_all_entry(session, user, target_date, private, min_mood_score, max_mood_score, min_progress_score, max_progress_score, min_learning_hours, max_learning_hours, sort, limit, offset)
+    return await give_all_entry(session, user, target_date, private, min_mood_score, max_mood_score, min_progress_score,
+                                max_progress_score, min_learning_hours, max_learning_hours, sort, limit, offset)
+
+@router.get("/entries/page")
+async def get_entries_count(session: SessionDep,
+                            user: Annotated[UserModel, Depends(get_current_user)],
+                            target_date: date = None,
+                            private: bool = None,
+                            min_mood_score: int = None,
+                            max_mood_score: int = None,
+                            min_progress_score: int = None,
+                            max_progress_score: int = None,
+                            min_learning_hours: float = None,
+                            max_learning_hours: float = None,
+                            sort: str = None,
+                            limit: int = 20,
+                            offset: int = 0
+                            ):
+    total = await get_entry_count(session, user, target_date, private, min_mood_score, max_mood_score,
+                                 min_progress_score, max_progress_score, min_learning_hours, max_learning_hours)
+    entries = await give_all_entry(session, user, target_date, private, min_mood_score, max_mood_score, min_progress_score,
+                                max_progress_score, min_learning_hours, max_learning_hours, sort, limit, offset)
+
+    return {"entries": entries, "total": total, "limit": limit, "offset": offset}
 
 @router.get("/entries/summary")
 async def hours_summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):

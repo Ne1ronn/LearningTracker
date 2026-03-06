@@ -6,6 +6,18 @@ def create_choose_buttons():
     builder.button(text="Filtering", callback_data="ask_filter")
     builder.button(text="Sorting", callback_data="ask_sort")
     builder.button(text="Result", callback_data="show_result")
+    builder.button(text="Cancel", callback_data="cancel")
+
+    builder.adjust(2)
+    return builder.as_markup()
+
+def create_page_buttons(offset: int, limit: int, total: int):
+    builder = InlineKeyboardBuilder()
+
+    if offset > 0:
+        builder.button(text="◀️ Previous", callback_data="previous")
+    if offset + limit < total:
+        builder.button(text="▶️ Next", callback_data="next")
 
     builder.adjust(2)
     return builder.as_markup()

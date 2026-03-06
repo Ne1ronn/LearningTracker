@@ -173,6 +173,24 @@ async def give_all_entry(session: SessionDep,
 
     return entries
 
+async def get_entry_count(session: SessionDep,
+                          user: Annotated[UserModel, Depends(get_current_user)],
+                          target_date: date = None,
+                          private: bool = None,
+                          min_mood_score: int = None,
+                          max_mood_score: int = None,
+                          min_progress_score: int = None,
+                          max_progress_score: int = None,
+                          min_learning_hours: float = None,
+                          max_learning_hours: float = None
+                          ):
+    stmt = select(func.count()).select_from(EntryModel).where(EntryModel.user_id == user.id)
+    stmt = apply_filter(stmt, target_date, private, min_mood_score, max_mood_score,
+                        min_progress_score, max_progress_score, min_learning_hours, max_learning_hours)
+    total = (await session.execute(stmt)).scalar_one()
+
+    return total
+
 async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
     entry = await get_entry_by_id(session, entry_id)
     can_update_entry(entry, user)

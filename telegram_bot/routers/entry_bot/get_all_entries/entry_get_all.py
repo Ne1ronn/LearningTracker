@@ -1,11 +1,11 @@
-from aiogram import F
+from aiogram import F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from telegram_bot.keyboards import create_choose_buttons
+from telegram_bot.keyboards import create_choose_buttons, create_page_buttons
 from ..entry_router import router
 import httpx
 
-API_ALL_URL = "http://127.0.0.1:8000/entries"
+API_ALL_URL = "http://127.0.0.1:8000/entries/page"
 API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
 API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
 
@@ -35,20 +35,30 @@ async def get_all_entries(cb: CallbackQuery, state: FSMContext, token: str):
 @router.callback_query(F.data == "show_result")
 async def show_result(cb: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    token = data.pop("token")
+    token = data["token"]
+    await state.update_data(limit=5, offset=0)
+    await show_page(state, cb.message, token)
 
-    params = {}
-    for key, value in data.items():
-        if value is not None:
-            params[key] = value
+async def show_page(state: FSMContext, message: types.Message, token: str):
+    data = await state.get_data()
+    limit = data["limit"]
+    offset = data["offset"]
+
+    params = {k: v for k, v in data.items() if v is not None and k not in ["token", "limit", "offset", "total"]}
+    params["limit"] = limit
+    params["offset"] = offset
 
     async with httpx.AsyncClient() as client:
         response = await client.get(API_ALL_URL, headers={"Authorization": f"Bearer {token}"}, params=params)
 
     if response.status_code == 200:
-        data = response.json()
+        entries = response.json().get("entries")
+        total = response.json().get("total")
+        next_offset = offset + limit
 
-        for entry in data:
+        await state.update_data(total=total)
+
+        for entry in entries:
             private_emoji = "🔒" if entry['private'] else "🌐"
             mood_emoji = "😄" if entry['mood_score'] >= 8 else "😐" if entry['mood_score'] == 5 else "😔"
 
@@ -65,15 +75,19 @@ async def show_result(cb: CallbackQuery, state: FSMContext):
                 f"🆔 <code>{entry['id']}</code>"
             )
 
-            await cb.message.answer(text, parse_mode="HTML")
+            await message.answer(text, parse_mode="HTML")
+
+        await state.update_data(token=token)
+        await message.answer(
+            f"Page {offset}-{min(next_offset, total)} of {total}",
+            reply_markup=create_page_buttons(offset, limit, total)
+        )
+
+        await message.answer(
+            "Want to enhance filtering and sorting?",
+            reply_markup=create_choose_buttons()
+        )
     else:
-        await cb.message.answer(f"Error: {response.text}")
+        await message.answer(f"Error: {response.text}")
         await state.clear()
         return
-
-    await state.update_data(token=token)
-    await cb.message.answer(
-        "Want to enhance filtering and sorting?",
-        reply_markup=create_choose_buttons()
-    )
-    await cb.answer()
