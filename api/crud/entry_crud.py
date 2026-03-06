@@ -181,10 +181,12 @@ async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id
     for field, value in update_dict.items():
         setattr(entry, field, value)
 
-    if new_entry.topic_ids:
-        topics = await missing_topics(session, new_entry)
-
-        entry.topics = topics
+    if new_entry.topic_ids is not None:
+        if new_entry.topic_ids:
+            topics = await missing_topics(session, new_entry)
+            entry.topics = topics
+        else:
+            entry.topics = []
 
     await session.commit()
 
@@ -196,10 +198,12 @@ async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: Update
     for field, value in update_dict.items():
         setattr(entry, field, value)
 
-    if patched_entry.topic_ids:
-        topics = await missing_topics(session, patched_entry)
-
-        entry.topics = topics
+    if patched_entry.topic_ids is not None:
+        if patched_entry.topic_ids:
+            topics = await missing_topics(session, patched_entry)
+            entry.topics = topics
+        else:
+            entry.topics = []
 
     await session.commit()
 
@@ -218,7 +222,7 @@ async def summary(session: SessionDep, user: Annotated[UserModel, Depends(get_cu
         )
         .select_from(TopicModel)
         .join(entry_topics, entry_topics.c.topic_id == TopicModel.id)
-        .join(EntryModel, EntryModel.id == entry_topics.c.entry_id                  )
+        .join(EntryModel, EntryModel.id == entry_topics.c.entry_id)
         .where(EntryModel.user_id == user.id)
         .group_by(TopicModel.id)
     )
