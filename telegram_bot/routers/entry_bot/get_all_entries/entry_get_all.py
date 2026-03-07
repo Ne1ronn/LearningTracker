@@ -34,6 +34,7 @@ async def get_all_entries(cb: CallbackQuery, state: FSMContext, token: str):
 
 @router.callback_query(F.data == "show_result")
 async def show_result(cb: CallbackQuery, state: FSMContext):
+    await cb.answer()
     data = await state.get_data()
     token = data["token"]
     await state.update_data(limit=5, offset=0)

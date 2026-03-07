@@ -2,7 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status, HTTPException
 from api.crud.entry_crud import (add_entry, give_all_entry, give_entry, update_entry_, patch_entry_, delete_entry_,
-                                 summary, can_update_entry, get_entry_by_id, get_weekly_stats, get_entry_count)
+                                 summary, can_update_entry, get_entry_by_id, get_weekly_stats, get_entry_count,
+                                 count_streak)
 from api.auth.auth_crud import get_current_user
 from database.setup import SessionDep
 from models.user_model import UserModel
@@ -64,6 +65,10 @@ async def get_entries_count(session: SessionDep,
 @router.get("/entries/summary")
 async def hours_summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
     return await summary(session, user)
+
+@router.get("/entries/streak")
+async def streak(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
+    return await count_streak(session, user)
 
 @router.get("/entries/{entry_id}", response_model=EntrySchema)
 async def get_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):

@@ -32,7 +32,7 @@ async def missing_topics(session: SessionDep, entry: Union[EntryAddSchema, Updat
 
     return topics
 
-async def add_entry(session: SessionDep, entry: EntryAddSchema, user: Annotated[UserModel, Depends(get_current_user)]):
+async def add_entry(session: SessionDep, entry: EntryAddSchema, user: UserModel):
     new_entry = EntryModel(
         user_id = user.id,
         title = entry.title,
@@ -74,7 +74,7 @@ async def add_daily_stat(session: SessionDep, user_id: int, entry_date: date, en
 
     await session.commit()
 
-async def get_weekly_stats(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
+async def get_weekly_stats(session: SessionDep, user: UserModel):
     last = date.today() - timedelta(days=6)
 
     stmt = (
@@ -107,7 +107,7 @@ async def get_weekly_stats(session: SessionDep, user: Annotated[UserModel, Depen
     else:
         delta_percent = 100 * (last_7_days_hours / prev_7_days_hours)
 
-    streak = await count_streak(session, user.id)
+    streak = await count_streak(session, user)
 
     return WeeklyStatsResponseSchema(
         last_7_days_hours=last_7_days_hours,
@@ -116,10 +116,10 @@ async def get_weekly_stats(session: SessionDep, user: Annotated[UserModel, Depen
         current_streak=streak
     )
 
-async def count_streak(session: SessionDep, user_id: int):
+async def count_streak(session: SessionDep, user: UserModel):
     stmt = (
         select(DailyStatsModel.date, DailyStatsModel.total_hours)
-        .where(DailyStatsModel.user_id == user_id)
+        .where(DailyStatsModel.user_id == user.id)
         .order_by(DailyStatsModel.date.desc())
     )
     result = await session.execute(stmt)
@@ -140,13 +140,13 @@ async def count_streak(session: SessionDep, user_id: int):
 
     return streak
 
-async def give_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
+async def give_entry(session: SessionDep, entry_id: int, user: UserModel):
     entry = await get_entry_by_id(session, entry_id)
     can_read_entry(entry, user)
     return entry
 
 async def give_all_entry(session: SessionDep,
-                         user: Annotated[UserModel, Depends(get_current_user)],
+                         user: UserModel,
                          target_date: date = None,
                          private: bool = None,
                          min_mood_score: int = None,
@@ -174,7 +174,7 @@ async def give_all_entry(session: SessionDep,
     return entries
 
 async def get_entry_count(session: SessionDep,
-                          user: Annotated[UserModel, Depends(get_current_user)],
+                          user: UserModel,
                           target_date: date = None,
                           private: bool = None,
                           min_mood_score: int = None,
@@ -191,7 +191,7 @@ async def get_entry_count(session: SessionDep,
 
     return total
 
-async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
+async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int, user: UserModel):
     entry = await get_entry_by_id(session, entry_id)
     can_update_entry(entry, user)
 
@@ -208,7 +208,7 @@ async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id
 
     await session.commit()
 
-async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: UpdateEntrySchema, user: Annotated[UserModel, Depends(get_current_user)]):
+async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: UpdateEntrySchema, user: UserModel):
     entry = await get_entry_by_id(session, entry_id)
     can_update_entry(entry, user)
 
@@ -225,14 +225,14 @@ async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: Update
 
     await session.commit()
 
-async def delete_entry_(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
+async def delete_entry_(session: SessionDep, entry_id: int, user: UserModel):
     entry = await get_entry_by_id(session, entry_id)
     can_delete_entry(entry, user)
 
     await session.delete(entry)
     await session.commit()
 
-async def summary(session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]):
+async def summary(session: SessionDep, user: UserModel):
     stmt = (
         select(
             TopicModel.title,

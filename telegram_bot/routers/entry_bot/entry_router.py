@@ -11,6 +11,7 @@ from . import entry_update
 from . import entry_patch
 from . import summary
 from . import entry_stats
+from . import entry_streak
 
 router.message.middleware(AuthMiddleware())
 router.callback_query.middleware(AuthMiddleware())

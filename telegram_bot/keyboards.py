@@ -93,6 +93,7 @@ def create_entry_crud_buttons():
     builder.button(text="🗑Delete entry", callback_data="delete_entry")
     builder.button(text="📊Weekly statistics", callback_data="weekly_stats")
     builder.button(text="📊Summary", callback_data="summary")
+    builder.button(text="🔥Streak", callback_data="streak")
 
     builder.adjust(2)
     return builder.as_markup()
