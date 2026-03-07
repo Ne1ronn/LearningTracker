@@ -42,6 +42,8 @@ async def set_sort_date(cb: CallbackQuery, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
+    await state.set_state(None)
+
 @router.callback_query(F.data == "sort_mood")
 async def sort_mood(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.sort_mood)
@@ -69,6 +71,8 @@ async def set_sort_mood(cb: CallbackQuery, state: FSMContext):
         f"Choose the sorting or filtering of result, or show the result:",
         reply_markup=create_choose_buttons(),
     )
+
+    await state.set_state(None)
 
 @router.callback_query(F.data == "sort_progress")
 async def sort_progress(cb: CallbackQuery, state: FSMContext):
@@ -98,6 +102,8 @@ async def set_sort_progress(cb: CallbackQuery, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
+    await state.set_state(None)
+
 @router.callback_query(F.data == "sort_hours")
 async def sort_hours(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.sort_hours)
@@ -125,6 +131,8 @@ async def set_sort_hours(cb: CallbackQuery, state: FSMContext):
         f"Choose the sorting or filtering of result, or show the result:",
         reply_markup=create_choose_buttons(),
     )
+
+    await state.set_state(None)
 
 def asc_or_desc(text, sort: str):
     if text == "Ascending":

@@ -30,11 +30,11 @@ async def set_private(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
     text = cb.data
 
-    if text == "All":
+    if text == "all":
         value = None
-    elif text == "Only private":
+    elif text == "private":
         value = True
-    elif text == "Only public":
+    elif text == "public":
         value = False
     else:
         await cb.message.answer("Choose from buttons, try again:", reply_markup=create_cancel_button())
@@ -50,6 +50,8 @@ async def set_private(cb: CallbackQuery, state: FSMContext):
         f"Choose the sorting or filtering of result, or show the result:",
         reply_markup=create_choose_buttons(),
     )
+
+    await state.set_state(None)
 
 @router.callback_query(F.data == "ask_date")
 async def ask_date(cb: CallbackQuery, state: FSMContext):
@@ -88,6 +90,8 @@ async def set_date(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
+    await state.set_state(None)
+
 @router.callback_query(F.data == "ask_mood")
 async def ask_mood(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_mood)
@@ -114,6 +118,8 @@ async def set_mood(message: types.Message, state: FSMContext):
         f"Choose the sorting or filtering of result, or show the result:",
         reply_markup=create_choose_buttons(),
     )
+
+    await state.set_state(None)
 
 @router.callback_query(F.data == "ask_progress")
 async def ask_progress(cb: CallbackQuery, state: FSMContext):
@@ -142,6 +148,8 @@ async def set_progress(message: types.Message, state: FSMContext):
         reply_markup=create_choose_buttons(),
     )
 
+    await state.set_state(None)
+
 @router.callback_query(F.data == "ask_hours")
 async def ask_hours(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_hours)
@@ -169,6 +177,8 @@ async def set_hours(message: types.Message, state: FSMContext):
         f"Choose the sorting or filtering of result, or show the result:",
         reply_markup=create_choose_buttons(),
     )
+
+    await state.set_state(None)
 
 def is_valid_date(s: str) -> bool:
     try:

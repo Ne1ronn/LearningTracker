@@ -23,3 +23,4 @@ async def streak_handler(cb: CallbackQuery, state: FSMContext, token: str):
     streak_emoji = "🔥" if streak > 2 else "✨"
 
     await cb.message.answer(f"{streak_emoji} Streak: <b>{streak} days</b>", parse_mode="HTML")
+    await state.clear()

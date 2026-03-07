@@ -74,3 +74,5 @@ async def add_category(message: types.Message, state: FSMContext):
         await message.answer(f"Error:{response.text}")
         await state.clear()
         return
+
+    await state.clear()

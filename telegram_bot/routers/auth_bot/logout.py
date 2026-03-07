@@ -41,3 +41,5 @@ async def logout(cb: CallbackQuery, state: FSMContext, refresh_token: str | None
             return
 
     await cb.message.answer("Successfully logged out")
+
+    await state.clear()

@@ -1,10 +1,9 @@
-from typing import Union, Annotated
+from typing import Union
 
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status
 
-from api.auth.auth_crud import get_current_user
 from database.setup import SessionDep
 from models import DailyStatsModel
 from models.entry_model import EntryModel
@@ -56,9 +55,7 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema, user: UserModel)
     await add_daily_stat(session, user.id, entry_date, entry.learning_hours)
 
 async def add_daily_stat(session: SessionDep, user_id: int, entry_date: date, entry_hours: float):
-    stmt = select(DailyStatsModel).where(DailyStatsModel.date == entry_date, DailyStatsModel.user_id == user_id)
-    result = await session.execute(stmt)
-    daily_stat = result.scalar_one_or_none()
+    daily_stat = await get_daily_stat(session, user_id, entry_date)
 
     if not daily_stat:
         new_daily_stat = DailyStatsModel(
@@ -194,6 +191,7 @@ async def get_entry_count(session: SessionDep,
 async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id: int, user: UserModel):
     entry = await get_entry_by_id(session, entry_id)
     can_update_entry(entry, user)
+    old_hours = entry.learning_hours
 
     update_dict = new_entry.dict()
     for field, value in update_dict.items():
@@ -206,11 +204,19 @@ async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id
         else:
             entry.topics = []
 
+    entry_hours = new_entry.learning_hours - old_hours
+    await update_daily_stat(session, user.id, entry.created_at.date(), entry_hours)
+
     await session.commit()
+
+async def update_daily_stat(session: SessionDep, user_id: int, entry_date: date, entry_hours: float):
+    daily_stat = await get_daily_stat(session, user_id, entry_date)
+    daily_stat.total_hours += entry_hours
 
 async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: UpdateEntrySchema, user: UserModel):
     entry = await get_entry_by_id(session, entry_id)
     can_update_entry(entry, user)
+    old_hours = entry.learning_hours
 
     update_dict = patched_entry.dict(exclude_unset=True)
     for field, value in update_dict.items():
@@ -223,14 +229,37 @@ async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: Update
         else:
             entry.topics = []
 
+    if patched_entry.learning_hours is not None:
+        entry_hours = patched_entry.learning_hours - old_hours
+        await update_daily_stat(session, user.id, entry.created_at.date(), entry_hours)
+
     await session.commit()
 
 async def delete_entry_(session: SessionDep, entry_id: int, user: UserModel):
     entry = await get_entry_by_id(session, entry_id)
     can_delete_entry(entry, user)
 
+    entry_hours = entry.learning_hours
+
     await session.delete(entry)
+    await delete_daily_stat(session, user.id, entry.created_at.date(), entry_hours)
+
     await session.commit()
+
+async def delete_daily_stat(session: SessionDep, user_id: int, entry_date: date, entry_hours: float):
+    daily_stat = await get_daily_stat(session, user_id, entry_date)
+    daily_stat.total_hours -= entry_hours
+    daily_stat.entries_count -= 1
+
+    if daily_stat.entries_count == 0:
+        await session.delete(daily_stat)
+
+async def get_daily_stat(session: SessionDep, user_id: int, entry_date: date):
+    stmt = select(DailyStatsModel).where(DailyStatsModel.date == entry_date, DailyStatsModel.user_id == user_id)
+    result = await session.execute(stmt)
+    daily_stat = result.scalar_one_or_none()
+
+    return daily_stat
 
 async def summary(session: SessionDep, user: UserModel):
     stmt = (

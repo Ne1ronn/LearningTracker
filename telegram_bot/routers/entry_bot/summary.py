@@ -29,3 +29,5 @@ async def summary(cb: CallbackQuery, state: FSMContext, token: str):
 
     text = "📚 <b>Statistics by topics</b>\n\n" + "\n".join(lines)
     await cb.message.answer(text, parse_mode="HTML")
+
+    await state.clear()
