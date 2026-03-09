@@ -8,7 +8,7 @@ import httpx
 
 from ...keyboards import create_topic_attribute_choose_buttons, create_yes_no_buttons, create_cancel_button
 
-API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
+API_URL = "http://127.0.0.1:8000/topics/{topic_id}"
 API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
 
 @router.callback_query(F.data == "edit_topic")

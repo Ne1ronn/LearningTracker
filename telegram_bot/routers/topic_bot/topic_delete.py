@@ -7,7 +7,7 @@ import httpx
 
 from ...keyboards import create_cancel_button
 
-API_URL = "http://127.0.0.1:8000/topic/{topic_id}"
+API_URL = "http://127.0.0.1:8000/topics/{topic_id}"
 
 @router.callback_query(F.data == "delete_topic")
 async def start_get(cb: CallbackQuery, state: FSMContext, token: str):
