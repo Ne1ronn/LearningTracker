@@ -14,7 +14,7 @@ class EntryAddSchema(BaseModel):
     progress_score: int = Field(ge=1, le=10)
     learning_hours: float = Field(ge=0, le=24)
     private: bool
-    topic_ids: List[int] | None = []
+    topic_ids: List[int] = Field(default_factory=list)
 
 class UpdateEntrySchema(BaseModel):
     title: str | None = None
@@ -22,9 +22,9 @@ class UpdateEntrySchema(BaseModel):
     tags: str | None = None
     mood_score: int | None = Field(default=None, ge=1, le=10)
     progress_score: int | None = Field(default=None, ge=1, le=10)
-    learning_hours: int | None = Field(default=None, ge=0, le=24)
+    learning_hours: float | None = Field(default=None, ge=0, le=24)
     private: bool | None = None
-    topic_ids: List[int] | None =  []
+    topic_ids: List[int] | None =  None
 
 class EntrySchema(EntryAddSchema):
     id: int

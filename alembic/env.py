@@ -8,6 +8,7 @@ load_dotenv()
 config = context.config
 fileConfig(config.config_file_name)
 
+import models
 from models.base import Base
 target_metadata = Base.metadata
 
