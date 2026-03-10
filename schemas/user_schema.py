@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import List
 
 from schemas.entry_schema import EntrySchema
@@ -13,8 +13,7 @@ class UserSchema(UserAddSchema):
     id: int
     entries: List[EntrySchema]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UserLoginSchema(BaseModel):
     username: str

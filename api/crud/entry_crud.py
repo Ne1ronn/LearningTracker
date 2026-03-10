@@ -193,7 +193,7 @@ async def update_entry_(session: SessionDep, new_entry: EntryAddSchema, entry_id
     can_update_entry(entry, user)
     old_hours = entry.learning_hours
 
-    update_dict = new_entry.dict()
+    update_dict = new_entry.model_dump()
     for field, value in update_dict.items():
         setattr(entry, field, value)
 
@@ -218,7 +218,7 @@ async def patch_entry_(session: SessionDep, entry_id: int, patched_entry: Update
     can_update_entry(entry, user)
     old_hours = entry.learning_hours
 
-    update_dict = patched_entry.dict(exclude_unset=True)
+    update_dict = patched_entry.model_dump(exclude_unset=True)
     for field, value in update_dict.items():
         setattr(entry, field, value)
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 import os
 from typing import Annotated
 
@@ -91,7 +91,7 @@ async def verify_refresh(session: SessionDep, token: str):
         raise HTTPException(404, detail="Token not found")
     if db_token.revoked:
         raise HTTPException(401, detail="Token has been revoked")
-    if db_token.expires_at < datetime.utcnow():
+    if db_token.expires_at < datetime.now(UTC):
         raise HTTPException(401, detail="Token has expired")
     if user is None:
         raise HTTPException(404, detail="User not found")

@@ -1,6 +1,5 @@
-from pydantic import BaseModel
 from datetime import datetime
-from pydantic import Field
+from pydantic import Field, BaseModel, ConfigDict
 from typing import List
 
 from schemas.topic_schema import TopicSchema
@@ -31,5 +30,4 @@ class EntrySchema(EntryAddSchema):
     created_at: datetime
     topics: List[TopicSchema]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

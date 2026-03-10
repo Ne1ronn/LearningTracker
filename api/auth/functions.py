@@ -3,7 +3,7 @@ import uuid
 import jwt
 from fastapi.security import OAuth2PasswordBearer
 from pwdlib import PasswordHash
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from database.setup import SessionDep
 import os
 
@@ -24,7 +24,7 @@ def verify_password(plain, password):
     return password_hash.verify(plain, password)
 
 def create_access_token(username: str, role: str):
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(UTC).replace(tzinfo=None)+ timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {"sub": username,
                "role": role,
                "type": "access",
@@ -33,7 +33,7 @@ def create_access_token(username: str, role: str):
 
 async def create_refresh_token(session: SessionDep, user_id: int):
     jti = str(uuid.uuid4())
-    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     payload = {"sub": str(user_id),
                "jti": jti,

@@ -40,7 +40,7 @@ async def get_all_topics_db(session: SessionDep, limit: int = 10, offset: int = 
 async def update_topic_(session: SessionDep, new_topic: TopicAddSchema, topic_id: int):
     topic = await give_topic(session, topic_id)
 
-    updated_dic = new_topic.dict()
+    updated_dic = new_topic.model_dump()
     for field, value in updated_dic.items():
         setattr(topic, field, value)
 
@@ -49,7 +49,7 @@ async def update_topic_(session: SessionDep, new_topic: TopicAddSchema, topic_id
 async def patch_topic_(session: SessionDep, patched_topic: UpdateTopicSchema, topic_id: int):
     topic = await give_topic(session, topic_id)
 
-    updated_dic = patched_topic.dict(exclude_unset=True)
+    updated_dic = patched_topic.model_dump(exclude_unset=True)
     for field, value in updated_dic.items():
         setattr(topic, field, value)
 

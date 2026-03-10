@@ -1,6 +1,8 @@
 import uuid
+
 import pytest
-from httpx import AsyncClient
+import pytest_asyncio
+from httpx import AsyncClient, ASGITransport
 from dotenv import load_dotenv
 
 from api.auth.functions import get_password_hash
@@ -8,7 +10,7 @@ from database.setup import get_session
 from models import UserModel
 
 load_dotenv()
-from sqlalchemy import select
+from sqlalchemy import select, NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 import os
 
@@ -18,6 +20,7 @@ DATABASE_URL_TEST = os.getenv("DATABASE_URL_TEST")
 engine = create_async_engine(
     str(DATABASE_URL_TEST),
     echo=False,
+    poolclass=NullPool
 )
 
 new_session = async_sessionmaker(engine, expire_on_commit=False)
@@ -26,15 +29,16 @@ async def override_get_session():
     async with new_session() as session:
         yield session
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         app.dependency_overrides[get_session] = override_get_session
         yield ac
         app.dependency_overrides.pop(get_session, None)
 
 @pytest.fixture
-async def user_payload():
+def user_payload():
     suffix = uuid.uuid4().hex[:8]
     return {
         "username": f"test_user_{suffix}",
@@ -42,7 +46,7 @@ async def user_payload():
         "password": "test_password"
     }
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def admin_headers(client):
     async with new_session() as session:
         result = await session.execute(
