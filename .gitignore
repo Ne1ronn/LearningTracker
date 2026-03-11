@@ -1,5 +1,6 @@
 # created by virtualenv automatically
 .env
+.env.docker
 .venv/
 __pycache__/
 *.pyc
