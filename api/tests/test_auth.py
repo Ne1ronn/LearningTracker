@@ -25,6 +25,25 @@ async def test_login(client, user_payload):
     assert "access_token" in data
 
 @pytest.mark.asyncio
+async def test_logout(client, user_payload):
+    await client.post("/register", json=user_payload)
+
+    response = await client.post("/login", data={
+        "username": user_payload["username"],
+        "password": user_payload["password"],
+    })
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "refresh_token" in data
+    refresh_token = data["refresh_token"]
+    logout_response = await client.post("/logout", json={"token": refresh_token})
+    assert logout_response.status_code == 200
+
+    refresh_response = await client.post("/refresh", json={"token": refresh_token})
+    assert refresh_response.status_code == 401
+
+@pytest.mark.asyncio
 async def test_auth_validation(client, user_payload):
     await client.post("/register", json=user_payload)
 

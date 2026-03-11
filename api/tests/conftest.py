@@ -46,6 +46,20 @@ def user_payload():
         "password": "test_password"
     }
 
+@pytest.fixture
+def entry_payload():
+    suffix = uuid.uuid4().hex[:8]
+    return {
+        "title": f"Day-{suffix}",
+        "description": "Learned SQLAlchemy",
+        "tags": f"python,sqlalchemy, {suffix}",
+        "mood_score": 8,
+        "progress_score": 7,
+        "learning_hours": 2.5,
+        "private": False,
+        "topic_ids": []
+    }
+
 @pytest_asyncio.fixture
 async def admin_headers(client):
     async with new_session() as session:

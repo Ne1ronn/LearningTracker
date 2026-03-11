@@ -13,18 +13,7 @@ async def create_login_user(client, user_payload):
 
     return headers
 
-async def create_entry_and_get_id(client, headers):
-    entry_payload = {
-        "title": "Day 1",
-        "description": "Learned SQLAlchemy",
-        "tags": "python,sqlalchemy",
-        "mood_score": 8,
-        "progress_score": 7,
-        "learning_hours": 2.5,
-        "private": False,
-        "topic_ids": []
-    }
-
+async def create_entry_and_get_id(client, headers, entry_payload):
     response = await client.post("/entries", json=entry_payload, headers=headers)
     assert response.status_code == 201
 
@@ -32,54 +21,64 @@ async def create_entry_and_get_id(client, headers):
     assert get_all_response.status_code == 200
     entries = get_all_response.json()
     assert len(entries) > 0
-    entry_id = next((entry["id"] for entry in entries if entry["title"] == "Day 1"), None)
+    entry_id = next((entry["id"] for entry in entries if entry["title"] == entry_payload["title"]), None)
     assert entry_id is not None
 
     return entry_id
 
 @pytest.mark.asyncio
-async def test_create_entry(client, user_payload):
+async def test_create_entry_ok(client, user_payload, entry_payload):
     headers = await create_login_user(client, user_payload)
 
-    entry_payload = {
-        "title": "Day 1",
-        "description": "Learned SQLAlchemy",
-        "tags": "python,sqlalchemy",
-        "mood_score": 8,
-        "progress_score": 7,
-        "learning_hours": 2.5,
-        "private": False,
-        "topic_ids": []
-    }
-
-    response = await client.post("/entries", json=entry_payload, headers=headers)
-    assert response.status_code == 201
+    authorized_response = await client.post("/entries", json=entry_payload, headers=headers)
+    assert authorized_response.status_code == 201
 
 @pytest.mark.asyncio
-async def test_get_entry(client, user_payload):
+async def test_create_entry_401(client, entry_payload):
+    unauthorized_response = await client.post("/entries", json=entry_payload)
+    assert unauthorized_response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_create_entry_422(client, user_payload):
     headers = await create_login_user(client, user_payload)
-    entry_id = await create_entry_and_get_id(client, headers)
+
+    unauthorized_response = await client.post("/entries", headers=headers)
+    assert unauthorized_response.status_code == 422
+
+@pytest.mark.asyncio
+async def test_get_entry_ok(client, user_payload, entry_payload):
+    headers = await create_login_user(client, user_payload)
+    entry_id = await create_entry_and_get_id(client, headers, entry_payload)
 
     get_id_response = await client.get(f"/entries/{entry_id}", headers=headers)
     assert get_id_response.status_code == 200
     entry = get_id_response.json()
-    assert entry["title"] == "Day 1"
+    assert entry["title"] == entry_payload["title"]
 
 @pytest.mark.asyncio
-async def test_update_entry(client, user_payload):
+async def test_get_entry_404(client, user_payload, entry_payload):
     headers = await create_login_user(client, user_payload)
-    entry_id = await create_entry_and_get_id(client, headers)
 
-    entry_update_payload = {
-        "title": "Day 2",
-        "description": "Learned FastAPI",
-        "tags": "python,fastapi",
-        "mood_score": 9,
-        "progress_score": 8,
-        "learning_hours": 3,
-        "private": False,
-        "topic_ids": []
-    }
+    get_all_response = await client.get("/entries", headers=headers)
+    assert get_all_response.status_code == 200
+    entries = get_all_response.json()
+    if entries:
+        max_id = max(entry["id"] for entry in entries)
+    else:
+        max_id = 0
+    missed_id = max_id + 1000000
+
+    get_id_response = await client.get(f"/entries/{missed_id}", headers=headers)
+    assert get_id_response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_update_entry(client, user_payload, entry_payload):
+    headers = await create_login_user(client, user_payload)
+    entry_id = await create_entry_and_get_id(client, headers, entry_payload)
+
+    entry_update_payload = dict(entry_payload)
+    entry_update_payload["title"] = "Day 2"
+    entry_update_payload["description"] = "Learned FastAPI"
 
     response = await client.put(f"/entries/{entry_id}", json=entry_update_payload, headers=headers)
     assert response.status_code == 200
@@ -87,12 +86,12 @@ async def test_update_entry(client, user_payload):
     get_id_response = await client.get(f"/entries/{entry_id}", headers=headers)
     assert get_id_response.status_code == 200
     entry = get_id_response.json()
-    assert entry["title"] == "Day 2"
+    assert entry["title"] == entry_update_payload["title"]
 
 @pytest.mark.asyncio
-async def test_patch_entry(client, user_payload):
+async def test_patch_entry(client, user_payload, entry_payload):
     headers = await create_login_user(client, user_payload)
-    entry_id = await create_entry_and_get_id(client, headers)
+    entry_id = await create_entry_and_get_id(client, headers, entry_payload)
 
     response = await client.patch(f"/entries/{entry_id}", json={"private": True}, headers=headers)
     assert response.status_code == 200
@@ -100,12 +99,12 @@ async def test_patch_entry(client, user_payload):
     get_id_response = await client.get(f"/entries/{entry_id}", headers=headers)
     assert get_id_response.status_code == 200
     entry = get_id_response.json()
-    assert entry["private"] == True
+    assert entry["private"] is True
 
 @pytest.mark.asyncio
-async def test_delete_entry(client, user_payload):
+async def test_delete_entry(client, user_payload, entry_payload):
     headers = await create_login_user(client, user_payload)
-    entry_id = await create_entry_and_get_id(client, headers)
+    entry_id = await create_entry_and_get_id(client, headers, entry_payload)
 
     response = await client.delete(f"/entries/{entry_id}", headers=headers)
     assert response.status_code == 200

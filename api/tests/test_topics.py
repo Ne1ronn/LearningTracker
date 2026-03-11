@@ -22,7 +22,7 @@ async def create_topic_and_get_id(client, headers):
     return topic_id
 
 @pytest.mark.asyncio
-async def test_create_topic(client, admin_headers):
+async def test_create_topic_ok(client, admin_headers):
     topic_payload = {
         "title": "FastAPI",
         "skill": "Backend Development",
@@ -31,8 +31,31 @@ async def test_create_topic(client, admin_headers):
         "is_active": True
     }
 
-    topic = await client.post("/topics", json=topic_payload, headers=admin_headers)
-    assert topic.status_code == 201
+    topic_response = await client.post("/topics", json=topic_payload, headers=admin_headers)
+    assert topic_response.status_code == 201
+
+@pytest.mark.asyncio
+async def test_create_topic_403(client, user_payload):
+    await client.post("/register", json=user_payload)
+
+    login = await client.post("/login", data={
+        "username": user_payload["username"],
+        "password": user_payload["password"],
+    })
+    assert login.status_code == 200
+    token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    topic_payload = {
+        "title": "FastAPI",
+        "skill": "Backend Development",
+        "description": "Python async backend framework",
+        "category": "Frameworks",
+        "is_active": True
+    }
+
+    topic_response = await client.post("/topics", json=topic_payload, headers=headers)
+    assert topic_response.status_code == 403
 
 @pytest.mark.asyncio
 async def test_get_topic(client, admin_headers):

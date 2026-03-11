@@ -91,7 +91,7 @@ async def verify_refresh(session: SessionDep, token: str):
         raise HTTPException(404, detail="Token not found")
     if db_token.revoked:
         raise HTTPException(401, detail="Token has been revoked")
-    if db_token.expires_at < datetime.now(UTC):
+    if db_token.expires_at < datetime.now(UTC).replace(tzinfo=None):
         raise HTTPException(401, detail="Token has expired")
     if user is None:
         raise HTTPException(404, detail="User not found")
