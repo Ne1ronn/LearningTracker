@@ -1,3 +1,5 @@
+import os
+
 from aiogram import F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
@@ -5,9 +7,10 @@ from telegram_bot.keyboards import create_choose_buttons, create_page_buttons
 from ..entry_router import router
 import httpx
 
-API_ALL_URL = "http://127.0.0.1:8000/entries/page"
-API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
-API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_ALL_URL = f"{API_BASE_URL}/entries/page"
+API_GET_URL = f"{API_BASE_URL}/token/{{telegram_id}}"
+API_TOKEN_URL = f"{API_BASE_URL}/auth/validate"
 
 @router.callback_query(F.data == "get_all_entries")
 async def get_all_entries(cb: CallbackQuery, state: FSMContext, token: str):

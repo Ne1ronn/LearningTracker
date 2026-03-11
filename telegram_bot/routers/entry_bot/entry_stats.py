@@ -1,10 +1,13 @@
+import os
+
 from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from .entry_router import router
 import httpx
 
-API_URL = "http://127.0.0.1:8000/entries/stats/weekly"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_URL = f"{API_BASE_URL}/entries/stats/weekly"
 
 @router.callback_query(F.data == "weekly_stats")
 async def weekly_stats(cb: CallbackQuery, state: FSMContext, token: str):

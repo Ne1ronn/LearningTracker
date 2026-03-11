@@ -1,3 +1,5 @@
+import os
+
 from aiogram import types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
@@ -8,8 +10,8 @@ import httpx
 
 from ...keyboards import create_cancel_button
 
-API_URL = "http://127.0.0.1:8000/topics"
-API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_URL = f"{API_BASE_URL}/topics"
 
 @router.callback_query(F.data == "add_topic")
 async def start_topic(cb: CallbackQuery, state: FSMContext, token: str):

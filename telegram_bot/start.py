@@ -1,3 +1,4 @@
+import os
 from aiogram import types, Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
@@ -6,8 +7,9 @@ from aiogram.types import CallbackQuery
 from .keyboards import create_start_buttons, create_entry_crud_buttons, create_topic_admin_buttons, create_topic_user_buttons
 from .middleware import AuthMiddleware, RoleMiddleware
 
-API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
-API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_GET_URL = f"{API_BASE_URL}/token/{{telegram_id}}"
+API_TOKEN_URL = f"{API_BASE_URL}/auth/validate"
 
 router = Router()
 router.message.middleware(AuthMiddleware())

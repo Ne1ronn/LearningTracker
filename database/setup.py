@@ -7,9 +7,11 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 import os
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+SQL_ECHO = os.getenv("SQL_ECHO")
+echo = True if SQL_ECHO == "true" else False
 engine = create_async_engine(
     str(DATABASE_URL),
-    echo=True,
+    echo=echo,
 )
 
 new_session = async_sessionmaker(engine, expire_on_commit=False)

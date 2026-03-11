@@ -6,8 +6,9 @@ from ...keyboards import create_auth_buttons
 from ...middleware import AuthMiddleware
 import httpx
 
-API_URL = "http://127.0.0.1:8000/logout"
-API_DELETE_URL = "http://127.0.0.1:8000/token/{telegram_id}"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_URL = f"{API_BASE_URL}/logout"
+API_DELETE_URL = f"{API_BASE_URL}/token/{{telegram_id}}"
 
 BOT_SECRET = os.getenv("BOT_SECRET")
 logout_router = Router()

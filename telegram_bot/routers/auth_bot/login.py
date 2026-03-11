@@ -10,9 +10,10 @@ import httpx
 
 from ...keyboards import create_cancel_button
 
-API_URL = "http://127.0.0.1:8000/login"
-API_GET_URL = "http://127.0.0.1:8000/user/login/{username}"
-API_POST_URL = "http://127.0.0.1:8000/token"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_URL = f"{API_BASE_URL}/login"
+API_GET_URL = f"{API_BASE_URL}/user/login/{{username}}"
+API_POST_URL = f"{API_BASE_URL}/token"
 BOT_SECRET = os.getenv("BOT_SECRET")
 
 class UserLoginForm(StatesGroup):

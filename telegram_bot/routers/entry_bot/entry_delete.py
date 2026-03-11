@@ -1,3 +1,5 @@
+import os
+
 from aiogram import types, F
 from .entry_states import DeleteEntryState
 from aiogram.fsm.context import FSMContext
@@ -8,7 +10,8 @@ import httpx
 
 from ...keyboards import create_cancel_button
 
-API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_URL = f"{API_BASE_URL}/entries/{{entry_id}}"
 
 @router.callback_query(F.data == "delete_entry")
 async def get_id(cb: CallbackQuery, state: FSMContext, token: str):

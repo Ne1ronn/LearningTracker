@@ -1,3 +1,5 @@
+import os
+
 from aiogram import types, F
 from aiogram.types import CallbackQuery
 from .topic_states import GetTopicState
@@ -7,7 +9,8 @@ import httpx
 
 from ...keyboards import create_cancel_button
 
-API_URL = "http://127.0.0.1:8000/topics/{topic_id}"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_URL = f"{API_BASE_URL}/topics/{{topic_id}}"
 
 @router.callback_query(F.data == "get_topic")
 async def start_get(cb: CallbackQuery, state: FSMContext):

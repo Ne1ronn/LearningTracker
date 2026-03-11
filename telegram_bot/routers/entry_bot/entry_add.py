@@ -1,3 +1,5 @@
+import os
+
 from aiogram import types, F
 from .entry_states import EntryForm
 from aiogram.fsm.context import FSMContext
@@ -6,8 +8,9 @@ from .entry_router import router
 from ...keyboards import create_yes_no_buttons, create_cancel_button, create_topics_buttons
 import httpx
 
-API_URL = "http://127.0.0.1:8000/entries"
-API_TOPICS_URL = "http://127.0.0.1:8000/topics"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_URL = f"{API_BASE_URL}/entries"
+API_TOPICS_URL = f"{API_BASE_URL}/topics"
 
 @router.callback_query(F.data == "add_entry")
 async def start_entry(cb: CallbackQuery, state: FSMContext, token: str):

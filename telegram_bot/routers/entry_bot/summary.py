@@ -1,3 +1,5 @@
+import os
+
 from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
@@ -5,7 +7,8 @@ from aiogram.types import CallbackQuery
 from .entry_router import router
 import httpx
 
-API_URL = "http://127.0.0.1:8000/entries/summary"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_URL = f"{API_BASE_URL}/entries/summary"
 
 @router.callback_query(F.data == "summary")
 async def summary(cb: CallbackQuery, state: FSMContext, token: str):

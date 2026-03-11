@@ -6,11 +6,12 @@ from aiogram.types import CallbackQuery
 from .routers.topic_bot.topic_states import GetTopicState
 from telegram_bot.keyboards import create_auth_buttons
 
-API_GET_URL = "http://127.0.0.1:8000/token/{telegram_id}"
-API_TOKEN_URL = "http://127.0.0.1:8000/auth/validate"
-API_ADMIN_URL = "http://127.0.0.1:8000/auth/validate/admin"
-API_REFRESH_URL = "http://127.0.0.1:8000/refresh"
-API_POST_URL = "http://127.0.0.1:8000/token"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_GET_URL = f"{API_BASE_URL}/token/{{telegram_id}}"
+API_TOKEN_URL = f"{API_BASE_URL}/auth/validate"
+API_ADMIN_URL = f"{API_BASE_URL}/auth/validate/admin"
+API_REFRESH_URL = f"{API_BASE_URL}/refresh"
+API_POST_URL = f"{API_BASE_URL}/token"
 BOT_SECRET = os.getenv("BOT_SECRET")
 
 class AuthMiddleware(BaseMiddleware):

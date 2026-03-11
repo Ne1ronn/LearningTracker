@@ -1,3 +1,5 @@
+import os
+
 from aiogram import types, F
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
@@ -8,9 +10,10 @@ import httpx
 
 from ...keyboards import create_cancel_button
 
-API_GET_URL = "http://127.0.0.1:8000/user/register/{username}"
-API_EMAIL_URL = "http://127.0.0.1:8000/userm/{email}"
-API_POST_URL = "http://127.0.0.1:8000/register"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_GET_URL = f"{API_BASE_URL}/user/register/{{username}}"
+API_EMAIL_URL = f"{API_BASE_URL}/userm/{{email}}"
+API_POST_URL = f"{API_BASE_URL}/register"
 
 class UserForm(StatesGroup):
     username = State()

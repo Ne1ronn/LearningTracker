@@ -1,3 +1,5 @@
+import os
+
 from aiogram import types, F
 from .entry_states import PatchEntryForm
 from aiogram.fsm.context import FSMContext
@@ -7,9 +9,10 @@ from ...keyboards import create_entry_attribute_choose_buttons, create_yes_no_bu
 from .entry_router import router
 import httpx
 
-API_URL = "http://127.0.0.1:8000/entries/{entry_id}"
-API_PERMISSION_URL = "http://127.0.0.1:8000/entries/{entry_id}/edit"
-API_TOPICS_URL = "http://127.0.0.1:8000/topics"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_URL = f"{API_BASE_URL}/entries/{{entry_id}}"
+API_PERMISSION_URL = f"{API_BASE_URL}/entries/{{entry_id}}/edit"
+API_TOPICS_URL = f"{API_BASE_URL}/topics"
 
 @router.callback_query(F.data == "patch_entry")
 async def start_patch(cb: CallbackQuery, state: FSMContext, token: str):
