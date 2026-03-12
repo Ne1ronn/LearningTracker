@@ -6,7 +6,10 @@ from typing import Annotated
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.environ["DATABASE_URL"].replace(
+    "postgresql://", "postgresql+asyncpg://"
+)
+
 SQL_ECHO = os.getenv("SQL_ECHO")
 echo = True if SQL_ECHO == "true" else False
 engine = create_async_engine(
