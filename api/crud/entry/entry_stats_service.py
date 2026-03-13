@@ -1,41 +1,89 @@
-from sqlalchemy import select, func
+from sqlalchemy import select, func, desc
 from database.setup import SessionDep
 from models import DailyStatsModel, EntryModel, entry_topics, TopicModel, UserModel
 from datetime import date, timedelta
+from schemas.profile_stats_schema import ProfileStatsResponseSchema
 from schemas.weekly_stats_schema import WeeklyStatsResponseSchema
+
+
+async def get_profile_stats(session: SessionDep, user: UserModel):
+    total_hours_all_time = await get_total_hours_all_time(session, user)
+    favorite_topic, favorite_topic_hours = await get_favorite_topic(session, user)
+    current_streak = await count_streak(session, user)
+    max_streak = await count_max_streak(session, user)
+    average_day_hours = await get_average_day_hours(session, user)
+
+    return ProfileStatsResponseSchema(
+        total_hours_all_time=total_hours_all_time,
+        average_day_hours=average_day_hours,
+        favorite_topic=favorite_topic,
+        favorite_topic_hours=favorite_topic_hours,
+        current_streak=current_streak,
+        max_streak=max_streak,
+    )
+
+
+async def get_total_hours_all_time(session: SessionDep, user: UserModel):
+    stmt = (
+        select(func.sum(DailyStatsModel.total_hours))
+        .select_from(DailyStatsModel)
+        .where(DailyStatsModel.user_id == user.id)
+    )
+    result = await session.execute(stmt)
+    return result.scalar() or 0.0
+
+
+async def get_favorite_topic(session: SessionDep, user: UserModel):
+    stmt = (
+        select(
+            TopicModel.title, func.sum(EntryModel.learning_hours).label("total_hours")
+        )
+        .select_from(TopicModel)
+        .join(entry_topics, entry_topics.c.topic_id == TopicModel.id)
+        .join(EntryModel, EntryModel.id == entry_topics.c.entry_id)
+        .where(EntryModel.user_id == user.id)
+        .group_by(TopicModel.id)
+        .order_by(desc("total_hours"))
+        .limit(1)
+    )
+
+    result = await session.execute(stmt)
+    favorite_topic_data = result.first()
+
+    favorite_topic = favorite_topic_data[0] if favorite_topic_data else None
+    favorite_topic_hours = favorite_topic_data[1] if favorite_topic_data else 0.0
+
+    return favorite_topic, favorite_topic_hours
+
+
+async def get_average_day_hours(session: SessionDep, user: UserModel):
+    stmt = (
+        select(func.avg(DailyStatsModel.total_hours))
+        .select_from(DailyStatsModel)
+        .where(DailyStatsModel.user_id == user.id)
+    )
+
+    result = await session.execute(stmt)
+    return result.scalar() or 0.0
 
 
 async def get_weekly_stats(session: SessionDep, user: UserModel):
     last = date.today() - timedelta(days=6)
 
-    stmt = (
-        select(DailyStatsModel.total_hours)
-        .where(DailyStatsModel.user_id == user.id, DailyStatsModel.date >= last)
-        .order_by(DailyStatsModel.date.asc())
+    stmt = select(func.sum(DailyStatsModel.total_hours)).where(
+        DailyStatsModel.user_id == user.id, DailyStatsModel.date >= last
     )
     result = await session.execute(stmt)
-    last_7_days_stats = result.scalars().all()
+    last_7_days_hours = result.scalar() or 0.0
 
     prev = date.today() - timedelta(days=13)
-    stmt = (
-        select(DailyStatsModel.total_hours)
-        .where(
-            DailyStatsModel.user_id == user.id,
-            DailyStatsModel.date < last,
-            DailyStatsModel.date >= prev,
-        )
-        .order_by(DailyStatsModel.date.asc())
+    stmt = select(func.sum(DailyStatsModel.total_hours)).where(
+        DailyStatsModel.user_id == user.id,
+        DailyStatsModel.date < last,
+        DailyStatsModel.date >= prev,
     )
     result = await session.execute(stmt)
-    prev_7_days_stats = result.scalars().all()
-
-    last_7_days_hours = 0
-    prev_7_days_hours = 0
-
-    for hours in last_7_days_stats:
-        last_7_days_hours += hours
-    for hours in prev_7_days_stats:
-        prev_7_days_hours += hours
+    prev_7_days_hours = result.scalar() or 0.0
 
     if not prev_7_days_hours:
         delta_percent = 100
@@ -85,6 +133,40 @@ async def count_streak(session: SessionDep, user: UserModel):
         expected_day -= timedelta(days=1)
 
     return streak
+
+
+async def count_max_streak(session: SessionDep, user: UserModel):
+    stmt = (
+        select(DailyStatsModel.date)
+        .where(DailyStatsModel.user_id == user.id, DailyStatsModel.total_hours > 0)
+        .order_by(DailyStatsModel.date.asc())
+    )
+    result = await session.execute(stmt)
+    daily_stats = result.scalars().all()
+
+    if not daily_stats:
+        return 0
+
+    current_streak = 0
+    max_streak = 0
+    previous_date = None
+
+    for current_date in daily_stats:
+        if previous_date is None:
+            current_streak = 1
+            previous_date = current_date
+            continue
+
+        if current_date == previous_date + timedelta(days=1):
+            current_streak += 1
+        else:
+            if max_streak < current_streak:
+                max_streak = current_streak
+            current_streak = 1
+
+        previous_date = current_date
+
+    return max_streak if max_streak > current_streak else current_streak
 
 
 async def summary(session: SessionDep, user: UserModel):

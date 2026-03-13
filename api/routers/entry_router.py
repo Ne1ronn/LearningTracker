@@ -1,6 +1,8 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status, HTTPException
+
+from schemas.profile_stats_schema import ProfileStatsResponseSchema
 from ..crud.auth.dependencies import get_current_user
 from ..crud.entry.entry_permessions import can_update_entry
 from ..crud.entry.entry_read_service import (
@@ -9,7 +11,12 @@ from ..crud.entry.entry_read_service import (
     give_entry,
     get_entry_by_id,
 )
-from ..crud.entry.entry_stats_service import summary, count_streak, get_weekly_stats
+from ..crud.entry.entry_stats_service import (
+    summary,
+    count_streak,
+    get_weekly_stats,
+    get_profile_stats,
+)
 from ..crud.entry.entry_write_service import (
     add_entry,
     update_entry_db,
@@ -147,6 +154,13 @@ async def weekly_stats(
     session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]
 ):
     return await get_weekly_stats(session, user)
+
+
+@router.get("/profile/stats", response_model=ProfileStatsResponseSchema)
+async def profile_stats(
+    session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]
+):
+    return await get_profile_stats(session, user)
 
 
 @router.put("/entries/{entry_id}")
