@@ -1,10 +1,11 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status, HTTPException
-from api.crud.entry_crud import (add_entry, give_all_entry, give_entry, update_entry_, patch_entry_, delete_entry_,
-                                 summary, can_update_entry, get_entry_by_id, get_weekly_stats, get_entry_count,
-                                 count_streak)
 from api.auth.auth_crud import get_current_user
+from api.crud.entry.entry_permessions import can_update_entry
+from api.crud.entry.entry_read_service import give_all_entry, get_entry_count, give_entry, get_entry_by_id
+from api.crud.entry.entry_stats_service import summary, count_streak, get_weekly_stats
+from api.crud.entry.entry_write_service import add_entry, update_entry_db, patch_entry_db, delete_entry_db
 from database.setup import SessionDep
 from models.user_model import UserModel
 from schemas.entry_schema import EntryAddSchema, EntrySchema, UpdateEntrySchema
@@ -80,17 +81,17 @@ async def weekly_stats(session: SessionDep, user: Annotated[UserModel, Depends(g
 
 @router.put("/entries/{entry_id}")
 async def update_entry(session: SessionDep, entry: EntryAddSchema, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
-    await update_entry_(session, entry, entry_id, user)
+    await update_entry_db(session, entry, entry_id, user)
     return {"message": "Entry updated successfully"}
 
 @router.patch("/entries/{entry_id}")
 async def patch_entry(session: SessionDep, patched_entry: UpdateEntrySchema, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
-    await patch_entry_(session, entry_id, patched_entry, user)
+    await patch_entry_db(session, entry_id, patched_entry, user)
     return {"message": "Entry updated successfully"}
 
 @router.delete("/entries/{entry_id}")
 async def delete_entry(session: SessionDep, entry_id: int, user: Annotated[UserModel, Depends(get_current_user)]):
-    await delete_entry_(session, entry_id, user)
+    await delete_entry_db(session, entry_id, user)
     return {"message": "Entry deleted successfully"}
 
 @router.get("/entries/{entry_id}/edit")
