@@ -9,13 +9,16 @@ import httpx
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 API_URL = f"{API_BASE_URL}/entries/stats/weekly"
 
+
 @router.callback_query(F.data == "weekly_stats")
 async def weekly_stats(cb: CallbackQuery, state: FSMContext, token: str):
     await state.clear()
     await cb.answer()
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(API_URL, headers={"Authorization": f"Bearer {token}"})
+        response = await client.get(
+            API_URL, headers={"Authorization": f"Bearer {token}"}
+        )
 
     if response.status_code != 200:
         await cb.message.answer(f"Error:{response.text}")

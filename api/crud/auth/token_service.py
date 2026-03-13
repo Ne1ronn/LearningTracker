@@ -15,6 +15,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 10
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
+
 async def verify_refresh(session: SessionDep, token: str):
     try:
         payload = jwt.decode(token, REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
@@ -52,30 +53,27 @@ async def verify_refresh(session: SessionDep, token: str):
         raise HTTPException(401, detail="Invalid user id")
     return {"user": user, "db_token": db_token}
 
+
 def create_access_token(username: str, role: str):
-    expire = datetime.now(UTC).replace(tzinfo=None)+ timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload = {"sub": username,
-               "role": role,
-               "type": "access",
-               "exp": expire}
+    expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    payload = {"sub": username, "role": role, "type": "access", "exp": expire}
     return jwt.encode(payload, ACCESS_SECRET_KEY, algorithm=ALGORITHM)
+
 
 async def create_refresh_token(session: SessionDep, user_id: int):
     jti = str(uuid.uuid4())
-    expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(
+        days=REFRESH_TOKEN_EXPIRE_DAYS
+    )
 
-    payload = {"sub": str(user_id),
-               "jti": jti,
-               "type": "refresh",
-               "exp": expire}
+    payload = {"sub": str(user_id), "jti": jti, "type": "refresh", "exp": expire}
 
     token = jwt.encode(payload, REFRESH_SECRET_KEY, algorithm=ALGORITHM)
 
     db_token = RefreshTokenModel(
-        jti=jti,
-        user_id=user_id,
-        expires_at=expire,
-        revoked=False
+        jti=jti, user_id=user_id, expires_at=expire, revoked=False
     )
 
     session.add(db_token)

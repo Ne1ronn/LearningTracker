@@ -14,15 +14,22 @@ API_REFRESH_URL = f"{API_BASE_URL}/refresh"
 API_POST_URL = f"{API_BASE_URL}/token"
 BOT_SECRET = os.getenv("BOT_SECRET")
 
+
 class AuthMiddleware(BaseMiddleware):
     async def __call__(self, handler, event, data):
         state = data.get("state")
         telegram_id = event.from_user.id
         async with httpx.AsyncClient() as client:
-            token_response = await client.get(API_GET_URL.format(telegram_id=telegram_id), headers={"X-Bot-Secret": BOT_SECRET})
+            token_response = await client.get(
+                API_GET_URL.format(telegram_id=telegram_id),
+                headers={"X-Bot-Secret": BOT_SECRET},
+            )
 
             if token_response.status_code != 200:
-                await event.answer(f"User with telegram id {telegram_id} unauthorized. Use this buttons to authorize", reply_markup=create_auth_buttons())
+                await event.answer(
+                    f"User with telegram id {telegram_id} unauthorized. Use this buttons to authorize",
+                    reply_markup=create_auth_buttons(),
+                )
                 await state.clear()
                 return
 
@@ -30,20 +37,28 @@ class AuthMiddleware(BaseMiddleware):
             refresh_token = token_response.json().get("refresh_token")
 
             if not access_token or not refresh_token:
-                await event.answer("Auth data missing. Use this buttons to authorize",
-                                   reply_markup=create_auth_buttons())
+                await event.answer(
+                    "Auth data missing. Use this buttons to authorize",
+                    reply_markup=create_auth_buttons(),
+                )
                 await state.clear()
                 return
 
-            auth_response = await client.get(API_TOKEN_URL, headers={"Authorization": f"Bearer {access_token}"})
+            auth_response = await client.get(
+                API_TOKEN_URL, headers={"Authorization": f"Bearer {access_token}"}
+            )
 
             if auth_response.status_code != 200:
                 if auth_response.status_code == 401:
-                    refresh_response = await client.post(API_REFRESH_URL, json={"token": refresh_token})
+                    refresh_response = await client.post(
+                        API_REFRESH_URL, json={"token": refresh_token}
+                    )
 
                     if refresh_response.status_code != 201:
-                        await event.answer("Logged session ended. Use this buttons to authorize",
-                                           reply_markup=create_auth_buttons())
+                        await event.answer(
+                            "Logged session ended. Use this buttons to authorize",
+                            reply_markup=create_auth_buttons(),
+                        )
                         await state.clear()
                         return
 
@@ -51,16 +66,22 @@ class AuthMiddleware(BaseMiddleware):
                     refresh_token = refresh_response.json().get("refresh_token")
 
                     if not access_token or not refresh_token:
-                        await event.answer("Auth data missing. Use this buttons to authorize",
-                                           reply_markup=create_auth_buttons())
+                        await event.answer(
+                            "Auth data missing. Use this buttons to authorize",
+                            reply_markup=create_auth_buttons(),
+                        )
                         await state.clear()
                         return
 
-                    response = await client.post(API_POST_URL,
-                                                params={"telegram_id": telegram_id},
-                                                     json={"token": refresh_token},
-                                                     headers={"Authorization": f"Bearer {access_token}",
-                                                              "X-Bot-Secret": BOT_SECRET})
+                    response = await client.post(
+                        API_POST_URL,
+                        params={"telegram_id": telegram_id},
+                        json={"token": refresh_token},
+                        headers={
+                            "Authorization": f"Bearer {access_token}",
+                            "X-Bot-Secret": BOT_SECRET,
+                        },
+                    )
 
                     if response.status_code != 201:
                         await event.answer(f"{response.text}")
@@ -72,7 +93,10 @@ class AuthMiddleware(BaseMiddleware):
                     return
 
         if not access_token or not refresh_token:
-            await event.answer("Auth data missing. Use this buttons to authorize", reply_markup=create_auth_buttons())
+            await event.answer(
+                "Auth data missing. Use this buttons to authorize",
+                reply_markup=create_auth_buttons(),
+            )
             await state.clear()
             return
 
@@ -80,12 +104,16 @@ class AuthMiddleware(BaseMiddleware):
         data["refresh_token"] = refresh_token
         return await handler(event, data)
 
+
 class RoleMiddleware(BaseMiddleware):
     async def __call__(self, handler, event, data):
         state = data.get("state")
         token = data.get("token")
 
-        if isinstance(event, CallbackQuery) and event.data in ["get_topic", "entry_actions"]:
+        if isinstance(event, CallbackQuery) and event.data in [
+            "get_topic",
+            "entry_actions",
+        ]:
             return await handler(event, data)
 
         if state:
@@ -94,7 +122,9 @@ class RoleMiddleware(BaseMiddleware):
                 return await handler(event, data)
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(API_ADMIN_URL, headers={"Authorization": f"Bearer {token}"})
+            response = await client.get(
+                API_ADMIN_URL, headers={"Authorization": f"Bearer {token}"}
+            )
 
         if response.status_code != 200:
             if isinstance(event, CallbackQuery) and event.data == "topic_actions":

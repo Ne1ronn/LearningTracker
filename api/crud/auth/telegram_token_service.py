@@ -4,8 +4,17 @@ from models.telegram_model import TelegramTokenModel
 from models.user_model import UserModel
 from sqlalchemy import select
 
-async def create_telegram_token(session: SessionDep, telegram_id: int, user: UserModel, access_token: str, refresh_token: str):
-    stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == telegram_id)
+
+async def create_telegram_token(
+    session: SessionDep,
+    telegram_id: int,
+    user: UserModel,
+    access_token: str,
+    refresh_token: str,
+):
+    stmt = select(TelegramTokenModel).where(
+        TelegramTokenModel.telegram_id == telegram_id
+    )
     result = await session.execute(stmt)
     token = result.scalar_one_or_none()
 
@@ -18,15 +27,18 @@ async def create_telegram_token(session: SessionDep, telegram_id: int, user: Use
             user_id=user.id,
             telegram_id=telegram_id,
             access_token=access_token,
-            refresh_token=refresh_token
+            refresh_token=refresh_token,
         )
 
         session.add(telegram_token)
 
     await session.commit()
 
+
 async def get_telegram_token(session: SessionDep, telegram_id: int):
-    stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == telegram_id)
+    stmt = select(TelegramTokenModel).where(
+        TelegramTokenModel.telegram_id == telegram_id
+    )
     result = await session.execute(stmt)
     token = result.scalar_one_or_none()
 
@@ -38,8 +50,11 @@ async def get_telegram_token(session: SessionDep, telegram_id: int):
 
     return token
 
+
 async def delete_telegram_token(session: SessionDep, telegram_id: int):
-    stmt = select(TelegramTokenModel).where(TelegramTokenModel.telegram_id == telegram_id)
+    stmt = select(TelegramTokenModel).where(
+        TelegramTokenModel.telegram_id == telegram_id
+    )
     result = await session.execute(stmt)
     token = result.scalar_one_or_none()
 

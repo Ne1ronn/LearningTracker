@@ -1,5 +1,6 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
+
 def create_choose_buttons():
     builder = InlineKeyboardBuilder()
 
@@ -10,6 +11,7 @@ def create_choose_buttons():
 
     builder.adjust(2)
     return builder.as_markup()
+
 
 def create_page_buttons(offset: int, limit: int, total: int):
     builder = InlineKeyboardBuilder()
@@ -22,6 +24,7 @@ def create_page_buttons(offset: int, limit: int, total: int):
     builder.adjust(2)
     return builder.as_markup()
 
+
 def create_sort_buttons():
     builder = InlineKeyboardBuilder()
     builder.button(text="Date", callback_data="sort_date")
@@ -33,6 +36,7 @@ def create_sort_buttons():
     builder.adjust(2)
     return builder.as_markup()
 
+
 def create_asc_desc_buttons():
     builder = InlineKeyboardBuilder()
 
@@ -43,22 +47,19 @@ def create_asc_desc_buttons():
     builder.adjust(2)
     return builder.as_markup()
 
+
 def create_filter_buttons():
     builder = InlineKeyboardBuilder()
-    builder.button(text="Private",
-                   callback_data="ask_private")
-    builder.button(text="Date",
-                   callback_data="ask_date")
-    builder.button(text="Mood",
-                   callback_data="ask_mood")
-    builder.button(text="Progress",
-                   callback_data="ask_progress")
-    builder.button(text="Hours",
-                   callback_data="ask_hours")
+    builder.button(text="Private", callback_data="ask_private")
+    builder.button(text="Date", callback_data="ask_date")
+    builder.button(text="Mood", callback_data="ask_mood")
+    builder.button(text="Progress", callback_data="ask_progress")
+    builder.button(text="Hours", callback_data="ask_hours")
     builder.button(text="Cancel", callback_data="cancel")
 
     builder.adjust(2)
     return builder.as_markup()
+
 
 def create_private_buttons():
     builder = InlineKeyboardBuilder()
@@ -71,6 +72,7 @@ def create_private_buttons():
     builder.adjust(2)
     return builder.as_markup()
 
+
 def create_date_reply_buttons():
     builder = ReplyKeyboardBuilder()
 
@@ -81,6 +83,7 @@ def create_date_reply_buttons():
 
     builder.adjust(2)
     return builder.as_markup()
+
 
 def create_entry_crud_buttons():
     builder = InlineKeyboardBuilder()
@@ -98,6 +101,7 @@ def create_entry_crud_buttons():
     builder.adjust(2)
     return builder.as_markup()
 
+
 def create_topic_admin_buttons():
     builder = InlineKeyboardBuilder()
 
@@ -110,10 +114,12 @@ def create_topic_admin_buttons():
     builder.adjust(2)
     return builder.as_markup()
 
+
 def create_topic_user_buttons():
     builder = InlineKeyboardBuilder()
     builder.button(text="🔍Get topic", callback_data="get_topic")
     return builder.as_markup()
+
 
 def create_start_buttons():
     builder = InlineKeyboardBuilder()
@@ -125,6 +131,7 @@ def create_start_buttons():
     builder.adjust(2)
     return builder.as_markup()
 
+
 def create_auth_buttons():
     builder = InlineKeyboardBuilder()
 
@@ -132,6 +139,7 @@ def create_auth_buttons():
     builder.button(text="Sign in", callback_data="register")
 
     return builder.as_markup()
+
 
 def create_yes_no_buttons(prefix: str):
     builder = InlineKeyboardBuilder()
@@ -142,6 +150,7 @@ def create_yes_no_buttons(prefix: str):
 
     builder.adjust(2)
     return builder.as_markup()
+
 
 def create_entry_attribute_choose_buttons():
     builder = InlineKeyboardBuilder()
@@ -159,6 +168,7 @@ def create_entry_attribute_choose_buttons():
     builder.adjust(2)
     return builder.as_markup()
 
+
 def create_topic_attribute_choose_buttons():
     builder = InlineKeyboardBuilder()
 
@@ -172,10 +182,12 @@ def create_topic_attribute_choose_buttons():
     builder.adjust(2)
     return builder.as_markup()
 
+
 def create_cancel_button():
     builder = InlineKeyboardBuilder()
     builder.button(text="Cancel", callback_data="cancel")
     return builder.as_markup()
+
 
 def create_topics_buttons(topics):
     builder = InlineKeyboardBuilder()

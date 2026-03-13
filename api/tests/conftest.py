@@ -11,20 +11,19 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from main import app
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 DATABASE_URL_TEST = os.getenv("DATABASE_URL_TEST")
-engine = create_async_engine(
-    str(DATABASE_URL_TEST),
-    echo=False,
-    poolclass=NullPool
-)
+engine = create_async_engine(str(DATABASE_URL_TEST), echo=False, poolclass=NullPool)
 
 new_session = async_sessionmaker(engine, expire_on_commit=False)
+
 
 async def override_get_session():
     async with new_session() as session:
         yield session
+
 
 @pytest_asyncio.fixture
 async def client():
@@ -34,14 +33,16 @@ async def client():
         yield ac
         app.dependency_overrides.pop(get_session, None)
 
+
 @pytest.fixture
 def user_payload():
     suffix = uuid.uuid4().hex[:8]
     return {
         "username": f"test_user_{suffix}",
         "email": f"test_{suffix}@example.com",
-        "password": "test_password"
+        "password": "test_password",
     }
+
 
 @pytest.fixture
 def entry_payload():
@@ -54,8 +55,9 @@ def entry_payload():
         "progress_score": 7,
         "learning_hours": 2.5,
         "private": False,
-        "topic_ids": []
+        "topic_ids": [],
     }
+
 
 @pytest_asyncio.fixture
 async def admin_headers(client):

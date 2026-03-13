@@ -4,6 +4,7 @@ from aiogram.types import CallbackQuery
 from ..entry_router import router
 from .entry_get_all import show_page
 
+
 @router.callback_query(F.data == "previous")
 async def previous_page(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
@@ -12,6 +13,7 @@ async def previous_page(cb: CallbackQuery, state: FSMContext):
     await state.update_data(offset=offset)
     token = data["token"]
     await show_page(state, cb.message, token)
+
 
 @router.callback_query(F.data == "next")
 async def next_page(cb: CallbackQuery, state: FSMContext):

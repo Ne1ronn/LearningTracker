@@ -10,11 +10,13 @@ fileConfig(config.config_file_name)
 
 import models
 from models.base import Base
+
 target_metadata = Base.metadata
 
 DATABASE_URL_ALEMBIC = os.environ["DATABASE_URL_ALEMBIC"].replace(
     "postgresql://", "postgresql+psycopg://"
 )
+
 
 def run_migrations_online():
     engine = create_engine(

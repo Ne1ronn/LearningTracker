@@ -1,5 +1,6 @@
 from aiogram.fsm.state import StatesGroup, State
 
+
 class UpdateEntryForm(StatesGroup):
     waiting_id = State()
     title = State()
@@ -12,6 +13,7 @@ class UpdateEntryForm(StatesGroup):
     waiting_ids = State()
     topic_ids = State()
 
+
 class PatchEntryForm(StatesGroup):
     waiting_id = State()
     waiting_attribute = State()
@@ -19,8 +21,10 @@ class PatchEntryForm(StatesGroup):
     edit_topic_ids = State()
     waiting_confirm = State()
 
+
 class DeleteEntryState(StatesGroup):
     waiting_id = State()
+
 
 class EntryForm(StatesGroup):
     title = State()
@@ -33,8 +37,10 @@ class EntryForm(StatesGroup):
     waiting_ids = State()
     topic_ids = State()
 
+
 class GetEntryState(StatesGroup):
     waiting_id = State()
+
 
 class EntriesState(StatesGroup):
     waiting_private = State()

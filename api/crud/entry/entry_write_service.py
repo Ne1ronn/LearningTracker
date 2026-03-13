@@ -11,14 +11,14 @@ from datetime import date
 
 async def add_entry(session: SessionDep, entry: EntryAddSchema, user: UserModel):
     new_entry = EntryModel(
-        user_id = user.id,
-        title = entry.title,
-        description = entry.description,
-        tags = entry.tags,
-        mood_score = entry.mood_score,
-        progress_score = entry.progress_score,
-        learning_hours = entry.learning_hours,
-        private=entry.private
+        user_id=user.id,
+        title=entry.title,
+        description=entry.description,
+        tags=entry.tags,
+        mood_score=entry.mood_score,
+        progress_score=entry.progress_score,
+        learning_hours=entry.learning_hours,
+        private=entry.private,
     )
 
     if entry.topic_ids:
@@ -32,15 +32,15 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema, user: UserModel)
     entry_date = new_entry.created_at.date()
     await add_daily_stat(session, user.id, entry_date, entry.learning_hours)
 
-async def add_daily_stat(session: SessionDep, user_id: int, entry_date: date, entry_hours: float):
+
+async def add_daily_stat(
+    session: SessionDep, user_id: int, entry_date: date, entry_hours: float
+):
     daily_stat = await get_daily_stat(session, user_id, entry_date)
 
     if not daily_stat:
         new_daily_stat = DailyStatsModel(
-            user_id = user_id,
-            date = entry_date,
-            total_hours=entry_hours,
-            entries_count=1
+            user_id=user_id, date=entry_date, total_hours=entry_hours, entries_count=1
         )
         session.add(new_daily_stat)
     else:
@@ -49,7 +49,10 @@ async def add_daily_stat(session: SessionDep, user_id: int, entry_date: date, en
 
     await session.commit()
 
-async def update_entry_db(session: SessionDep, new_entry: EntryAddSchema, entry_id: int, user: UserModel):
+
+async def update_entry_db(
+    session: SessionDep, new_entry: EntryAddSchema, entry_id: int, user: UserModel
+):
     entry = await get_entry_by_id(session, entry_id)
     can_update_entry(entry, user)
     old_hours = entry.learning_hours
@@ -70,11 +73,20 @@ async def update_entry_db(session: SessionDep, new_entry: EntryAddSchema, entry_
 
     await session.commit()
 
-async def update_daily_stat(session: SessionDep, user_id: int, entry_date: date, entry_hours: float):
+
+async def update_daily_stat(
+    session: SessionDep, user_id: int, entry_date: date, entry_hours: float
+):
     daily_stat = await get_daily_stat(session, user_id, entry_date)
     daily_stat.total_hours += entry_hours
 
-async def patch_entry_db(session: SessionDep, entry_id: int, patched_entry: UpdateEntrySchema, user: UserModel):
+
+async def patch_entry_db(
+    session: SessionDep,
+    entry_id: int,
+    patched_entry: UpdateEntrySchema,
+    user: UserModel,
+):
     entry = await get_entry_by_id(session, entry_id)
     can_update_entry(entry, user)
     old_hours = entry.learning_hours
@@ -96,6 +108,7 @@ async def patch_entry_db(session: SessionDep, entry_id: int, patched_entry: Upda
 
     await session.commit()
 
+
 async def delete_entry_db(session: SessionDep, entry_id: int, user: UserModel):
     entry = await get_entry_by_id(session, entry_id)
     can_delete_entry(entry, user)
@@ -107,7 +120,10 @@ async def delete_entry_db(session: SessionDep, entry_id: int, user: UserModel):
 
     await session.commit()
 
-async def delete_daily_stat(session: SessionDep, user_id: int, entry_date: date, entry_hours: float):
+
+async def delete_daily_stat(
+    session: SessionDep, user_id: int, entry_date: date, entry_hours: float
+):
     daily_stat = await get_daily_stat(session, user_id, entry_date)
     daily_stat.total_hours -= entry_hours
     daily_stat.entries_count -= 1
@@ -115,7 +131,10 @@ async def delete_daily_stat(session: SessionDep, user_id: int, entry_date: date,
     if daily_stat.entries_count == 0:
         await session.delete(daily_stat)
 
-async def missing_topics(session: SessionDep, entry: Union[EntryAddSchema, UpdateEntrySchema]):
+
+async def missing_topics(
+    session: SessionDep, entry: Union[EntryAddSchema, UpdateEntrySchema]
+):
     stmt = select(TopicModel).where(TopicModel.id.in_(entry.topic_ids))
     result = await session.execute(stmt)
     topics = result.scalars().all()
@@ -123,9 +142,6 @@ async def missing_topics(session: SessionDep, entry: Union[EntryAddSchema, Updat
     if len(topics) != len(entry.topic_ids):
         found_ids = {topic.id for topic in topics}
         missing = {i for i in entry.topic_ids if not i in found_ids}
-        raise HTTPException(
-            status_code=404,
-            detail=f"Topics not found: {missing}"
-        )
+        raise HTTPException(status_code=404, detail=f"Topics not found: {missing}")
 
     return topics

@@ -7,15 +7,16 @@ from schemas.topic_schema import TopicAddSchema, UpdateTopicSchema
 
 async def add_topic(session: SessionDep, topic: TopicAddSchema):
     new_topic = TopicModel(
-        title = topic.title,
-        skill = topic.skill,
-        description = topic.description,
-        category = topic.category,
-        is_active = topic.is_active
+        title=topic.title,
+        skill=topic.skill,
+        description=topic.description,
+        category=topic.category,
+        is_active=topic.is_active,
     )
 
     session.add(new_topic)
     await session.commit()
+
 
 async def give_topic(session: SessionDep, topic_id: int):
     stmt = select(TopicModel).where(TopicModel.id == topic_id)
@@ -25,10 +26,11 @@ async def give_topic(session: SessionDep, topic_id: int):
     if topic is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Topic with id {topic_id} not found"
+            detail=f"Topic with id {topic_id} not found",
         )
 
     return topic
+
 
 async def get_all_topics_db(session: SessionDep, limit: int = 10, offset: int = 0):
     stmt = select(TopicModel).offset(offset).limit(limit)
@@ -36,6 +38,7 @@ async def get_all_topics_db(session: SessionDep, limit: int = 10, offset: int = 
     topics = result.scalars().all()
 
     return topics
+
 
 async def update_topic_(session: SessionDep, new_topic: TopicAddSchema, topic_id: int):
     topic = await give_topic(session, topic_id)
@@ -46,7 +49,10 @@ async def update_topic_(session: SessionDep, new_topic: TopicAddSchema, topic_id
 
     await session.commit()
 
-async def patch_topic_(session: SessionDep, patched_topic: UpdateTopicSchema, topic_id: int):
+
+async def patch_topic_(
+    session: SessionDep, patched_topic: UpdateTopicSchema, topic_id: int
+):
     topic = await give_topic(session, topic_id)
 
     updated_dic = patched_topic.model_dump(exclude_unset=True)
@@ -54,6 +60,7 @@ async def patch_topic_(session: SessionDep, patched_topic: UpdateTopicSchema, to
         setattr(topic, field, value)
 
     await session.commit()
+
 
 async def delete_topic_(session: SessionDep, topic_id: int):
     topic = await give_topic(session, topic_id)

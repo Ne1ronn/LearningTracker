@@ -13,23 +13,36 @@ async def give_entry(session: SessionDep, entry_id: int, user: UserModel):
     can_read_entry(entry, user)
     return entry
 
-async def give_all_entry(session: SessionDep,
-                         user: UserModel,
-                         target_date: date = None,
-                         private: bool = None,
-                         min_mood_score: int = None,
-                         max_mood_score: int = None,
-                         min_progress_score: int = None,
-                         max_progress_score: int = None,
-                         min_learning_hours: float = None,
-                         max_learning_hours: float = None,
-                         sort: str = None,
-                         limit: int = 20,
-                         offset: int = 0):
+
+async def give_all_entry(
+    session: SessionDep,
+    user: UserModel,
+    target_date: date = None,
+    private: bool = None,
+    min_mood_score: int = None,
+    max_mood_score: int = None,
+    min_progress_score: int = None,
+    max_progress_score: int = None,
+    min_learning_hours: float = None,
+    max_learning_hours: float = None,
+    sort: str = None,
+    limit: int = 20,
+    offset: int = 0,
+):
 
     stmt = select(EntryModel).where(EntryModel.user_id == user.id)
 
-    stmt = apply_filter(stmt, target_date, private, min_mood_score, max_mood_score, min_progress_score, max_progress_score, min_learning_hours, max_learning_hours)
+    stmt = apply_filter(
+        stmt,
+        target_date,
+        private,
+        min_mood_score,
+        max_mood_score,
+        min_progress_score,
+        max_progress_score,
+        min_learning_hours,
+        max_learning_hours,
+    )
     stmt = apply_sort(stmt, sort)
 
     stmt = stmt.offset(offset).limit(limit)
@@ -41,23 +54,39 @@ async def give_all_entry(session: SessionDep,
 
     return entries
 
-async def get_entry_count(session: SessionDep,
-                          user: UserModel,
-                          target_date: date = None,
-                          private: bool = None,
-                          min_mood_score: int = None,
-                          max_mood_score: int = None,
-                          min_progress_score: int = None,
-                          max_progress_score: int = None,
-                          min_learning_hours: float = None,
-                          max_learning_hours: float = None
-                          ):
-    stmt = select(func.count()).select_from(EntryModel).where(EntryModel.user_id == user.id)
-    stmt = apply_filter(stmt, target_date, private, min_mood_score, max_mood_score,
-                        min_progress_score, max_progress_score, min_learning_hours, max_learning_hours)
+
+async def get_entry_count(
+    session: SessionDep,
+    user: UserModel,
+    target_date: date = None,
+    private: bool = None,
+    min_mood_score: int = None,
+    max_mood_score: int = None,
+    min_progress_score: int = None,
+    max_progress_score: int = None,
+    min_learning_hours: float = None,
+    max_learning_hours: float = None,
+):
+    stmt = (
+        select(func.count())
+        .select_from(EntryModel)
+        .where(EntryModel.user_id == user.id)
+    )
+    stmt = apply_filter(
+        stmt,
+        target_date,
+        private,
+        min_mood_score,
+        max_mood_score,
+        min_progress_score,
+        max_progress_score,
+        min_learning_hours,
+        max_learning_hours,
+    )
     total = (await session.execute(stmt)).scalar_one()
 
     return total
+
 
 async def get_entry_by_id(session: SessionDep, entry_id: int):
     stmt = (
@@ -72,13 +101,16 @@ async def get_entry_by_id(session: SessionDep, entry_id: int):
     if entry is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Entry with id {entry_id} not found"
+            detail=f"Entry with id {entry_id} not found",
         )
 
     return entry
 
+
 async def get_daily_stat(session: SessionDep, user_id: int, entry_date: date):
-    stmt = select(DailyStatsModel).where(DailyStatsModel.date == entry_date, DailyStatsModel.user_id == user_id)
+    stmt = select(DailyStatsModel).where(
+        DailyStatsModel.date == entry_date, DailyStatsModel.user_id == user_id
+    )
     result = await session.execute(stmt)
     daily_stat = result.scalar_one_or_none()
 

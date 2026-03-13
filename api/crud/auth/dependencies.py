@@ -9,11 +9,12 @@ from .user_repo import get_user_by_username
 
 BOT_SECRET = os.getenv("BOT_SECRET")
 
+
 async def get_current_user(session: SessionDep, token: str = Depends(oauth2_scheme)):
     credential_exceptions = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"}
+        headers={"WWW-Authenticate": "Bearer"},
     )
     try:
         payload = jwt.decode(token, ACCESS_SECRET_KEY, algorithms=[ALGORITHM])
@@ -28,16 +29,17 @@ async def get_current_user(session: SessionDep, token: str = Depends(oauth2_sche
         raise credential_exceptions
     return user
 
+
 async def require_role(user=Depends(get_current_user)):
     if user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Don't have enough permissions"
+            detail="Don't have enough permissions",
         )
+
 
 async def verify_bot_secret(x_bot_secret: str = Header(...)):
     if x_bot_secret != BOT_SECRET:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid bot secret"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid bot secret"
         )

@@ -1,5 +1,5 @@
 from aiogram import Router
-from  .logout import logout_router
+from .logout import logout_router
 
 router = Router()
 router.include_router(logout_router)

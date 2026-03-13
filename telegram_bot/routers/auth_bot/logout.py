@@ -14,14 +14,19 @@ BOT_SECRET = os.getenv("BOT_SECRET")
 logout_router = Router()
 logout_router.callback_query.middleware(AuthMiddleware())
 
+
 @logout_router.callback_query(F.data == "logout")
-async def logout(cb: CallbackQuery, state: FSMContext, refresh_token: str | None = None):
+async def logout(
+    cb: CallbackQuery, state: FSMContext, refresh_token: str | None = None
+):
     await state.clear()
     await cb.answer()
 
     if not refresh_token:
-        await cb.message.answer("No credentials provided, use this buttons to authorize",
-                                reply_markup=create_auth_buttons())
+        await cb.message.answer(
+            "No credentials provided, use this buttons to authorize",
+            reply_markup=create_auth_buttons(),
+        )
         await state.clear()
         return
 
@@ -35,7 +40,10 @@ async def logout(cb: CallbackQuery, state: FSMContext, refresh_token: str | None
 
         telegram_id = cb.from_user.id
 
-        delete_response = await client.delete(API_DELETE_URL.format(telegram_id=telegram_id), headers={"X-Bot-Secret": BOT_SECRET})
+        delete_response = await client.delete(
+            API_DELETE_URL.format(telegram_id=telegram_id),
+            headers={"X-Bot-Secret": BOT_SECRET},
+        )
         if delete_response.status_code != 200:
             await cb.message.answer(f"Error:{delete_response.text}")
             await state.clear()

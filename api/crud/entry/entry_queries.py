@@ -3,15 +3,17 @@ from models import EntryModel
 from datetime import datetime, date, timedelta
 
 
-def apply_filter(stmt,
-                       target_date: date = None,
-                       private: bool = None,
-                       min_mood_score: int = None,
-                       max_mood_score: int = None,
-                       min_progress_score: int = None,
-                       max_progress_score: int = None,
-                       min_learning_hours: int = None,
-                       max_learning_hours: int = None):
+def apply_filter(
+    stmt,
+    target_date: date = None,
+    private: bool = None,
+    min_mood_score: int = None,
+    max_mood_score: int = None,
+    min_progress_score: int = None,
+    max_progress_score: int = None,
+    min_learning_hours: int = None,
+    max_learning_hours: int = None,
+):
 
     if target_date is not None:
         start = datetime.combine(target_date, datetime.min.time())
@@ -41,6 +43,7 @@ def apply_filter(stmt,
 
     return stmt
 
+
 def apply_sort(stmt, sort: str = None):
     if not sort:
         return stmt.order_by(EntryModel.created_at.desc())
@@ -53,12 +56,13 @@ def apply_sort(stmt, sort: str = None):
         if not field:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid sort field: {key}"
+                detail=f"Invalid sort field: {key}",
             )
 
         stmt = stmt.order_by(field.desc() if desc else field.asc())
 
     return stmt
+
 
 SORT_FIELDS = {
     "created_at": EntryModel.created_at,

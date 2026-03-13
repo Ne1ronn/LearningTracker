@@ -12,20 +12,26 @@ from ...keyboards import create_cancel_button
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 API_URL = f"{API_BASE_URL}/topics/{{topic_id}}"
 
+
 @router.callback_query(F.data == "get_topic")
 async def start_get(cb: CallbackQuery, state: FSMContext):
     await state.clear()
     await cb.answer()
 
-    await cb.message.answer("Enter the id of topic:", reply_markup=create_cancel_button())
+    await cb.message.answer(
+        "Enter the id of topic:", reply_markup=create_cancel_button()
+    )
     await state.set_state(GetTopicState.waiting_id)
+
 
 @router.message(GetTopicState.waiting_id)
 async def get_topic(message: types.Message, state: FSMContext):
     try:
         topic_id = int(message.text)
     except ValueError:
-        await message.answer("Enter a integer number", reply_markup=create_cancel_button())
+        await message.answer(
+            "Enter a integer number", reply_markup=create_cancel_button()
+        )
         return
 
     async with httpx.AsyncClient() as client:
@@ -33,7 +39,7 @@ async def get_topic(message: types.Message, state: FSMContext):
 
     if response.status_code == 200:
         data = response.json()
-        active_emoji = "✅" if data['is_active'] else "❌"
+        active_emoji = "✅" if data["is_active"] else "❌"
 
         text = (
             f"📖 <b>{data['title']}</b>\n"

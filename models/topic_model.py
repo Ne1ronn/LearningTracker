@@ -13,4 +13,6 @@ class TopicModel(Base):
     skill: Mapped[str]
     is_active: Mapped[bool] = mapped_column(nullable=True, default=True)
 
-    entries: Mapped[List["EntryModel"]] = relationship("EntryModel", secondary=entry_topics, back_populates="topics")
+    entries: Mapped[List["EntryModel"]] = relationship(
+        "EntryModel", secondary=entry_topics, back_populates="topics"
+    )

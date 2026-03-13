@@ -15,6 +15,7 @@ class EntryAddSchema(BaseModel):
     private: bool
     topic_ids: List[int] = Field(default_factory=list)
 
+
 class UpdateEntrySchema(BaseModel):
     title: str | None = None
     description: str | None = None
@@ -23,7 +24,8 @@ class UpdateEntrySchema(BaseModel):
     progress_score: int | None = Field(default=None, ge=1, le=10)
     learning_hours: float | None = Field(default=None, ge=0, le=24)
     private: bool | None = None
-    topic_ids: List[int] | None =  None
+    topic_ids: List[int] | None = None
+
 
 class EntrySchema(EntryAddSchema):
     id: int

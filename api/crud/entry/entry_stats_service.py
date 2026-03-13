@@ -19,7 +19,11 @@ async def get_weekly_stats(session: SessionDep, user: UserModel):
     prev = date.today() - timedelta(days=13)
     stmt = (
         select(DailyStatsModel.total_hours)
-        .where(DailyStatsModel.user_id == user.id, DailyStatsModel.date < last, DailyStatsModel.date >= prev)
+        .where(
+            DailyStatsModel.user_id == user.id,
+            DailyStatsModel.date < last,
+            DailyStatsModel.date >= prev,
+        )
         .order_by(DailyStatsModel.date.asc())
     )
     result = await session.execute(stmt)
@@ -44,15 +48,19 @@ async def get_weekly_stats(session: SessionDep, user: UserModel):
         last_7_days_hours=last_7_days_hours,
         previous_7_days_hours=prev_7_days_hours,
         delta_percent=delta_percent,
-        current_streak=streak
+        current_streak=streak,
     )
 
+
 async def get_daily_stat(session: SessionDep, user_id: int, entry_date: date):
-    stmt = select(DailyStatsModel).where(DailyStatsModel.date == entry_date, DailyStatsModel.user_id == user_id)
+    stmt = select(DailyStatsModel).where(
+        DailyStatsModel.date == entry_date, DailyStatsModel.user_id == user_id
+    )
     result = await session.execute(stmt)
     daily_stat = result.scalar_one_or_none()
 
     return daily_stat
+
 
 async def count_streak(session: SessionDep, user: UserModel):
     stmt = (
@@ -78,12 +86,10 @@ async def count_streak(session: SessionDep, user: UserModel):
 
     return streak
 
+
 async def summary(session: SessionDep, user: UserModel):
     stmt = (
-        select(
-            TopicModel.title,
-            func.sum(EntryModel.learning_hours)
-        )
+        select(TopicModel.title, func.sum(EntryModel.learning_hours))
         .select_from(TopicModel)
         .join(entry_topics, entry_topics.c.topic_id == TopicModel.id)
         .join(EntryModel, EntryModel.id == entry_topics.c.entry_id)

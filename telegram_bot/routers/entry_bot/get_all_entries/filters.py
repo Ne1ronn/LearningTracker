@@ -3,27 +3,33 @@ from aiogram import types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 from ..entry_states import EntriesState
-from telegram_bot.keyboards import create_date_reply_buttons, create_filter_buttons, create_choose_buttons, \
-    create_private_buttons, create_cancel_button
+from telegram_bot.keyboards import (
+    create_date_reply_buttons,
+    create_filter_buttons,
+    create_choose_buttons,
+    create_private_buttons,
+    create_cancel_button,
+)
 from ..entry_router import router
+
 
 @router.callback_query(F.data == "ask_filter")
 async def ask_filter(cb: CallbackQuery):
     await cb.message.answer(
-        "Choose the filter method:",
-        reply_markup=create_filter_buttons()
+        "Choose the filter method:", reply_markup=create_filter_buttons()
     )
 
     await cb.answer()
+
 
 @router.callback_query(F.data == "ask_private")
 async def ask_private(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_private)
     await cb.message.answer(
-        "Choose the private:",
-        reply_markup=create_private_buttons()
+        "Choose the private:", reply_markup=create_private_buttons()
     )
     await cb.answer()
+
 
 @router.callback_query(EntriesState.waiting_private)
 async def set_private(cb: CallbackQuery, state: FSMContext):
@@ -37,7 +43,9 @@ async def set_private(cb: CallbackQuery, state: FSMContext):
     elif text == "public":
         value = False
     else:
-        await cb.message.answer("Choose from buttons, try again:", reply_markup=create_cancel_button())
+        await cb.message.answer(
+            "Choose from buttons, try again:", reply_markup=create_cancel_button()
+        )
         return
 
     await state.update_data(private=value)
@@ -53,14 +61,16 @@ async def set_private(cb: CallbackQuery, state: FSMContext):
 
     await state.set_state(None)
 
+
 @router.callback_query(F.data == "ask_date")
 async def ask_date(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_date)
     await cb.message.answer(
         "Choice the day or enter your own in YYYY-MM-DD format:",
-        reply_markup=create_date_reply_buttons()
+        reply_markup=create_date_reply_buttons(),
     )
     await cb.answer()
+
 
 @router.message(EntriesState.waiting_date)
 async def set_date(message: types.Message, state: FSMContext):
@@ -92,6 +102,7 @@ async def set_date(message: types.Message, state: FSMContext):
 
     await state.set_state(None)
 
+
 @router.callback_query(F.data == "ask_mood")
 async def ask_mood(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_mood)
@@ -101,6 +112,7 @@ async def ask_mood(cb: CallbackQuery, state: FSMContext):
     )
     await cb.answer()
 
+
 @router.message(EntriesState.waiting_mood)
 async def set_mood(message: types.Message, state: FSMContext):
     try:
@@ -108,7 +120,9 @@ async def set_mood(message: types.Message, state: FSMContext):
         if not (1 <= low <= high <= 10):
             raise ValueError
     except ValueError:
-        await message.answer("Wrong input, try again:", reply_markup=create_cancel_button())
+        await message.answer(
+            "Wrong input, try again:", reply_markup=create_cancel_button()
+        )
         return
 
     await state.update_data(min_mood_score=low, max_mood_score=high)
@@ -121,14 +135,16 @@ async def set_mood(message: types.Message, state: FSMContext):
 
     await state.set_state(None)
 
+
 @router.callback_query(F.data == "ask_progress")
 async def ask_progress(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_progress)
     await cb.message.answer(
         "Enter a range of numbers from 1 to 10 with a space between them:",
-        reply_markup=create_cancel_button()
+        reply_markup=create_cancel_button(),
     )
     await cb.answer()
+
 
 @router.message(EntriesState.waiting_progress)
 async def set_progress(message: types.Message, state: FSMContext):
@@ -137,7 +153,9 @@ async def set_progress(message: types.Message, state: FSMContext):
         if not (1 <= low <= high <= 10):
             raise ValueError
     except ValueError:
-        await message.answer("Wrong input, try again:", reply_markup=create_cancel_button())
+        await message.answer(
+            "Wrong input, try again:", reply_markup=create_cancel_button()
+        )
         return
 
     await state.update_data(min_progress_score=low, max_progress_score=high)
@@ -150,12 +168,13 @@ async def set_progress(message: types.Message, state: FSMContext):
 
     await state.set_state(None)
 
+
 @router.callback_query(F.data == "ask_hours")
 async def ask_hours(cb: CallbackQuery, state: FSMContext):
     await state.set_state(EntriesState.waiting_hours)
     await cb.message.answer(
         "Enter a range of numbers with a space between them:",
-        reply_markup=create_cancel_button()
+        reply_markup=create_cancel_button(),
     )
     await cb.answer()
 
@@ -167,7 +186,9 @@ async def set_hours(message: types.Message, state: FSMContext):
         if not (1 <= low <= high):
             raise ValueError
     except ValueError:
-        await message.answer("Wrong input, try again:", reply_markup=create_cancel_button())
+        await message.answer(
+            "Wrong input, try again:", reply_markup=create_cancel_button()
+        )
         return
 
     await state.update_data(min_learning_hours=low, max_learning_hours=high)
@@ -179,6 +200,7 @@ async def set_hours(message: types.Message, state: FSMContext):
     )
 
     await state.set_state(None)
+
 
 def is_valid_date(s: str) -> bool:
     try:

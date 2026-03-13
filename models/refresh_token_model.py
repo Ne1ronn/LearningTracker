@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey
 from models.base import Base
 
+
 class RefreshTokenModel(Base):
     __tablename__ = "refresh_tokens"
 

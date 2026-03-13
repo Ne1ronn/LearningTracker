@@ -4,8 +4,12 @@ from aiogram import types, F
 from .entry_states import PatchEntryForm
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from ...keyboards import create_entry_attribute_choose_buttons, create_yes_no_buttons, create_cancel_button, \
-    create_topics_buttons
+from ...keyboards import (
+    create_entry_attribute_choose_buttons,
+    create_yes_no_buttons,
+    create_cancel_button,
+    create_topics_buttons,
+)
 from .entry_router import router
 import httpx
 
@@ -14,28 +18,37 @@ API_URL = f"{API_BASE_URL}/entries/{{entry_id}}"
 API_PERMISSION_URL = f"{API_BASE_URL}/entries/{{entry_id}}/edit"
 API_TOPICS_URL = f"{API_BASE_URL}/topics"
 
+
 @router.callback_query(F.data == "patch_entry")
 async def start_patch(cb: CallbackQuery, state: FSMContext, token: str):
     await state.clear()
     await cb.answer()
 
     await state.update_data(token=token)
-    await cb.message.answer("Enter the id of entry:", reply_markup=create_cancel_button())
+    await cb.message.answer(
+        "Enter the id of entry:", reply_markup=create_cancel_button()
+    )
     await state.set_state(PatchEntryForm.waiting_id)
+
 
 @router.message(PatchEntryForm.waiting_id)
 async def get_entry(message: types.Message, state: FSMContext):
     try:
         entry_id = int(message.text)
     except ValueError:
-        await message.answer("Enter a integer number", reply_markup=create_cancel_button())
+        await message.answer(
+            "Enter a integer number", reply_markup=create_cancel_button()
+        )
         return
 
     data = await state.get_data()
     token = data.pop("token")
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(API_PERMISSION_URL.format(entry_id=entry_id), headers={"Authorization": f"Bearer {token}"})
+        response = await client.get(
+            API_PERMISSION_URL.format(entry_id=entry_id),
+            headers={"Authorization": f"Bearer {token}"},
+        )
 
     if response.status_code in (403, 404):
         await message.answer(response.text)
@@ -47,8 +60,12 @@ async def get_entry(message: types.Message, state: FSMContext):
         topic_ids = [t["id"] for t in response.json()["topics"]]
 
     await state.update_data(entry_id=entry_id, topic_ids=topic_ids, updates={})
-    await message.answer("What exactly you want update?", reply_markup=create_entry_attribute_choose_buttons())
+    await message.answer(
+        "What exactly you want update?",
+        reply_markup=create_entry_attribute_choose_buttons(),
+    )
     await state.set_state(PatchEntryForm.waiting_attribute)
+
 
 @router.callback_query(PatchEntryForm.waiting_attribute)
 async def wait_attribute(cb: CallbackQuery, state: FSMContext):
@@ -96,13 +113,18 @@ async def wait_attribute(cb: CallbackQuery, state: FSMContext):
             titles = [topic_map.get(i, str(i)) for i in topics_ids]
             text = "Existed topics of entry:\n" + "\n".join(f"• {t}" for t in titles)
             await cb.message.answer(text)
-        await cb.message.answer("Add or clear topics:", reply_markup=create_topics_buttons(topics))
+        await cb.message.answer(
+            "Add or clear topics:", reply_markup=create_topics_buttons(topics)
+        )
         await state.update_data(topics=topics, topic_map=topic_map)
         await state.set_state(PatchEntryForm.edit_topic_ids)
         return
 
-    await cb.message.answer("Enter a new value for attribute:", reply_markup=create_cancel_button())
+    await cb.message.answer(
+        "Enter a new value for attribute:", reply_markup=create_cancel_button()
+    )
     await state.set_state(PatchEntryForm.edit_attribute)
+
 
 @router.message(PatchEntryForm.edit_attribute)
 async def edit_attribute(message: types.Message, state: FSMContext):
@@ -117,7 +139,9 @@ async def edit_attribute(message: types.Message, state: FSMContext):
             if not (0 <= value <= 10):
                 raise ValueError
         except ValueError:
-            await message.answer("Enter number between 0 and 10", reply_markup=create_cancel_button())
+            await message.answer(
+                "Enter number between 0 and 10", reply_markup=create_cancel_button()
+            )
             return
     elif attribute == "learning_hours":
         try:
@@ -125,15 +149,19 @@ async def edit_attribute(message: types.Message, state: FSMContext):
             if value < 0 or value > 24:
                 raise ValueError
         except ValueError:
-            await message.answer("Enter number more than 0 and less than 24", reply_markup=create_cancel_button())
+            await message.answer(
+                "Enter number more than 0 and less than 24",
+                reply_markup=create_cancel_button(),
+            )
             return
 
     updates[attribute] = value
     await state.update_data(updates=updates)
 
-    await message.answer("Field added to changes\n"
-                         "Would you update anything else?",
-                         reply_markup=create_yes_no_buttons("field"))
+    await message.answer(
+        "Field added to changes\n" "Would you update anything else?",
+        reply_markup=create_yes_no_buttons("field"),
+    )
     await state.set_state(PatchEntryForm.waiting_confirm)
 
 
@@ -149,13 +177,16 @@ async def add_topics(cb: CallbackQuery, state: FSMContext):
 
     elif cb.data == "clear":
         await state.update_data(topic_ids=[])
-        await cb.message.answer("Topics cleared", reply_markup=create_topics_buttons(topics))
+        await cb.message.answer(
+            "Topics cleared", reply_markup=create_topics_buttons(topics)
+        )
         return
 
     elif cb.data == "ready":
-        await cb.message.answer("Field added to changes\n"
-                             "Would you update anything else?",
-                             reply_markup=create_yes_no_buttons("field"))
+        await cb.message.answer(
+            "Field added to changes\n" "Would you update anything else?",
+            reply_markup=create_yes_no_buttons("field"),
+        )
         updates = data["updates"]
         updates["topic_ids"] = data["topic_ids"]
         await state.update_data(updates=updates)
@@ -183,11 +214,15 @@ async def add_topics(cb: CallbackQuery, state: FSMContext):
         await cb.message.answer("Wrong button. Please choose right one")
         return
 
+
 @router.callback_query(PatchEntryForm.waiting_confirm)
 async def confirm(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
     if cb.data == "yes_field":
-        await cb.message.answer("What exactly you want update?", reply_markup=create_entry_attribute_choose_buttons())
+        await cb.message.answer(
+            "What exactly you want update?",
+            reply_markup=create_entry_attribute_choose_buttons(),
+        )
         await state.set_state(PatchEntryForm.waiting_attribute)
         return
 
@@ -197,7 +232,11 @@ async def confirm(cb: CallbackQuery, state: FSMContext):
     token = data.pop("token")
 
     async with httpx.AsyncClient() as client:
-        response = await client.patch(API_URL.format(entry_id=entry_id), json=updates, headers={"Authorization": f"Bearer {token}"})
+        response = await client.patch(
+            API_URL.format(entry_id=entry_id),
+            json=updates,
+            headers={"Authorization": f"Bearer {token}"},
+        )
 
     if response.status_code == 200:
         await cb.message.answer("Entry successfully updated ✅")
