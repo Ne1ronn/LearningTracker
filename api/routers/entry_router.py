@@ -1,11 +1,11 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status, HTTPException
-from api.auth.auth_crud import get_current_user
-from api.crud.entry.entry_permessions import can_update_entry
-from api.crud.entry.entry_read_service import give_all_entry, get_entry_count, give_entry, get_entry_by_id
-from api.crud.entry.entry_stats_service import summary, count_streak, get_weekly_stats
-from api.crud.entry.entry_write_service import add_entry, update_entry_db, patch_entry_db, delete_entry_db
+from ..crud.auth.dependencies import get_current_user
+from ..crud.entry.entry_permessions import can_update_entry
+from ..crud.entry.entry_read_service import give_all_entry, get_entry_count, give_entry, get_entry_by_id
+from ..crud.entry.entry_stats_service import summary, count_streak, get_weekly_stats
+from ..crud.entry.entry_write_service import add_entry, update_entry_db, patch_entry_db, delete_entry_db
 from database.setup import SessionDep
 from models.user_model import UserModel
 from schemas.entry_schema import EntryAddSchema, EntrySchema, UpdateEntrySchema

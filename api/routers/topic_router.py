@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, status, HTTPException
+
+from ..crud.auth.dependencies import require_role, get_current_user
 from api.crud.topic_crud import add_topic, give_topic, update_topic_, patch_topic_, delete_topic_, get_all_topics_db
 from database.setup import SessionDep
 from schemas.topic_schema import TopicAddSchema, UpdateTopicSchema
-from api.auth.auth_crud import require_role, get_current_user
 
 router = APIRouter(tags=["Tracker Topics"])
 

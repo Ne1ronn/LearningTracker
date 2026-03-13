@@ -1,8 +1,8 @@
 from typing import Union
 from sqlalchemy import select
 from fastapi import HTTPException
-from api.crud.entry.entry_permessions import can_update_entry, can_delete_entry
-from api.crud.entry.entry_read_service import get_entry_by_id, get_daily_stat
+from .entry_permessions import can_update_entry, can_delete_entry
+from .entry_read_service import get_entry_by_id, get_daily_stat
 from database.setup import SessionDep
 from models import DailyStatsModel, EntryModel, TopicModel, UserModel
 from schemas.entry_schema import EntryAddSchema, UpdateEntrySchema

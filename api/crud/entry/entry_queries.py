@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from models.entry_model import EntryModel
+from models import EntryModel
 from datetime import datetime, date, timedelta
 
 

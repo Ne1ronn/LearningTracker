@@ -1,17 +1,15 @@
 from typing import Annotated
-
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
-
-from api.auth.functions import oauth2_scheme
+from ..crud.auth.auth_service import register, login, logout, refresh
+from ..crud.auth.dependencies import get_current_user, require_role, verify_bot_secret
+from ..crud.auth.telegram_token_service import create_telegram_token, get_telegram_token, delete_telegram_token
+from ..crud.auth.token_service import oauth2_scheme
+from ..crud.auth.user_repo import get_user_by_username, get_user_by_email
 from database.setup import SessionDep
 from fastapi import APIRouter, Depends, HTTPException, status
-
-from models.user_model import UserModel
+from models import UserModel
 from schemas.user_schema import UserAddSchema, Token, RefreshData
-from api.auth.auth_crud import register, login, get_user_by_username, create_telegram_token, get_telegram_token, \
-    delete_telegram_token, get_current_user, get_user_by_email, require_role, verify_bot_secret, refresh, logout
-
 router = APIRouter(tags=["Authentification"])
 
 @router.post("/register")

@@ -1,20 +1,17 @@
 import uuid
-
 import pytest
+import os
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
-from dotenv import load_dotenv
-
-from api.auth.functions import get_password_hash
+from ..crud.auth.auth_service import get_password_hash
 from database.setup import get_session
 from models import UserModel
-
-load_dotenv()
 from sqlalchemy import select, NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-import os
-
 from main import app
+
+from dotenv import load_dotenv
+load_dotenv()
 
 DATABASE_URL_TEST = os.getenv("DATABASE_URL_TEST")
 engine = create_async_engine(

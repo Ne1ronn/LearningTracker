@@ -1,11 +1,11 @@
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
-from api.crud.entry.entry_permessions import can_read_entry
+from .entry_permessions import can_read_entry
 from database.setup import SessionDep
 from models import DailyStatsModel, EntryModel, UserModel
 from datetime import date
-from api.crud.entry.entry_queries import apply_filter, apply_sort
+from .entry_queries import apply_filter, apply_sort
 
 
 async def give_entry(session: SessionDep, entry_id: int, user: UserModel):
