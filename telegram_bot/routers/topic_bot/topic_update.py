@@ -12,6 +12,7 @@ from ...keyboards import create_cancel_button
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 API_URL = f"{API_BASE_URL}/topics/{{topic_id}}"
+API_PERMISSION_URL = f"{API_BASE_URL}/topics/{{topic_id}}/edit"
 API_ADMIN_URL = f"{API_BASE_URL}/auth/validate/admin"
 
 
@@ -37,13 +38,17 @@ async def update_topic(message: types.Message, state: FSMContext):
         )
         return
 
+    data = await state.get_data()
+    token = data.pop("token")
     async with httpx.AsyncClient() as client:
-        response = await client.get(API_URL.format(topic_id=topic_id))
-
-    if response.status_code != 200:
-        await message.answer(
-            "Entered a wrong id, try again ❌", reply_markup=create_cancel_button()
+        response = await client.get(
+            API_PERMISSION_URL.format(topic_id=topic_id),
+            headers={"Authorization": f"Bearer {token}"},
         )
+
+    if response.status_code in (403, 404):
+        await message.answer(response.text)
+        await state.clear()
         return
 
     await state.update_data(topic_id=topic_id)

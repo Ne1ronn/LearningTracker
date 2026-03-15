@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from ...middleware import AuthMiddleware, RoleMiddleware
+from ...middleware import AuthMiddleware
 
 router = Router()
 
@@ -12,5 +12,3 @@ from . import topic_patch
 
 router.message.middleware(AuthMiddleware())
 router.callback_query.middleware(AuthMiddleware())
-router.message.middleware(RoleMiddleware())
-router.callback_query.middleware(RoleMiddleware())

@@ -14,10 +14,11 @@ API_URL = f"{API_BASE_URL}/topics/{{topic_id}}"
 
 
 @router.callback_query(F.data == "get_topic")
-async def start_get(cb: CallbackQuery, state: FSMContext):
+async def start_get(cb: CallbackQuery, state: FSMContext, token: str):
     await state.clear()
     await cb.answer()
 
+    await state.update_data(token=token)
     await cb.message.answer(
         "Enter the id of topic:", reply_markup=create_cancel_button()
     )
@@ -34,8 +35,13 @@ async def get_topic(message: types.Message, state: FSMContext):
         )
         return
 
+    data = await state.get_data()
+    token = data.pop("token")
     async with httpx.AsyncClient() as client:
-        response = await client.get(API_URL.format(topic_id=topic_id))
+        response = await client.get(
+            API_URL.format(topic_id=topic_id),
+            headers={"Authorization": f"Bearer {token}"},
+        )
 
     if response.status_code == 200:
         data = response.json()

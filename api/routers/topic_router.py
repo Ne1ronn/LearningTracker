@@ -9,6 +9,8 @@ from api.crud.topic.topic_crud import (
     patch_topic_db,
     delete_topic_db,
     get_all_topics_db,
+    get_topic_by_id,
+    can_topic,
 )
 from database.setup import SessionDep
 from schemas.topic_schema import TopicAddSchema, UpdateTopicSchema
@@ -74,3 +76,14 @@ async def delete_topic(
 ):
     await delete_topic_db(session, topic_id, user)
     return {"message": "Topic deleted successfully"}
+
+
+@router.get("/topics/{topic_id}/edit", status_code=status.HTTP_200_OK)
+async def can_edit_topic(
+    session: SessionDep,
+    topic_id: int,
+    user: Annotated[UserModel, Depends(get_current_user)],
+):
+    topic = await get_topic_by_id(session, topic_id)
+    can_topic(topic, user)
+    return {"message": "OK"}

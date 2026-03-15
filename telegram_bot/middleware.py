@@ -127,14 +127,8 @@ class RoleMiddleware(BaseMiddleware):
             )
 
         if response.status_code != 200:
-            if isinstance(event, CallbackQuery) and event.data == "topic_actions":
-                data["is_admin"] = False
-                return await handler(event, data)
-            else:
-                await event.answer("You don't have enough permissions")
-                await state.clear()
-                return
-        else:
-            data["is_admin"] = True
+            await event.answer("You don't have enough permissions")
+            await state.clear()
+            return
 
         return await handler(event, data)
