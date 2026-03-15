@@ -44,6 +44,31 @@ def user_payload():
     }
 
 
+@pytest_asyncio.fixture()
+async def user_headers(client):
+    suffix = uuid.uuid4().hex[:8]
+    user_payload = {
+        "username": f"test_user_{suffix}",
+        "email": f"test_{suffix}@example.com",
+        "password": "test_password",
+    }
+
+    await client.post("/register", json=user_payload)
+
+    login = await client.post(
+        "/login",
+        data={
+            "username": user_payload["username"],
+            "password": user_payload["password"],
+        },
+    )
+    assert login.status_code == 200
+    token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    return headers
+
+
 @pytest.fixture
 def entry_payload():
     suffix = uuid.uuid4().hex[:8]
@@ -57,30 +82,3 @@ def entry_payload():
         "private": False,
         "topic_ids": [],
     }
-
-
-@pytest_asyncio.fixture
-async def admin_headers(client):
-    async with new_session() as session:
-        result = await session.execute(
-            select(UserModel).where(UserModel.username == "test_admin")
-        )
-        admin = result.scalar_one_or_none()
-
-        if admin is None:
-            admin = UserModel(
-                username="test_admin",
-                email="test_admin@example.com",
-                hashed_password=get_password_hash("test_password"),
-                role="admin",
-            )
-            session.add(admin)
-            await session.commit()
-
-    login = await client.post(
-        "/login",
-        data={"username": "test_admin", "password": "test_password"},
-    )
-    assert login.status_code == 200
-    token = login.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}

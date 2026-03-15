@@ -7,11 +7,11 @@ from schemas.weekly_stats_schema import WeeklyStatsResponseSchema
 
 
 async def get_profile_stats(session: SessionDep, user: UserModel):
-    total_hours_all_time = await get_total_hours_all_time(session, user)
-    favorite_topic, favorite_topic_hours = await get_favorite_topic(session, user)
-    current_streak = await count_streak(session, user)
-    max_streak = await count_max_streak(session, user)
-    average_day_hours = await get_average_day_hours(session, user)
+    total_hours_all_time = await get_total_hours_all_time(session, user.id)
+    favorite_topic, favorite_topic_hours = await get_favorite_topic(session, user.id)
+    current_streak = await count_streak(session, user.id)
+    max_streak = await count_max_streak(session, user.id)
+    average_day_hours = await get_average_day_hours(session, user.id)
 
     return ProfileStatsResponseSchema(
         total_hours_all_time=total_hours_all_time,
@@ -23,25 +23,26 @@ async def get_profile_stats(session: SessionDep, user: UserModel):
     )
 
 
-async def get_total_hours_all_time(session: SessionDep, user: UserModel):
+async def get_total_hours_all_time(session: SessionDep, user_id: int):
     stmt = (
         select(func.sum(DailyStatsModel.total_hours))
         .select_from(DailyStatsModel)
-        .where(DailyStatsModel.user_id == user.id)
+        .where(DailyStatsModel.user_id == user_id)
     )
     result = await session.execute(stmt)
     return result.scalar() or 0.0
 
 
-async def get_favorite_topic(session: SessionDep, user: UserModel):
+async def get_favorite_topic(session: SessionDep, user_id: int):
     stmt = (
         select(
             TopicModel.title, func.sum(EntryModel.learning_hours).label("total_hours")
         )
         .select_from(TopicModel)
+        .where(TopicModel.user_id == user_id)
         .join(entry_topics, entry_topics.c.topic_id == TopicModel.id)
         .join(EntryModel, EntryModel.id == entry_topics.c.entry_id)
-        .where(EntryModel.user_id == user.id)
+        .where(EntryModel.user_id == user_id)
         .group_by(TopicModel.id)
         .order_by(desc("total_hours"))
         .limit(1)
@@ -56,11 +57,11 @@ async def get_favorite_topic(session: SessionDep, user: UserModel):
     return favorite_topic, favorite_topic_hours
 
 
-async def get_average_day_hours(session: SessionDep, user: UserModel):
+async def get_average_day_hours(session: SessionDep, user_id: int):
     stmt = (
         select(func.avg(DailyStatsModel.total_hours))
         .select_from(DailyStatsModel)
-        .where(DailyStatsModel.user_id == user.id)
+        .where(DailyStatsModel.user_id == user_id)
     )
 
     result = await session.execute(stmt)
@@ -90,7 +91,7 @@ async def get_weekly_stats(session: SessionDep, user: UserModel):
     else:
         delta_percent = 100 * (last_7_days_hours / prev_7_days_hours)
 
-    streak = await count_streak(session, user)
+    streak = await count_streak(session, user.id)
 
     return WeeklyStatsResponseSchema(
         last_7_days_hours=last_7_days_hours,
@@ -110,10 +111,10 @@ async def get_daily_stat(session: SessionDep, user_id: int, entry_date: date):
     return daily_stat
 
 
-async def count_streak(session: SessionDep, user: UserModel):
+async def count_streak(session: SessionDep, user_id: int):
     stmt = (
         select(DailyStatsModel.date, DailyStatsModel.total_hours)
-        .where(DailyStatsModel.user_id == user.id)
+        .where(DailyStatsModel.user_id == user_id)
         .order_by(DailyStatsModel.date.desc())
     )
     result = await session.execute(stmt)
@@ -135,10 +136,10 @@ async def count_streak(session: SessionDep, user: UserModel):
     return streak
 
 
-async def count_max_streak(session: SessionDep, user: UserModel):
+async def count_max_streak(session: SessionDep, user_id: int):
     stmt = (
         select(DailyStatsModel.date)
-        .where(DailyStatsModel.user_id == user.id, DailyStatsModel.total_hours > 0)
+        .where(DailyStatsModel.user_id == user_id, DailyStatsModel.total_hours > 0)
         .order_by(DailyStatsModel.date.asc())
     )
     result = await session.execute(stmt)
@@ -173,6 +174,7 @@ async def summary(session: SessionDep, user: UserModel):
     stmt = (
         select(TopicModel.title, func.sum(EntryModel.learning_hours))
         .select_from(TopicModel)
+        .where(TopicModel.user_id == user.id)
         .join(entry_topics, entry_topics.c.topic_id == TopicModel.id)
         .join(EntryModel, EntryModel.id == entry_topics.c.entry_id)
         .where(EntryModel.user_id == user.id)

@@ -22,7 +22,7 @@ async def add_entry(session: SessionDep, entry: EntryAddSchema, user: UserModel)
     )
 
     if entry.topic_ids:
-        topics = await missing_topics(session, entry)
+        topics = await missing_topics(session, entry, user.id)
         new_entry.topics.extend(topics)
 
     session.add(new_entry)
@@ -63,7 +63,7 @@ async def update_entry_db(
 
     if new_entry.topic_ids is not None:
         if new_entry.topic_ids:
-            topics = await missing_topics(session, new_entry)
+            topics = await missing_topics(session, new_entry, user.id)
             entry.topics = topics
         else:
             entry.topics = []
@@ -97,7 +97,7 @@ async def patch_entry_db(
 
     if patched_entry.topic_ids is not None:
         if patched_entry.topic_ids:
-            topics = await missing_topics(session, patched_entry)
+            topics = await missing_topics(session, patched_entry, user.id)
             entry.topics = topics
         else:
             entry.topics = []
@@ -133,9 +133,11 @@ async def delete_daily_stat(
 
 
 async def missing_topics(
-    session: SessionDep, entry: Union[EntryAddSchema, UpdateEntrySchema]
+    session: SessionDep, entry: Union[EntryAddSchema, UpdateEntrySchema], user_id: int
 ):
-    stmt = select(TopicModel).where(TopicModel.id.in_(entry.topic_ids))
+    stmt = select(TopicModel).where(
+        TopicModel.id.in_(entry.topic_ids), TopicModel.user_id == user_id
+    )
     result = await session.execute(stmt)
     topics = result.scalars().all()
 
