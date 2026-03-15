@@ -14,6 +14,9 @@ class UserModel(Base):
     entries: Mapped[List["EntryModel"]] = relationship(
         "EntryModel", back_populates="user"
     )
+    topics: Mapped[List["TopicModel"]] = relationship(
+        "TopicModel", back_populates="user"
+    )
     telegram_token: Mapped["TelegramTokenModel"] = relationship(
         "TelegramTokenModel", back_populates="user"
     )
