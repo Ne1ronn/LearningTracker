@@ -1,6 +1,7 @@
+from dataclasses import asdict
 from typing import Annotated
 from fastapi import APIRouter, Depends, status
-from schemas.goal_schema import GoalAddSchema, GoalUpdateSchema
+from schemas.goal_schema import GoalAddSchema, GoalUpdateSchema, GoalResponseSchema
 from ..crud.auth.dependencies import get_current_user
 from database.setup import SessionDep
 from models.user_model import UserModel
@@ -10,6 +11,7 @@ from ..crud.goal.goal_crud import (
     get_goals_db,
     patch_goal_db,
     delete_goal_db,
+    get_goal_progress,
 )
 
 router = APIRouter(tags=["Goals"])
@@ -60,3 +62,12 @@ async def delete_goal(
 ):
     await delete_goal_db(session, goal_id, user)
     return {"detail": "Goal deleted successfully"}
+
+
+@router.get("/goals/{goal_id}/stats", response_model=GoalResponseSchema)
+async def get_goal_stats(
+    session: SessionDep,
+    goal_id: int,
+    user: Annotated[UserModel, Depends(get_current_user)],
+):
+    return await get_goal_progress(session, goal_id, user)

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey
-from datetime import date
+from sqlalchemy import ForeignKey, DateTime
+from datetime import date, datetime, UTC
 from models.base import Base
 
 
@@ -10,6 +10,9 @@ class GoalModel(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     topic_id: Mapped[int] = mapped_column(
         ForeignKey("topics.id"), ondelete="CASCADE", unique=True
+    )
+    started_at: Mapped[date] = mapped_column(
+        DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
     target_hours: Mapped[float]
     target_date: Mapped[date]

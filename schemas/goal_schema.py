@@ -15,5 +15,10 @@ class GoalUpdateSchema(BaseModel):
 
 
 class GoalResponseSchema(GoalAddSchema):
-    id: int
+    hours_done: float | None = None
+    hours_left: float | None = None
+    days_left: int | None = None
+    current_tempo: float | None = None
+    needed_tempo: float | None = None
+    status: str | None = None
     model_config = ConfigDict(from_attributes=True)
