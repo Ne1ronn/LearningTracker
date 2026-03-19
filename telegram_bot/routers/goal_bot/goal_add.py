@@ -93,7 +93,7 @@ async def add_topic_id(cb: CallbackQuery, state: FSMContext):
 @router.message(GoalAddState.waiting_target_date)
 async def add_target_date(message: Message, state: FSMContext):
     try:
-        target_date = datetime.strptime(message.text, "%Y-%m-%d").date()
+        datetime.strptime(message.text, "%Y-%m-%d").date()
     except ValueError:
         await message.answer(
             f"Wrong format. Please enter right date (YYYY-MM-DD)",
@@ -101,7 +101,7 @@ async def add_target_date(message: Message, state: FSMContext):
         )
         return
 
-    await state.update_data(target_date=target_date)
+    await state.update_data(target_date=message.text)
     await message.answer(
         "Enter target hours for your goal:", reply_markup=create_cancel_button()
     )

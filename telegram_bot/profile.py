@@ -29,7 +29,7 @@ async def profile(message: types.Message, state: FSMContext, token: str):
     text = (
         "📊 <b>Your Profile</b>\n\n"
         f"⏱ Total hours: <b>{data['total_hours_all_time']}</b>\n"
-        f"📅 Average per day: <b>{data['average_hours_all_time']}</b>\n\n"
+        f"📅 Average per day: <b>{data['average_day_hours']}</b>\n\n"
         f"🏆 Favorite topic: <b>{data['favorite_topic']}</b>\n"
         f"⏳ Hours on it: <b>{data['favorite_topic_hours']}</b>\n\n"
         f"🔥 Current streak: <b>{data['current_streak']} days</b>\n"

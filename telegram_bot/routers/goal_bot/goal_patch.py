@@ -90,13 +90,14 @@ async def edit_attribute(message: Message, state: FSMContext):
 
     if attribute == "target_date":
         try:
-            value = datetime.strptime(message.text, "%Y-%m-%d").date()
+            datetime.strptime(message.text, "%Y-%m-%d").date()
         except ValueError:
             await message.answer(
                 f"Wrong format. Please enter right date (YYYY-MM-DD)",
                 reply_markup=create_cancel_button(),
             )
             return
+        value = message.text
 
     elif attribute == "target_hours":
         try:
