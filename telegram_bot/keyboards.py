@@ -177,19 +177,31 @@ def create_topic_attribute_choose_buttons():
     return builder.as_markup()
 
 
+def create_goal_attribute_choose_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="Target date", callback_data="target_date")
+    builder.button(text="Target hours", callback_data="target_hours")
+    builder.button(text="Cancel", callback_data="cancel")
+
+    builder.adjust(2)
+    return builder.as_markup()
+
+
 def create_cancel_button():
     builder = InlineKeyboardBuilder()
     builder.button(text="Cancel", callback_data="cancel")
     return builder.as_markup()
 
 
-def create_topics_buttons(topics):
+def create_topics_buttons(topics, many_topics: bool = True):
     builder = InlineKeyboardBuilder()
 
     for topic in topics:
         builder.button(text=topic["title"], callback_data=f"topic_{topic['id']}")
     builder.button(text="Ready", callback_data="ready")
-    builder.button(text="Clear", callback_data="clear")
+    if many_topics:
+        builder.button(text="Clear", callback_data="clear")
     builder.button(text="Cancel", callback_data="cancel")
 
     builder.adjust(2)

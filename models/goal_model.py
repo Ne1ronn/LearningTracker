@@ -9,7 +9,7 @@ class GoalModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     topic_id: Mapped[int] = mapped_column(
-        ForeignKey("topics.id"), ondelete="CASCADE", unique=True
+        ForeignKey("topics.id", ondelete="CASCADE"), unique=True
     )
     started_at: Mapped[date] = mapped_column(
         DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None)

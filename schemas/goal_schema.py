@@ -9,7 +9,6 @@ class GoalAddSchema(BaseModel):
 
 
 class GoalUpdateSchema(BaseModel):
-    topic_id: int | None = None
     target_hours: float | None = None
     target_date: date | None = None
 
