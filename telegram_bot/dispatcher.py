@@ -6,6 +6,7 @@ import asyncio
 from telegram_bot.routers.topic_bot.topic_router import router as topic_router
 from telegram_bot.routers.entry_bot.entry_router import router as entry_router
 from telegram_bot.routers.auth_bot.auth_router import router as auth_router
+from .routers.goal_bot.goal_router import router as goal_router
 from telegram_bot.start import router as start_router
 from telegram_bot.cancel import router as cancel_router
 from telegram_bot.profile import router as profile_router
@@ -20,6 +21,7 @@ async def main():
     dp.include_router(topic_router)
     dp.include_router(entry_router)
     dp.include_router(auth_router)
+    dp.include_router(goal_router)
     dp.include_router(start_router)
     dp.include_router(cancel_router)
     dp.include_router(profile_router)

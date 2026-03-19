@@ -18,7 +18,7 @@ router = APIRouter(tags=["Goals"])
 
 
 @router.post("/goals", status_code=status.HTTP_201_CREATED)
-async def inset_goal(
+async def insert_goal(
     session: SessionDep,
     goal: GoalAddSchema,
     user: Annotated[UserModel, Depends(get_current_user)],

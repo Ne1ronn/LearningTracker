@@ -10,15 +10,15 @@ async def create_topic_and_get_id(client, headers):
         "is_active": True,
     }
 
-    topic = await client.post("/topics", json=topic_payload, headers=headers)
-    assert topic.status_code == 201
+    topic_response = await client.post("/topics", json=topic_payload, headers=headers)
+    assert topic_response.status_code == 201
 
     get_all_response = await client.get("/topics", headers=headers)
     assert get_all_response.status_code == 200
     topics = get_all_response.json()
     assert len(topics) > 0
     topic_id = next(
-        (entry["id"] for entry in topics if entry["title"] == "FastAPI"), None
+        (topic["id"] for topic in topics if topic["title"] == "FastAPI"), None
     )
     assert topic_id is not None
 
