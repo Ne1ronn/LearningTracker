@@ -12,7 +12,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 API_URL = f"{API_BASE_URL}/profile/stats"
 
 
-@router.message(Command("/profile"))
+@router.message(Command("profile"))
 async def profile(message: types.Message, state: FSMContext, token: str):
     await state.clear()
     async with AsyncClient() as client:

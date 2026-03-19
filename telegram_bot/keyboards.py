@@ -115,11 +115,24 @@ def create_topic_buttons():
     return builder.as_markup()
 
 
+def create_goal_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="➕Add new goal", callback_data="add_goal")
+    builder.button(text="🔍Get goal", callback_data="get_goal")
+    builder.button(text="✏️Edit goal", callback_data="patch_goal")
+    builder.button(text="🗑Delete goal", callback_data="delete_goal")
+
+    builder.adjust(2)
+    return builder.as_markup()
+
+
 def create_start_buttons():
     builder = InlineKeyboardBuilder()
 
     builder.button(text="Entry actions", callback_data="entry_actions")
     builder.button(text="Topic actions", callback_data="topic_actions")
+    builder.button(text="Goal actions", callback_data="goal_actions")
     builder.button(text="Log out", callback_data="logout")
 
     builder.adjust(2)

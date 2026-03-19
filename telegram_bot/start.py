@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery
 from .keyboards import (
     create_start_buttons,
     create_entry_crud_buttons,
-    create_topic_buttons,
+    create_topic_buttons, create_goal_buttons,
 )
 from .middleware import AuthMiddleware
 
@@ -46,4 +46,14 @@ async def topic_actions(cb: CallbackQuery):
     await cb.message.answer(
         "All topic actions:",
         reply_markup=create_topic_buttons(),
+    )
+
+
+@router.callback_query(F.data == "goal_actions")
+async def goal_actions(cb: CallbackQuery):
+    await cb.answer()
+
+    await cb.message.answer(
+        "All goal actions:",
+        reply_markup=create_goal_buttons()
     )
