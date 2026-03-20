@@ -15,6 +15,10 @@ class GoalDeleteState(GoalGetState):
     waiting_id = State()
 
 
+class GoalStatsState(StatesGroup):
+    waiting_id = State()
+
+
 class GoalPatchState(StatesGroup):
     waiting_id = State()
     waiting_attribute = State()

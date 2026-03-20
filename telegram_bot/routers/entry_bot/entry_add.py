@@ -121,11 +121,13 @@ async def add_private(cb: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(EntryForm.waiting_ids)
-async def wait_topics(cb: CallbackQuery, state: FSMContext):
+async def wait_topics(cb: CallbackQuery, state: FSMContext, token: str):
     await cb.answer()
     if cb.data == "yes_topics":
         async with httpx.AsyncClient() as client:
-            response = await client.get(API_TOPICS_URL)
+            response = await client.get(
+                API_TOPICS_URL, headers={"Authorization": f"Bearer {token}"}
+            )
 
         if response.status_code == 200:
             topics = response.json()

@@ -68,7 +68,7 @@ async def get_entry(message: types.Message, state: FSMContext):
 
 
 @router.callback_query(PatchEntryForm.waiting_attribute)
-async def wait_attribute(cb: CallbackQuery, state: FSMContext):
+async def wait_attribute(cb: CallbackQuery, state: FSMContext, token: str):
     await cb.answer()
     attribute = cb.data
     data = await state.get_data()
@@ -96,7 +96,9 @@ async def wait_attribute(cb: CallbackQuery, state: FSMContext):
 
     if attribute == "topic_ids":
         async with httpx.AsyncClient() as client:
-            response = await client.get(API_TOPICS_URL)
+            response = await client.get(
+                API_TOPICS_URL, headers={"Authorization": f"Bearer {token}"}
+            )
 
         if response.status_code == 200:
             topics = response.json()
@@ -185,7 +187,7 @@ async def add_topics(cb: CallbackQuery, state: FSMContext):
     elif cb.data == "ready":
         await cb.message.answer(
             "Field added to changes\n" "Would you update anything else?",
-            reply_markup=create_yes_no_buttons("field"),
+            reply_markup=create_yes_no_buttons("entry_field"),
         )
         updates = data["updates"]
         updates["topic_ids"] = data["topic_ids"]
@@ -218,7 +220,7 @@ async def add_topics(cb: CallbackQuery, state: FSMContext):
 @router.callback_query(PatchEntryForm.waiting_confirm)
 async def confirm(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
-    if cb.data == "yes_field":
+    if cb.data == "yes_entry_field":
         await cb.message.answer(
             "What exactly you want update?",
             reply_markup=create_entry_attribute_choose_buttons(),

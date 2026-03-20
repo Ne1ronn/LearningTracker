@@ -113,7 +113,7 @@ async def edit_attribute(message: Message, state: FSMContext):
 
     await message.answer(
         "Field added to changes\n" "Would you update anything else?",
-        reply_markup=create_yes_no_buttons("field"),
+        reply_markup=create_yes_no_buttons("goal_field"),
     )
     await state.set_state(GoalPatchState.waiting_confirm)
 
@@ -121,7 +121,7 @@ async def edit_attribute(message: Message, state: FSMContext):
 @router.callback_query(GoalPatchState.waiting_confirm)
 async def patch_goal(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
-    if cb.data == "yes_field":
+    if cb.data == "yes_goal_field":
         await cb.message.answer(
             "What exactly you want update?",
             reply_markup=create_goal_attribute_choose_buttons(),
