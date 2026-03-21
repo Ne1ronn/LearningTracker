@@ -95,7 +95,7 @@ def create_entry_crud_buttons():
     builder.button(text="🔁Completely update entry", callback_data="update_entry")
     builder.button(text="🗑Delete entry", callback_data="delete_entry")
     builder.button(text="📊Weekly statistics", callback_data="weekly_stats")
-    builder.button(text="📊Summary", callback_data="summary")
+    builder.button(text="📊Topic statistics", callback_data="summary")
     builder.button(text="🔥Streak", callback_data="streak")
 
     builder.adjust(2)
@@ -122,6 +122,7 @@ def create_goal_buttons():
     builder.button(text="🔍Get goal", callback_data="get_goal")
     builder.button(text="✏️Edit goal", callback_data="patch_goal")
     builder.button(text="🗑Delete goal", callback_data="delete_goal")
+    builder.button(text="📊Goal statistics", callback_data="goal_stats")
 
     builder.adjust(2)
     return builder.as_markup()
