@@ -10,6 +10,8 @@ class UserModel(Base):
     email: Mapped[str] = mapped_column(unique=True)
     hashed_password: Mapped[str]
     role: Mapped[str] = mapped_column(nullable=False, default="user")
+    timezone: Mapped[str] = mapped_column(nullable=False, default="UTC")
+    reminders_enabled: Mapped[bool] = mapped_column(nullable=False, default=True)
 
     entries: Mapped[List["EntryModel"]] = relationship(
         "EntryModel", back_populates="user"
@@ -23,4 +25,7 @@ class UserModel(Base):
     )
     daily_stats: Mapped[List["DailyStatsModel"]] = relationship(
         "DailyStatsModel", back_populates="user"
+    )
+    reminders: Mapped[List["ReminderLogModel"]] = relationship(
+        "ReminderLogModel", back_populates="user"
     )
