@@ -1,10 +1,12 @@
+import asyncio
 import os
 from datetime import datetime, UTC, time, timedelta
 from zoneinfo import ZoneInfo
+from aiogram import Bot
 from celery import Celery
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
-from models import UserModel, ReminderLogModel, EntryModel
+from models import UserModel, ReminderLogModel, EntryModel, TelegramTokenModel
 
 app = Celery(
     "celery_app",
@@ -13,7 +15,7 @@ app = Celery(
 )
 
 DATABASE_URL = os.getenv("DATABASE_URL_ALEMBIC")
-
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
@@ -26,7 +28,6 @@ def check_missing_entries_reminders():
         users = result.scalars().all()
 
         utc_now = datetime.now(UTC)
-        reminders = []
         for user in users:
             user_timezone = ZoneInfo(user.timezone)
             local_timezone = utc_now.astimezone(user_timezone)
@@ -34,7 +35,7 @@ def check_missing_entries_reminders():
             local_date = local_timezone.date()
             local_time = local_timezone.time()
 
-            if time(21, 0) <= local_time < time(23, 59):
+            if time(21, 0) <= local_time <= time(21, 59):
                 local_start = datetime.combine(
                     local_date, time(0, 0), tzinfo=user_timezone
                 )
@@ -48,7 +49,7 @@ def check_missing_entries_reminders():
                     EntryModel.created_at < utc_end,
                 )
                 result = session.execute(stmt)
-                entry = result.scalar_one()
+                entry = result.scalar()
 
                 if entry is None:
                     stmt = select(ReminderLogModel).where(
@@ -60,15 +61,30 @@ def check_missing_entries_reminders():
                     reminder = result.scalar_one_or_none()
 
                     if reminder is None:
-                        reminders.append(user.id)
-                        reminder = ReminderLogModel(
-                            user_id=user.id,
-                            reminder_type="missing_entry",
-                            local_date=local_date,
-                            sent_at=utc_now.replace(tzinfo=None),
+                        stmt = select(TelegramTokenModel.telegram_id).where(
+                            TelegramTokenModel.user_id == user.id
                         )
-                        session.add(reminder)
+                        result = session.execute(stmt)
+                        telegram_id = result.scalar()
+
+                        if telegram_id is not None:
+                            asyncio.run(send_missing_entry_reminder(telegram_id))
+
+                            reminder = ReminderLogModel(
+                                user_id=user.id,
+                                reminder_type="missing_entry",
+                                local_date=local_date,
+                                sent_at=utc_now.replace(tzinfo=None),
+                            )
+                            session.add(reminder)
 
         session.commit()
 
-        return reminders
+
+async def send_missing_entry_reminder(telegram_id: int):
+    bot = Bot(token=BOT_TOKEN)
+    await bot.send_message(
+        chat_id=telegram_id,
+        text="You still haven't added today's entry",
+    )
+    await bot.session.close()
