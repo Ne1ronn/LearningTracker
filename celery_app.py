@@ -19,6 +19,13 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
+app.conf.beat_schedule = {
+    "send_reminder": {
+        "task": "celery_app.check_missing_entries_reminders",
+        "schedule": 600.0,
+    }
+}
+
 
 @app.task
 def check_missing_entries_reminders():
