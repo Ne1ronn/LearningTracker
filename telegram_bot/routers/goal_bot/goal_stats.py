@@ -35,7 +35,8 @@ async def get_goal_stats(message: Message, state: FSMContext, token: str):
 
     async with AsyncClient() as client:
         goal_response = await client.get(
-            API_URL.format(goal_id), headers={"Authorization": f"Bearer {token}"}
+            API_URL.format(goal_id=goal_id),
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         if goal_response.status_code == 200:

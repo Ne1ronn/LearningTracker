@@ -9,7 +9,12 @@ from ..crud.auth.telegram_token_service import (
     delete_telegram_token,
 )
 from ..crud.auth.token_service import oauth2_scheme
-from ..crud.auth.user_repo import get_user_by_username, get_user_by_email
+from ..crud.auth.user_repo import (
+    get_user_by_username,
+    get_user_by_email,
+    set_timezone_db,
+    change_reminders_enabled_db,
+)
 from database.setup import SessionDep
 from fastapi import APIRouter, Depends, HTTPException, status
 from models import UserModel
@@ -79,6 +84,26 @@ async def token_check(user: Annotated[UserModel, Depends(get_current_user)]):
 @router.get("/auth/validate/admin")
 async def admin_check(admin=Depends(require_role)):
     return {"detail": "OK"}
+
+
+@router.patch("/user/timezone")
+async def set_timezone(
+    session: SessionDep,
+    timezone: str,
+    user: Annotated[UserModel, Depends(get_current_user)],
+):
+    await set_timezone_db(session, timezone, user)
+    return {"detail": "Timezone set successfully"}
+
+
+@router.patch("/user/reminders")
+async def change_reminders_enabled(
+    session: SessionDep,
+    change: bool,
+    user: Annotated[UserModel, Depends(get_current_user)],
+):
+    await change_reminders_enabled_db(session, change, user)
+    return {"detail": "Reminders changed successfully"}
 
 
 @router.get("/user/register/{username}")
