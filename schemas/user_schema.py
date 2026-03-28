@@ -10,6 +10,14 @@ class UserAddSchema(BaseModel):
     password: str
 
 
+class UserTimezoneSchema(BaseModel):
+    timezone: str
+
+
+class UserRemindersSchema(BaseModel):
+    reminders_enabled: bool
+
+
 class UserSchema(UserAddSchema):
     id: int
     entries: List[EntrySchema]

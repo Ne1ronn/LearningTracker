@@ -74,8 +74,8 @@ async def get_goal_progress(session: SessionDep, goal_id: int, user: UserModel):
     )
 
     result = await session.execute(stmt)
-    hours_done = result.scalars().first() or 0
-    days_passed = (date.today() - goal.started_at).days
+    hours_done = result.scalar() or 0
+    days_passed = (date.today() - goal.started_at.date()).days
     days_left = (
         (goal.target_date - date.today()).days if goal.target_date > date.today() else 0
     )

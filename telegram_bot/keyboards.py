@@ -220,3 +220,36 @@ def create_topics_buttons(topics, many_topics: bool = True):
 
     builder.adjust(2)
     return builder.as_markup()
+
+
+def create_settings_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="Set timezone", callback_data="set_timezone")
+    builder.button(text="Change reminders enabled", callback_data="change_reminders")
+
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+def create_timezone_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="Asia/Almaty", callback_data="Asia/Almaty")
+    builder.button(text="Europe/Moscow", callback_data="Europe/Moscow")
+    builder.button(text="Asia/Bishkek", callback_data="Asia/Bishkek")
+    builder.button(text="Asia/Tashkent", callback_data="Asia/Tashkent")
+    builder.button(text="Cancel", callback_data="cancel")
+
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+def create_true_false_buttons():
+    builder = InlineKeyboardBuilder()
+    builder.button(text="True", callback_data="true")
+    builder.button(text="False", callback_data="false")
+    builder.button(text="Cancel", callback_data="cancel")
+
+    builder.adjust(2)
+    return builder.as_markup()

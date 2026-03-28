@@ -3,7 +3,7 @@ from aiogram import types, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from httpx import AsyncClient
-from .middleware import AuthMiddleware
+from telegram_bot.middleware import AuthMiddleware
 
 router = Router()
 router.message.middleware(AuthMiddleware())

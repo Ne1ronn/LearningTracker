@@ -18,7 +18,13 @@ from ..crud.auth.user_repo import (
 from database.setup import SessionDep
 from fastapi import APIRouter, Depends, HTTPException, status
 from models import UserModel
-from schemas.user_schema import UserAddSchema, Token, RefreshData
+from schemas.user_schema import (
+    UserAddSchema,
+    UserTimezoneSchema,
+    UserRemindersSchema,
+    Token,
+    RefreshData,
+)
 
 router = APIRouter(tags=["Authentification"])
 
@@ -89,20 +95,20 @@ async def admin_check(admin=Depends(require_role)):
 @router.patch("/user/timezone")
 async def set_timezone(
     session: SessionDep,
-    timezone: str,
+    timezone_schema: UserTimezoneSchema,
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
-    await set_timezone_db(session, timezone, user)
+    await set_timezone_db(session, timezone_schema.timezone, user)
     return {"detail": "Timezone set successfully"}
 
 
 @router.patch("/user/reminders")
 async def change_reminders_enabled(
     session: SessionDep,
-    change: bool,
+    reminders_schema: UserRemindersSchema,
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
-    await change_reminders_enabled_db(session, change, user)
+    await change_reminders_enabled_db(session, reminders_schema.reminders_enabled, user)
     return {"detail": "Reminders changed successfully"}
 
 
