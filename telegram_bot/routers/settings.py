@@ -13,6 +13,7 @@ from telegram_bot.keyboards import (
 from telegram_bot.middleware import AuthMiddleware
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+API_GET_URL = f"{API_BASE_URL}/user"
 API_TIMEZONE_URL = f"{API_BASE_URL}/user/timezone"
 API_REMINDER_URL = f"{API_BASE_URL}/user/reminders"
 
@@ -27,9 +28,28 @@ class SettingsState(StatesGroup):
 
 
 @router.message(Command("settings"))
-async def settings(message: Message, state: FSMContext):
+async def settings(message: Message, state: FSMContext, token: str):
     await state.clear()
-    await message.answer("What you want to do?", reply_markup=create_settings_buttons())
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            API_GET_URL, headers={"Authorization": f"Bearer {token}"}
+        )
+
+    if response.status_code != 200:
+        await message.answer(f"Error: {response.text}")
+        await state.clear()
+        return
+
+    user_timezone = response.json().get("user_timezone")
+    reminders_enabled = response.json().get("user_reminders_enabled")
+
+    await message.answer(
+        f"⚙️ <b>Your settings:</b>\n\n"
+        f"🕐 Timezone: <code>{user_timezone or 'not set'}</code>\n"
+        f"🔔 Reminders: {'✅ enabled' if reminders_enabled else '❌ disabled'}",
+        reply_markup=create_settings_buttons(),
+        parse_mode="HTML",
+    )
 
 
 @router.callback_query(F.data == "set_timezone")

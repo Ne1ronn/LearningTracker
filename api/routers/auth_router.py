@@ -112,6 +112,16 @@ async def change_reminders_enabled(
     return {"detail": "Reminders changed successfully"}
 
 
+@router.get("/user")
+async def get_user_timezone_and_reminder(
+    user: Annotated[UserModel, Depends(get_current_user)],
+):
+    return {
+        "user_timezone": user.timezone,
+        "user_reminders_enabled": user.reminders_enabled,
+    }
+
+
 @router.get("/user/register/{username}")
 async def get_user_for_register(session: SessionDep, username: str):
     if await get_user_by_username(session, username):
