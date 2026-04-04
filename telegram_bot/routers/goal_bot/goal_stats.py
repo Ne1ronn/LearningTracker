@@ -65,12 +65,12 @@ async def get_goal_stats(message: Message, state: FSMContext, token: str):
                 f"\n"
                 f"📊 Status: <b>{status}</b>\n"
                 f"\n"
-                f"⏱ Done: <b>{goal_data.get('hours_done', 0)}h</b>  "
-                f"🎯 Target: <b>{goal_data.get('target_hours')}h</b>  "
-                f"⏳ Left: <b>{goal_data.get('hours_left', 0)}h</b>\n"
+                f"⏱ Done: <b>{goal_data.get('hours_done') or 0}h</b>  "
+                f"🎯 Target: <b>{goal_data.get('target_hours') or 0}h</b>  "
+                f"⏳ Left: <b>{goal_data.get('hours_left') or 0}h</b>\n"
                 f"\n"
-                f"📅 Days left: <b>{goal_data.get('days_left', 0)}</b>\n"
-                f"🚀 Current tempo: <b>{goal_data.get('current_tempo', 0):.1f}h/day</b>\n"
+                f"📅 Days left: <b>{goal_data.get('days_left') or 0}</b>\n"
+                f"🚀 Current tempo: <b>{(goal_data.get('current_tempo') or 0):.1f}h/day</b>\n"
             )
 
             if status == "behind":

@@ -93,7 +93,7 @@ async def set_timezone(cb: CallbackQuery, state: FSMContext, token: str):
     await state.clear()
 
 
-@router.callback_query(F.data == "set_reminders")
+@router.callback_query(F.data == "change_reminders")
 async def ask_reminders(cb: CallbackQuery, state: FSMContext):
     await cb.answer()
     await cb.message.answer(

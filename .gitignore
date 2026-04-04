@@ -8,3 +8,5 @@ __pycache__/
 appendonly.aof
 *.rdb
 *.aof
+celerybeat-schedule.db
+celerybeat.pid

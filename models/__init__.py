@@ -7,3 +7,4 @@ from .refresh_token_model import RefreshTokenModel
 from .daily_stats_model import DailyStatsModel
 from .goal_model import GoalModel
 from .reminder_log_model import ReminderLogModel
+from .quiz_model import QuizModel

@@ -25,3 +25,6 @@ class EntryModel(Base):
     topics: Mapped[List["TopicModel"]] = relationship(
         "TopicModel", secondary=entry_topics, back_populates="entries"
     )
+    quizzes: Mapped[List["QuizModel"]] = relationship(
+        "QuizModel", back_populates="entry"
+    )
