@@ -6,7 +6,7 @@ from models.topic_model import TopicModel
 from schemas.topic_schema import TopicAddSchema, UpdateTopicSchema
 
 
-async def add_topic(session: SessionDep, topic: TopicAddSchema, user: UserModel):
+async def create_topic(session: SessionDep, topic: TopicAddSchema, user: UserModel):
     new_topic = TopicModel(
         user_id=user.id,
         title=topic.title,

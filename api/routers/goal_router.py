@@ -1,4 +1,3 @@
-from dataclasses import asdict
 from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from schemas.goal_schema import GoalAddSchema, GoalUpdateSchema, GoalResponseSchema
@@ -6,7 +5,7 @@ from ..crud.auth.dependencies import get_current_user
 from database.setup import SessionDep
 from models.user_model import UserModel
 from ..crud.goal.goal_crud import (
-    add_goal,
+    create_goal,
     get_goal_by_id,
     get_goals_db,
     patch_goal_db,
@@ -14,16 +13,16 @@ from ..crud.goal.goal_crud import (
     get_goal_progress,
 )
 
-router = APIRouter(tags=["Goals"])
+router = APIRouter(tags=["Goals Tracking"])
 
 
 @router.post("/goals", status_code=status.HTTP_201_CREATED)
-async def insert_goal(
+async def add_goal(
     session: SessionDep,
     goal: GoalAddSchema,
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
-    await add_goal(session, goal, user)
+    await create_goal(session, goal, user)
     return {"detail": "Goal added successfully"}
 
 

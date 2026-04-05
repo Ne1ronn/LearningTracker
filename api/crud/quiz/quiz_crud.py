@@ -6,7 +6,7 @@ from models import QuizModel
 from schemas.quiz_schema import QuizAddSchema, QuizUpdateSchema
 
 
-async def add_quiz(session: SessionDep, quiz: QuizAddSchema, user: UserModel):
+async def create_quiz(session: SessionDep, quiz: QuizAddSchema, user: UserModel):
     stmt = select(EntryModel).where(
         EntryModel.id == quiz.entry_id, EntryModel.user_id == user.id
     )
@@ -45,7 +45,14 @@ async def get_quiz_by_id(session: SessionDep, quiz_id: int, user: UserModel):
     return quiz
 
 
-async def patch_quiz(
+async def get_quizzes_db(session: SessionDep, user: UserModel):
+    stmt = select(QuizModel).join(EntryModel).where(EntryModel.user_id == user.id)
+    result = await session.execute(stmt)
+    quizzes = result.scalars().all()
+    return quizzes
+
+
+async def patch_quiz_db(
     session: SessionDep, quiz_id: int, patched_quiz: QuizUpdateSchema, user: UserModel
 ):
     quiz = await get_quiz_by_id(session, quiz_id, user)
@@ -56,7 +63,7 @@ async def patch_quiz(
     await session.commit()
 
 
-async def delete_quiz(session: SessionDep, quiz_id: int, user: UserModel):
+async def delete_quiz_db(session: SessionDep, quiz_id: int, user: UserModel):
     quiz = await get_quiz_by_id(session, quiz_id, user)
     await session.delete(quiz)
     await session.commit()

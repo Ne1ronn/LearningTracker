@@ -9,7 +9,7 @@ from schemas.entry_schema import EntryAddSchema, UpdateEntrySchema
 from datetime import date
 
 
-async def add_entry(session: SessionDep, entry: EntryAddSchema, user: UserModel):
+async def create_entry(session: SessionDep, entry: EntryAddSchema, user: UserModel):
     new_entry = EntryModel(
         user_id=user.id,
         title=entry.title,

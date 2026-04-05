@@ -9,7 +9,7 @@ from models.goal_model import GoalModel
 from schemas.goal_schema import GoalAddSchema, GoalUpdateSchema, GoalResponseSchema
 
 
-async def add_goal(session: SessionDep, goal: GoalAddSchema, user: UserModel):
+async def create_goal(session: SessionDep, goal: GoalAddSchema, user: UserModel):
     await get_topic_by_id(session, goal.topic_id)
 
     db_goal = GoalModel(

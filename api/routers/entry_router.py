@@ -18,7 +18,7 @@ from ..crud.entry.entry_stats_service import (
     get_profile_stats,
 )
 from ..crud.entry.entry_write_service import (
-    add_entry,
+    create_entry,
     update_entry_db,
     patch_entry_db,
     delete_entry_db,
@@ -34,12 +34,12 @@ router = APIRouter(tags=["Entry Tracking"])
 
 
 @router.post("/entries")
-async def insert_entry(
+async def add_entry(
     session: SessionDep,
     entry: EntryAddSchema,
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
-    await add_entry(session, entry, user)
+    await create_entry(session, entry, user)
     raise HTTPException(
         status_code=status.HTTP_201_CREATED, detail="Entry added successfully"
     )

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from models import UserModel
 from ..crud.auth.dependencies import get_current_user
 from api.crud.topic.topic_crud import (
-    add_topic,
+    create_topic,
     give_topic,
     update_topic_db,
     patch_topic_db,
@@ -19,12 +19,12 @@ router = APIRouter(tags=["Tracker Topics"])
 
 
 @router.post("/topics")
-async def insert_topic(
+async def add_topic(
     session: SessionDep,
     topic: TopicAddSchema,
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
-    await add_topic(session, topic, user)
+    await create_topic(session, topic, user)
     raise HTTPException(
         status_code=status.HTTP_201_CREATED, detail="Topic added successfully"
     )
