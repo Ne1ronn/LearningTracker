@@ -8,9 +8,7 @@ class GoalModel(Base):
     __tablename__ = "goals"
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    topic_id: Mapped[int] = mapped_column(
-        ForeignKey("topics.id", ondelete="CASCADE"), unique=True
-    )
+    topic_id: Mapped[int] = mapped_column(ForeignKey("topics.id", ondelete="CASCADE"))
     started_at: Mapped[date] = mapped_column(
         DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
@@ -18,4 +16,4 @@ class GoalModel(Base):
     target_date: Mapped[date]
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="goals")
-    topic: Mapped["TopicModel"] = relationship("TopicModel", back_populates="goal")
+    topic: Mapped["TopicModel"] = relationship("TopicModel", back_populates="goals")

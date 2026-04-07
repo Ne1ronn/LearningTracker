@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy import select, func
 from fastapi import HTTPException, status
@@ -9,14 +9,46 @@ from models.goal_model import GoalModel
 from schemas.goal_schema import GoalAddSchema, GoalUpdateSchema, GoalResponseSchema
 
 
-async def create_goal(session: SessionDep, goal: GoalAddSchema, user: UserModel):
-    await get_topic_by_id(session, goal.topic_id)
+async def create_goal(session: SessionDep, new_goal: GoalAddSchema, user: UserModel):
+    await get_topic_by_id(session, new_goal.topic_id)
+    stmt = select(GoalModel).where(
+        GoalModel.topic_id == new_goal.topic_id, GoalModel.user_id == user.id
+    )
+    result = await session.execute(stmt)
+    goals = result.scalars().all()
+
+    for goal in goals:
+        hours_stmt = (
+            select(func.sum(EntryModel.learning_hours))
+            .select_from(TopicModel)
+            .where(TopicModel.id == goal.topic_id, TopicModel.user_id == user.id)
+            .join(entry_topics, entry_topics.c.topic_id == TopicModel.id)
+            .join(EntryModel, EntryModel.id == entry_topics.c.entry_id)
+            .where(
+                EntryModel.user_id == user.id,
+                EntryModel.created_at >= goal.started_at,
+                EntryModel.created_at < goal.target_date + timedelta(days=1),
+            )
+        )
+
+        result = await session.execute(hours_stmt)
+        hours_done = result.scalar() or 0
+
+        if hours_done >= goal.target_hours or (
+            hours_done < goal.target_hours and goal.target_date <= date.today()
+        ):
+            continue
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Active goal for this topic already exists",
+            )
 
     db_goal = GoalModel(
         user_id=user.id,
-        topic_id=goal.topic_id,
-        target_hours=goal.target_hours,
-        target_date=goal.target_date,
+        topic_id=new_goal.topic_id,
+        target_hours=new_goal.target_hours,
+        target_date=new_goal.target_date,
     )
     session.add(db_goal)
     await session.commit()
@@ -70,7 +102,11 @@ async def get_goal_progress(session: SessionDep, goal_id: int, user: UserModel):
         .where(TopicModel.id == goal.topic_id, TopicModel.user_id == user.id)
         .join(entry_topics, entry_topics.c.topic_id == TopicModel.id)
         .join(EntryModel, EntryModel.id == entry_topics.c.entry_id)
-        .where(EntryModel.user_id == user.id)
+        .where(
+            EntryModel.user_id == user.id,
+            EntryModel.created_at >= goal.started_at,
+            EntryModel.created_at < goal.target_date + timedelta(days=1),
+        )
     )
 
     result = await session.execute(stmt)

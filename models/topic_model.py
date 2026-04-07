@@ -20,4 +20,4 @@ class TopicModel(Base):
         "EntryModel", secondary=entry_topics, back_populates="topics"
     )
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="topics")
-    goal: Mapped["GoalModel"] = relationship("GoalModel", back_populates="topic")
+    goals: Mapped[List["GoalModel"]] = relationship("GoalModel", back_populates="topic")
