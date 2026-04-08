@@ -1,3 +1,5 @@
+import datetime
+from datetime import UTC, timedelta
 from sqlalchemy import select
 from fastapi import HTTPException, status
 from database.setup import SessionDep
@@ -22,6 +24,7 @@ async def create_quiz(session: SessionDep, quiz: QuizAddSchema, user: UserModel)
         entry_id=quiz.entry_id,
         question=quiz.question,
         answer=quiz.answer,
+        next_review_at=datetime.now(UTC).replace(tzinfo=None) + timedelta(days=1),
     )
     session.add(quiz_model)
     await session.commit()
@@ -66,4 +69,37 @@ async def patch_quiz_db(
 async def delete_quiz_db(session: SessionDep, quiz_id: int, user: UserModel):
     quiz = await get_quiz_by_id(session, quiz_id, user)
     await session.delete(quiz)
+    await session.commit()
+
+
+async def change_quiz(session: SessionDep, quiz_id: int, result: str, user: UserModel):
+    quiz = await get_quiz_by_id(session, quiz_id, user)
+    now = datetime.now(UTC)
+
+    if result == "know":
+        review_step = quiz.review_step
+
+        if not review_step:
+            quiz.next_review_at = now + timedelta(days=1)
+        elif review_step == 1:
+            quiz.next_review_at = now + timedelta(days=3)
+        elif review_step == 2:
+            quiz.next_review_at = now + timedelta(days=7)
+        elif review_step == 3:
+            quiz.is_active = False
+
+        if review_step != 3:
+            quiz.review_step += 1
+
+    elif result == "do_not_know":
+        quiz.review_step = 0
+        quiz.next_review_at = now + timedelta(days=1)
+
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid quiz review result",
+        )
+
+    quiz.awaiting_response = False
     await session.commit()

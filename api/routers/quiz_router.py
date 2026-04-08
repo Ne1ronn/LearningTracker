@@ -10,6 +10,7 @@ from ..crud.quiz.quiz_crud import (
     get_quizzes_db,
     delete_quiz_db,
     patch_quiz_db,
+    change_quiz,
 )
 
 router = APIRouter(tags=["Quiz Tracking"])
@@ -60,3 +61,13 @@ async def delete_quiz(
 ):
     await delete_quiz_db(session, quiz_id, user)
     return {"detail": "Quiz deleted successfully"}
+
+
+@router.patch("/quizzes/status/{quiz_id}", status_code=status.HTTP_200_OK)
+async def change_quiz_status(
+    session: SessionDep,
+    quiz_id: int,
+    result: str,
+    user: Annotated[UserModel, Depends(get_current_user)],
+):
+    await change_quiz(session, quiz_id, result, user)

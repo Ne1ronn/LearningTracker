@@ -1,3 +1,5 @@
+from aiogram.types import InlineKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,7 +12,13 @@ from aiogram import Bot
 from celery import Celery
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
-from models import UserModel, ReminderLogModel, EntryModel, TelegramTokenModel
+from models import (
+    UserModel,
+    ReminderLogModel,
+    EntryModel,
+    TelegramTokenModel,
+    QuizModel,
+)
 
 app = Celery(
     "celery_app",
@@ -27,7 +35,11 @@ app.conf.beat_schedule = {
     "send_reminder": {
         "task": "celery_app.check_missing_entries_reminders",
         "schedule": 600.0,
-    }
+    },
+    "send_quiz": {
+        "task": "celery_app.check_quizzes",
+        "schedule": 600.0,
+    },
 }
 
 
@@ -92,6 +104,42 @@ def check_missing_entries_reminders():
         session.commit()
 
 
+@app.task
+def check_quizzes():
+    with SessionLocal() as session:
+        stmt = select(UserModel).where(UserModel.reminders_enabled.is_(True))
+        result = session.execute(stmt)
+        users = result.scalars().all()
+
+        now = datetime.now(UTC)
+        for user in users:
+            quiz_stmt = (
+                select(QuizModel)
+                .where(
+                    QuizModel.next_review_at <= now,
+                    QuizModel.is_active.is_(True),
+                    QuizModel.awaiting_response.is_(False),
+                )
+                .join(EntryModel)
+                .where(EntryModel.user_id == user.id)
+            )
+            quiz_result = session.execute(quiz_stmt)
+            quizzes = quiz_result.scalars().all()
+
+            stmt = select(TelegramTokenModel.telegram_id).where(
+                TelegramTokenModel.user_id == user.id
+            )
+            result = session.execute(stmt)
+            telegram_id = result.scalar()
+
+            if telegram_id is not None:
+                for quiz in quizzes:
+                    asyncio.run(send_quiz(telegram_id, quiz.question, quiz.id))
+                    quiz.awaiting_response = True
+
+        session.commit()
+
+
 async def send_missing_entry_reminder(telegram_id: int):
     bot = Bot(token=BOT_TOKEN)
     await bot.send_message(
@@ -99,3 +147,23 @@ async def send_missing_entry_reminder(telegram_id: int):
         text="You still haven't added today's entry",
     )
     await bot.session.close()
+
+
+async def send_quiz(telegram_id: int, question: str, quiz_id: int):
+    bot = Bot(token=BOT_TOKEN)
+    await bot.send_message(
+        chat_id=telegram_id,
+        text=(
+            "🧠 <b>Time to review the material!</b>\n\n"
+            f"❓ <b>Question:</b> {question}\n\n"
+            "Choose the button:"
+        ),
+        reply_markup=create_quiz_buttons(quiz_id),
+    )
+    await bot.session.close()
+
+
+def create_quiz_buttons(quiz_id: int):
+    builder = InlineKeyboardBuilder()
+    builder.button(text="Show answer", callback_data=f"show_answer:{quiz_id}")
+    return builder.as_markup()
