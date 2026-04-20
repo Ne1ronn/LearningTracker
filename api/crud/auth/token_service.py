@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from .user_repo import get_user_by_id
 from database.setup import SessionDep
 from models import RefreshTokenModel
+from sqlalchemy import select
 
 ACCESS_SECRET_KEY = os.environ["ACCESS_SECRET_KEY"]
 REFRESH_SECRET_KEY = os.environ["REFRESH_SECRET_KEY"]
@@ -80,3 +81,16 @@ async def create_refresh_token(session: SessionDep, user_id: int):
     await session.commit()
 
     return token
+
+
+async def revoke_user_tokens(session: SessionDep, user_id: int):
+    stmt = select(RefreshTokenModel).where(
+        RefreshTokenModel.user_id == user_id, RefreshTokenModel.revoked.is_(False)
+    )
+    result = await session.execute(stmt)
+    tokens = result.scalars().all()
+
+    for token in tokens:
+        token.revoked = True
+
+    await session.commit()

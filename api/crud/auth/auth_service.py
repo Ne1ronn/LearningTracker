@@ -2,7 +2,12 @@ from typing import Annotated
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from pwdlib import PasswordHash
-from .token_service import create_access_token, create_refresh_token, verify_refresh
+from .token_service import (
+    create_access_token,
+    create_refresh_token,
+    verify_refresh,
+    revoke_user_tokens,
+)
 from .user_repo import get_user_by_username, get_user_by_email
 from database.setup import SessionDep
 from models import UserModel
@@ -46,6 +51,7 @@ async def login(
         )
 
     access_token = create_access_token(username=form_data.username, role=db_user.role)
+    await revoke_user_tokens(session, db_user.id)
     refresh_token = await create_refresh_token(session, user_id=db_user.id)
     return Token(
         access_token=access_token, refresh_token=refresh_token, token_type="bearer"
