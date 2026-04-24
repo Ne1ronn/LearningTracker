@@ -253,3 +253,13 @@ def create_true_false_buttons():
 
     builder.adjust(2)
     return builder.as_markup()
+
+
+def create_quiz_answer_buttons():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="I know", callback_data="know")
+    builder.button(text="I don't know", callback_data="do_not_know")
+
+    builder.adjust(2)
+    return builder.as_markup()

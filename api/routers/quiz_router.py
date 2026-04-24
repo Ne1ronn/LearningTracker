@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, status
-from schemas.quiz_schema import QuizAddSchema, QuizUpdateSchema
+from schemas.quiz_schema import QuizAddSchema, QuizUpdateSchema, ResultSchema
 from ..crud.auth.dependencies import get_current_user
 from database.setup import SessionDep
 from models.user_model import UserModel
@@ -67,7 +67,7 @@ async def delete_quiz(
 async def change_quiz_status(
     session: SessionDep,
     quiz_id: int,
-    result: str,
+    result: ResultSchema,
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
-    await change_quiz(session, quiz_id, result, user)
+    await change_quiz(session, quiz_id, result.result, user)
