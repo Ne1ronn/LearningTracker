@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import DateTime, ForeignKey
-from datetime import datetime, UTC, tzinfo
+from datetime import datetime, UTC
 from models.base import Base
 from typing import List
 from models.entry_topics_model import entry_topics

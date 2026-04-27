@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 from sqlalchemy import select, func
 from fastapi import HTTPException, status
-from api.crud.topic.topic_crud import get_topic_by_id
+from api.crud.topic.topic_crud import get_topic_by_id, give_topic
 from database.setup import SessionDep
 from models import UserModel, EntryModel, TopicModel, entry_topics
 from models.goal_model import GoalModel
@@ -10,7 +10,7 @@ from schemas.goal_schema import GoalAddSchema, GoalUpdateSchema, GoalResponseSch
 
 
 async def create_goal(session: SessionDep, new_goal: GoalAddSchema, user: UserModel):
-    await get_topic_by_id(session, new_goal.topic_id)
+    await give_topic(session, new_goal.topic_id, user)
     stmt = select(GoalModel).where(
         GoalModel.topic_id == new_goal.topic_id, GoalModel.user_id == user.id
     )

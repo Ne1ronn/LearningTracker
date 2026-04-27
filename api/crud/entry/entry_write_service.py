@@ -26,11 +26,11 @@ async def create_entry(session: SessionDep, entry: EntryAddSchema, user: UserMod
         new_entry.topics.extend(topics)
 
     session.add(new_entry)
-    await session.commit()
 
-    await session.refresh(new_entry)
+    await session.flush()
     entry_date = new_entry.created_at.date()
     await add_daily_stat(session, user.id, entry_date, entry.learning_hours)
+    await session.commit()
 
 
 async def add_daily_stat(
@@ -46,8 +46,6 @@ async def add_daily_stat(
     else:
         daily_stat.total_hours += entry_hours
         daily_stat.entries_count += 1
-
-    await session.commit()
 
 
 async def update_entry_db(
@@ -113,10 +111,10 @@ async def delete_entry_db(session: SessionDep, entry_id: int, user: UserModel):
     entry = await get_entry_by_id(session, entry_id)
     can_delete_entry(entry, user)
 
-    entry_hours = entry.learning_hours
-
+    await delete_daily_stat(
+        session, user.id, entry.created_at.date(), entry.learning_hours
+    )
     await session.delete(entry)
-    await delete_daily_stat(session, user.id, entry.created_at.date(), entry_hours)
 
     await session.commit()
 

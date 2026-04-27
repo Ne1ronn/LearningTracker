@@ -137,7 +137,7 @@ async def hours_summary(
 async def streak(
     session: SessionDep, user: Annotated[UserModel, Depends(get_current_user)]
 ):
-    return await count_streak(session, user)
+    return await count_streak(session, user.id)
 
 
 @router.get("/entries/{entry_id}", response_model=EntrySchema)
