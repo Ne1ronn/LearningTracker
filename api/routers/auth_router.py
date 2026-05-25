@@ -29,12 +29,10 @@ from schemas.user_schema import (
 router = APIRouter(tags=["Authentification"])
 
 
-@router.post("/register")
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_user(session: SessionDep, user: UserAddSchema):
     await register(session, user)
-    raise HTTPException(
-        status_code=status.HTTP_201_CREATED, detail="User added successfully"
-    )
+    return {"detail": "User added successfully"}
 
 
 @router.post("/login")

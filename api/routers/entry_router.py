@@ -33,16 +33,14 @@ from schemas.weekly_stats_schema import WeeklyStatsResponseSchema
 router = APIRouter(tags=["Entry Tracking"])
 
 
-@router.post("/entries")
+@router.post("/entries", status_code=status.HTTP_201_CREATED)
 async def add_entry(
     session: SessionDep,
     entry: EntryAddSchema,
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
     await create_entry(session, entry, user)
-    raise HTTPException(
-        status_code=status.HTTP_201_CREATED, detail="Entry added successfully"
-    )
+    return {"detail": "Entry added successfully"}
 
 
 @router.get("/entries")
@@ -171,7 +169,7 @@ async def update_entry(
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
     await update_entry_db(session, entry, entry_id, user)
-    return {"message": "Entry updated successfully"}
+    return {"detail": "Entry updated successfully"}
 
 
 @router.patch("/entries/{entry_id}")
@@ -182,7 +180,7 @@ async def patch_entry(
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
     await patch_entry_db(session, entry_id, patched_entry, user)
-    return {"message": "Entry updated successfully"}
+    return {"detail": "Entry updated successfully"}
 
 
 @router.delete("/entries/{entry_id}")
@@ -192,7 +190,7 @@ async def delete_entry(
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
     await delete_entry_db(session, entry_id, user)
-    return {"message": "Entry deleted successfully"}
+    return {"detail": "Entry deleted successfully"}
 
 
 @router.get("/entries/{entry_id}/edit")

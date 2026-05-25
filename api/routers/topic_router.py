@@ -18,16 +18,14 @@ from schemas.topic_schema import TopicAddSchema, UpdateTopicSchema
 router = APIRouter(tags=["Tracker Topics"])
 
 
-@router.post("/topics")
+@router.post("/topics", status_code=status.HTTP_201_CREATED)
 async def add_topic(
     session: SessionDep,
     topic: TopicAddSchema,
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
     await create_topic(session, topic, user)
-    raise HTTPException(
-        status_code=status.HTTP_201_CREATED, detail="Topic added successfully"
-    )
+    return {"detail": "Topic added successfully"}
 
 
 @router.get("/topics/{topic_id}")
@@ -54,7 +52,7 @@ async def update_topic(
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
     await update_topic_db(session, topic, topic_id, user)
-    return {"message": "Topic updated successfully"}
+    return {"detail": "Topic updated successfully"}
 
 
 @router.patch("/topics/{topic_id}")
@@ -65,7 +63,7 @@ async def patch_topic(
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
     await patch_topic_db(session, patched_topic, topic_id, user)
-    return {"message": "Topic updated successfully"}
+    return {"detail": "Topic updated successfully"}
 
 
 @router.delete("/topics/{topic_id}")
@@ -75,7 +73,7 @@ async def delete_topic(
     user: Annotated[UserModel, Depends(get_current_user)],
 ):
     await delete_topic_db(session, topic_id, user)
-    return {"message": "Topic deleted successfully"}
+    return {"detail": "Topic deleted successfully"}
 
 
 @router.get("/topics/{topic_id}/edit", status_code=status.HTTP_200_OK)
@@ -86,4 +84,4 @@ async def can_edit_topic(
 ):
     topic = await get_topic_by_id(session, topic_id)
     can_topic(topic, user)
-    return {"message": "OK"}
+    return {"detail": "OK"}
