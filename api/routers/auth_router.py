@@ -140,7 +140,7 @@ async def get_user_for_login(session: SessionDep, username: str):
     return {"detail": "OK"}
 
 
-@router.get("/userm/{email}")
+@router.get("/user/check-email")
 async def get_user_email(session: SessionDep, email: EmailStr):
     if await get_user_by_email(session, email):
         raise HTTPException(

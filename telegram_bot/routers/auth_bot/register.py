@@ -12,7 +12,7 @@ from ...keyboards import create_cancel_button
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 API_GET_URL = f"{API_BASE_URL}/user/register/{{username}}"
-API_EMAIL_URL = f"{API_BASE_URL}/userm/{{email}}"
+API_EMAIL_URL = f"{API_BASE_URL}/user/check-email"
 API_POST_URL = f"{API_BASE_URL}/register"
 
 
@@ -60,7 +60,7 @@ async def add_email(message: types.Message, state: FSMContext):
         return
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(API_EMAIL_URL.format(email=email))
+        response = await client.get(API_EMAIL_URL, params={"email": email})
 
     if response.status_code == 409:
         await message.answer(
